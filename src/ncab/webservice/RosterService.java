@@ -20,8 +20,6 @@ import ncab.dao.impl.RosterServiceImpl;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
-
-
 @Path("/RosterService")
 public class RosterService {
 	
@@ -58,14 +56,18 @@ public class RosterService {
 
 	@POST
 	@Path("/UploadFileData")
+	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
-	public String uploadFile(@FormDataParam("uploadFile") InputStream fileInputStream,
+	public Response uploadFile(@FormDataParam("uploadFile") InputStream fileInputStream,
 			@FormDataParam("uploadFile") FormDataContentDisposition fileFormDataContentDisposition) throws Exception {
+		Response response;
+		JSONArray jsarr=new JSONArray();
 		System.out.println("TestCheck");
 		RosterServiceImpl frd=new RosterServiceImpl();
-		frd.insertIntoDB(fileInputStream, fileFormDataContentDisposition);
+		jsarr=frd.insertIntoDB(fileInputStream, fileFormDataContentDisposition);
 		System.out.println("Success import excel to mysql table");
-		return null;
+		response = Response.status(200).type("application/json").entity(jsarr.toString()).build(); 		
+		return response;
 	}
 
 
@@ -117,11 +119,11 @@ public class RosterService {
 	@Path("/getcablist")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-		public Response getCabList(){
+		public Response getCabList(String s){
 			Response response=null;
 			try {
 				RosterServiceImpl frd=new RosterServiceImpl();
-				JSONArray status=frd.getcablist();
+				JSONArray status=frd.getcablist(s);
 				response = Response.status(200).type("application/json").entity(status.toString()).build(); 		
 
 			} catch (Exception e) {
@@ -157,7 +159,25 @@ public class RosterService {
 
 
 	//Jaspreet
+	@POST
+	@Path("/driver")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response driver() {
+		Response response = null;
+		RosterServiceImpl frd=new RosterServiceImpl();
+		JSONArray jarr = new JSONArray();
+		System.out.println("Inside display empdetails");
+		try {
+			System.out.println("inside try before call");
+			jarr = frd.getDriver();
+			response = Response.status(200).type("application/json").entity(jarr.toString()).build();
 
+		} catch (Exception e) {
+
+		}
+		return response;
+	}
+	
 	@POST
 	@Path("/vendorDetails")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -353,7 +373,7 @@ public class RosterService {
 
 
 	@POST
-	@Path("/getCabno")
+	@Path("/getCabNo")
 	@Produces(MediaType.APPLICATION_JSON)
 		public Response getCab(){
 		
@@ -362,6 +382,25 @@ public class RosterService {
 				JSONArray jsonArray =new JSONArray();
 				RosterServiceImpl frd=new RosterServiceImpl();
 				jsonArray =frd.getAllCab();
+				response = Response.status(200).type("application/json").entity(jsonArray.toString()).build(); 		
+
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		return response;
+	}	
+	
+	@POST
+	@Path("/getVendor")
+	@Produces(MediaType.APPLICATION_JSON)
+		public Response getVendor(){
+		
+			Response response=null;
+			try {
+				JSONArray jsonArray =new JSONArray();
+				RosterServiceImpl frd=new RosterServiceImpl();
+				jsonArray =frd.getAllVendor();
 				response = Response.status(200).type("application/json").entity(jsonArray.toString()).build(); 		
 
 			} catch (Exception e) {
@@ -393,6 +432,63 @@ public class RosterService {
 	response = Response.status(200).type("application/json").entity(status).build(); 		
 		return response;
 	}
+	
+	@POST
+	@Path("/downloadexcel")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response write_excel(String s){
+		Response response=null;
+	   
+		System.out.println("implementation class starts");
+		RosterServiceImpl frd=new RosterServiceImpl();
+	String status=frd.writeExcel(s);		
+	response = Response.status(200).type("application/json").entity(status).build(); 		
+		return response;
+	}
+	
+
+@POST
+@Path("/getRouteDetails")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+	public Response getRouteData(String json){
+          Response response=null;
+		try {
+			JSONObject js=new JSONObject(json);
+			RosterServiceImpl frd=new RosterServiceImpl();
+	     	  JSONArray status=frd.getRouteDatas(js);
+	     	  response = Response.status(200).type("application/json").entity(status.toString()).build(); 		
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		 
+
+	return response;
+}
+
+@POST
+@Path("/getVendorForFilter")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+	public Response getVendorData(String json){
+          Response response=null;
+		try {
+			RosterServiceImpl frd=new RosterServiceImpl();
+	     	  JSONArray status=frd.getVendorForFilter();
+	     	  response = Response.status(200).type("application/json").entity(status.toString()).build(); 		
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		 
+
+	return response;
+}
+	
 	}
 
 

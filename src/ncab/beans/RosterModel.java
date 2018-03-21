@@ -2,7 +2,15 @@ package ncab.beans;
 
 public class RosterModel {
 
-	private String max_route,qlid ,name ,pickup_area,contact ,address,cab_model,remarks,guard_required,cab_number,driver_id,driver_name,driver_phone_number,shift_id,root_number,pickup_time,drop_time,month,fname,mname,lname,Emp_Mob;
+	private String max_route,qlid ,name ,pickup_area,contact ,vendor_name,address,cab_model,remarks,guard_required,cab_number,driver_id,driver_name,driver_phone_number,shift_id,root_number,pickup_time,drop_time,month,fname,mname,lname,Emp_Mob;
+
+	public String getVendor_name() {
+		return vendor_name;
+	}
+
+	public void setVendor_name(String vendor_name) {
+		this.vendor_name = vendor_name;
+	}
 
 	public String getEmp_Mob() {
 		return Emp_Mob;
