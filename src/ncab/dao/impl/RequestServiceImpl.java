@@ -79,23 +79,19 @@ public class RequestServiceImpl {
 				String Source=rs.getString("Source");
 				String Destination=rs.getString("Destination");
 
-				excelRow.add(Request_ID);
-				excelRow.add( Emp_ID);
-				excelRow.add(Employee_Name);
-				excelRow.add(Emp_Gender);
-				excelRow.add(Emp_Mob_Nbr);
-				excelRow.add(Manager_Qlid);
-				excelRow.add(Manager_Name);
-				excelRow.add(this.getDate(Rqst_Date_Time)+" "+this.getTime(Rqst_Date_Time));
-				excelRow.add(this.getDate(Start_Date_Time));
-				excelRow.add(this.getTime(Start_Date_Time));
-				excelRow.add(this.getDate(End_Date_Time));
-				excelRow.add(Allocated);
-				excelRow.add(Emp_Pickup_Area);
-				excelRow.add(Other_Address);
-				excelRow.add(Approval);
-				excelRow.add(Source);
-				excelRow.add(Destination);
+				excelRow.add(this.getDate(Rqst_Date_Time)+" "+this.getTime(Rqst_Date_Time)); //Request Date
+				excelRow.add(Request_ID);	//Request ID
+				excelRow.add(Emp_ID);		//Emp ID
+				excelRow.add(Employee_Name);	//Emp name
+				excelRow.add(Emp_Gender);	//gender
+				excelRow.add(Emp_Mob_Nbr);	//emp no
+				excelRow.add(Manager_Qlid);	//manager id
+				excelRow.add(Manager_Name);	//manager name
+				excelRow.add(Source);	//pickup loc
+				excelRow.add(this.getTime(Start_Date_Time));	//pickup time
+				excelRow.add(Destination); //drop loc
+				excelRow.add(Other_Address);	//Trip Type
+				excelRow.add(Approval);			//Request Status		
 
 //				System.out.println(excelRow.toString());
 				
