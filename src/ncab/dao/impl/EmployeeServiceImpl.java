@@ -2404,6 +2404,34 @@ public class EmployeeServiceImpl {
 					.put("message", "Some error occured!");
 	}
 	
+	public JSONArray getShiftJSONArray() {
+		System.out.println("Getting Shift Info....");
+		DBConnectionUpd dbCon = new DBConnectionUpd();
+		Connection con = dbCon.getConnection();
+		PreparedStatement ps;
+		ResultSet rs;
+		JSONArray jsArr = new JSONArray();
+		
+		try {
+			ps = con.prepareStatement(
+				"SELECT * FROM NCAB_SHIFT_MASTER_TBL"
+			);
+			rs = ps.executeQuery();
+			
+			while(rs.next()) {
+				jsArr.put(
+						(new JSONObject())
+							.put("shiftId", rs.getString("shift_id"))
+							.put("startTime", rs.getString("start_time"))
+							.put("shiftName", rs.getString("shift_name"))
+				);	
+			}
+		}catch(SQLException e) {
+			e.printStackTrace();
+		}
+		return jsArr;
+	}
+	
 /// Employee Dashboard
 
 	public JSONObject employeeDash(String qlid) {
@@ -2434,10 +2462,12 @@ public class EmployeeServiceImpl {
 							.put("c_n", "")
 							.put("s_i", "")
 							.put("e_n", "")
+							.put("vname", "")
 						)
 				)
 				.put("driverDetails", getDriverInfoForEmployee(qlid))
-				.put("contacts", getContactJSONArray());
+				.put("contacts", getContactJSONArray())
+				.put("shiftInfo", getShiftJSONArray());
 		
 		
 //		try{

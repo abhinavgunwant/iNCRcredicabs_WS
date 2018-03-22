@@ -25,7 +25,20 @@ public class EmployeeBean {
 	private String	rolesId;
 	private String	empMgrQlid1;
 	private String	empMgrQlid2;
+	private String	empOrgId;
 	private String	empZone;
+	/**
+	 * @return the empOrgId
+	 */
+	public String getEmpOrgId() {
+		return empOrgId;
+	}
+	/**
+	 * @param empOrgId the empOrgId to set
+	 */
+	public void setEmpOrgId(String empOrgId) {
+		this.empOrgId = empOrgId;
+	}
 	/**
 	 * @return the empQlid
 	 */
