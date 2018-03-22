@@ -2,7 +2,31 @@ package ncab.beans;
 
 public class RosterModel {
 
-	private String max_route,qlid ,name ,pickup_area,contact ,vendor_name,address,cab_model,remarks,guard_required,cab_number,driver_id,driver_name,driver_phone_number,shift_id,root_number,pickup_time,drop_time,month,fname,mname,lname,Emp_Mob;
+	private String max_route,qlid ,name ,route_no,pickup_area,contact ,vendor_name,address,cab_model,remarks,guard_required,cab_number,driver_id,driver_name,driver_phone_number,shift_id,root_number,pickup_time,drop_time,month,fname,mname,lname,Emp_Mob,start_time,end_time;
+
+	public String getStart_time() {
+		return start_time;
+	}
+
+	public void setStart_time(String start_time) {
+		this.start_time = start_time;
+	}
+
+	public String getEnd_time() {
+		return end_time;
+	}
+
+	public void setEnd_time(String end_time) {
+		this.end_time = end_time;
+	}
+
+	public String getRoute_no() {
+		return route_no;
+	}
+
+	public void setRoute_no(String route_no) {
+		this.route_no = route_no;
+	}
 
 	public String getVendor_name() {
 		return vendor_name;

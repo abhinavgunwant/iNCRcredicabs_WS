@@ -278,6 +278,7 @@ public class RosterService {
 		return response;
 	}
 
+
 	@POST
 	@Path("/insertRouteSCH")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -376,8 +377,7 @@ public class RosterService {
 	@Path("/getCabNo")
 	@Produces(MediaType.APPLICATION_JSON)
 		public Response getCab(){
-		
-			Response response=null;
+		Response response=null;	
 			try {
 				JSONArray jsonArray =new JSONArray();
 				RosterServiceImpl frd=new RosterServiceImpl();
@@ -390,7 +390,7 @@ public class RosterService {
 			}
 		return response;
 	}	
-	
+
 	@POST
 	@Path("/getVendor")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -439,10 +439,9 @@ public class RosterService {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response write_excel(String s){
 		Response response=null;
-	   
 		System.out.println("implementation class starts");
 		RosterServiceImpl frd=new RosterServiceImpl();
-	String status=frd.writeExcel(s);		
+	String status=frd.download_data(s);		
 	response = Response.status(200).type("application/json").entity(status).build(); 		
 		return response;
 	}
