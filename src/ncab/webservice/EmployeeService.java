@@ -41,7 +41,13 @@ import ncab.dao.impl.RosterServiceImpl;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Path("/EmployeeService")
-public class EmployeeService {
+public class EmployeeService {	
+//	private static final String BASE_URL = "http://localhost:4200";
+	private static final String BASE_URL = "http://ec2-18-219-151-75.us-east-2.compute.amazonaws.com:8080";
+	
+	private static final String FORGOT_PASSWORD_SET_URL = BASE_URL+"/forgot-password/set-password";
+	private static final String NEW_ACC_SETUP_SET_PASSWORD_URL = BASE_URL+"/new-acc-setup/set-password";
+	
 	public EmployeeService() {}
 	
 	/**
@@ -226,7 +232,7 @@ public class EmployeeService {
 			empSrvImpl.setOldTokensInvalid(ucb.getQlid());
 
 			String token = empSrvImpl.buildRandomToken(128);
-			String url="http://localhost:4200/forgot-password/set-password/"+ucb.getQlid()+"/"+token;
+			String url= BASE_URL+"/forgot-password/set-password/"+ucb.getQlid()+"/"+token;
 			String recepient = ucb.getQlid()+"@ncr.com";
 			String subject="iNCRediCabs: Link to reset password";
 			String message = 
@@ -240,7 +246,7 @@ public class EmployeeService {
 				+ "		<div class=\"container col-sm-6 col-sm-ofset-3\">"
 				+ "			<h1 class=\"text-center\">iNCRediCabs</h1>"
 				+ "			<p>Visit the url below to reset your password:</p><br />"
-				+ "			<a href=\""+url+"\">"+url+"</a>"
+				+ "			<a href=\""+url+"\">Click Here!</a>"
 				+ "		</div>"
 				+ "	</body>"
 				+ "</html>";
@@ -545,7 +551,7 @@ public class EmployeeService {
 			}
 			
 //			SendMailService sms = new SendMailService();
-			String url = "http://localhost:4200/new-acc-setup/set-password/"+qlid+"/"+pwdToken;
+			String url = BASE_URL + "/new-acc-setup/set-password/"+qlid+"/"+pwdToken;
 			String recepient = qlid+"@ncr.com";
 			String subject = "iNCRediCabs: Link to set password.....";
 			String messageBody = 
@@ -829,11 +835,14 @@ public class EmployeeService {
 		System.out.println("TestCheck");
 		EmployeeServiceImpl frd = new EmployeeServiceImpl();
 		JSONObject sUpl = frd.insertIntoDatabase(fileInputStream, fileFormDataContentDisposition);
-		System.out.println("Success import excel to mysql table");
+//		System.out.println("Success import excel to mysql table");
 		return (new JSONObject())
-					.put("success", true)
-					.put("message", "File successfully uploaded!")
-					.put("SuccessfullUpload", sUpl.getJSONArray("successfulUpload"))
+					.put("success", Boolean.parseBoolean(sUpl.getString("success")))
+					.put("totalRows", sUpl.getString("totalRows"))
+					.put("totalSuccessful", sUpl.getString("totalSuccessful"))
+					.put("totalFailed", sUpl.getString("totalFailed"))
+//					.put("message", "File successfully uploaded!")
+					.put("successfullUpload", sUpl.getJSONArray("successfulUpload"))
 					.toString();
 	}
 	
@@ -898,6 +907,8 @@ public class EmployeeService {
 		
 			jsArr = empSrvImpl.getContactJSONArray();
 		
-		return jsArr.toString();	
+		return jsArr.toString();
+
+	
      }
 }

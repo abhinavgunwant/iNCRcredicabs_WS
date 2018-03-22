@@ -21,6 +21,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Properties;
 import java.util.Random;
 
@@ -66,7 +67,7 @@ public class EmployeeServiceImpl {
 	private final String GRECAPTCHA_SECRET = "6LfobEoUAAAAAMzl6qoNPTKv561siLjKlvFVAMIO";
 	
 	public static final String DEFAULT_QLID = "NO_QLID";
-	public static final String DEFAULT_TOKEN = "NO_TOKEN";	
+	public static final String DEFAULT_TOKEN = "NO_TOKEN";
 	
 	public JSONObject grecaptchaVerify(String grecaptchaResponse) {
 		JSONObject grecaptchaResponseJSON = new JSONObject();
@@ -836,24 +837,28 @@ public class EmployeeServiceImpl {
 			addEmpSuccess = false;
 			jsObj.put("empQlid", 
 				(new JSONObject())
+					.put("value", employeeBean.getEmpQlid())
 					.put("error", true)
 					.put("message", "Employee QLID cannot be empty!")
 			);
 		}else if(!employeeBean.getEmpQlid().matches(qlidPattern)) {
-			System.out.println("Error in Employee QLID validation2");
+			System.out.println("Error in Employee QLID validation2, qlid: " + employeeBean.getEmpQlid());
 			addEmpSuccess = false;
 			jsObj.put("empQlid", 
 				(new JSONObject())
+					.put("value", employeeBean.getEmpQlid())
 					.put("error", true)
 					.put("message", "Employee QLID format is invalid!")
 			);
 		}else {
 			jsObj.put("empQlid", 
 				(new JSONObject())
+					.put("value", employeeBean.getEmpQlid())
 					.put("error", false)
 					.put("message", "")
 			);
 		}
+		
 		
 		//// Employee FirstName validation		
 		if(employeeBean.getEmpFName() == "") {
@@ -861,6 +866,7 @@ public class EmployeeServiceImpl {
 			addEmpSuccess = false;
 			jsObj.put("empFName", 
 				(new JSONObject())
+					.put("value", employeeBean.getEmpFName())
 					.put("error", true)
 					.put("message", "First Name cannot be empty!")
 			);
@@ -869,12 +875,14 @@ public class EmployeeServiceImpl {
 			addEmpSuccess = false;
 			jsObj.put("empFName",
 				(new JSONObject())
+					.put("value", employeeBean.getEmpFName())
 					.put("error", true)
 					.put("message", "Firstname length should be between 1 and 16")
 			);
 		}else {
 			jsObj.put("empFName", 
 				(new JSONObject())
+					.put("value", employeeBean.getEmpFName())
 					.put("error", false)
 					.put("message", "")
 			);
@@ -887,6 +895,7 @@ public class EmployeeServiceImpl {
 				addEmpSuccess = false;
 				jsObj.put("empMName", 
 					(new JSONObject())
+						.put("value", employeeBean.getEmpMName())
 						.put("error", true)
 						.put("message", "Middle name cannot exceed 15 characters")
 				);
@@ -1831,7 +1840,7 @@ public class EmployeeServiceImpl {
 		props.put("mail.smtp.socketFactory.port", "465");
 		props.put("mail.smtp.socketFactory.class","javax.net.ssl.SSLSocketFactory");
 		props.put("mail.smtp.auth", "true");
-		props.put("mail.smtp.port", "465");		    
+		props.put("mail.smtp.port", "465");
 		    
 		Session mySession = Session.getInstance(props, new Authenticator(){
 			protected PasswordAuthentication getPasswordAuthentication(){
@@ -1848,7 +1857,6 @@ public class EmployeeServiceImpl {
 	    	message.addRecipients(Message.RecipientType.TO, InternetAddress.parse(recepient));	  
 	    	message.setSubject(subject);
 	    	message.setContent(messageBody, "text/html; charset=utf-8");
-	    	System.out.println("SendMailService: Sending Mail to " + recepient);
 	    	Transport.send(message);
 	    	System.out.println("SendMailService: Message Sent!");
 	    	return true;
@@ -1887,253 +1895,413 @@ public class EmployeeServiceImpl {
 	}
 
 
-public JSONObject insertIntoDatabase(InputStream fileInputStream, FormDataContentDisposition fileFormDataContentDisposition)
-		throws IOException {
-	DBConnectionUpd dbconnection = new DBConnectionUpd();
-	Connection connection = dbconnection.getConnection();
-	JSONArray jsArr = new JSONArray();
-	//PreparedStatement object = null;
-	RowCheck rowcheck = new RowCheck();
-	File file = new File("C:\\Users\\AG250497\\Desktop\\output.txt");
-	FileWriter f0;
-	FileWriter fw;
-	
-	try
-	{
-		f0 = new FileWriter(file);
-	}
-	catch(FileNotFoundException c)
-	{	
-		System.out.println("File not found");
-	}
-    String[] qlid_arr = null;
-
-    int i = 0, last_row_valid = 0, index = 1;
-	HashMap<String, String> link = new HashMap<>();
-    int ct = 0;
-
-	try {
-		XSSFWorkbook workbook = null;
-		if (fileFormDataContentDisposition.getFileName().endsWith("xlsx")) {
-			System.out.println("Yes check succeed");
-			workbook = new XSSFWorkbook(fileInputStream);
-		} else {
-			workbook = new XSSFWorkbook(fileInputStream);
-			System.out.println("Yes check succeed for other file type");
-		}
-		Sheet sheet = workbook.getSheetAt(0);
-		//Sheet sheet = workbook.getSheetAt(0);
-
-		//System.out.println(sheet.getLastRowNum());
-		// Generating right LastRowNum
+	public JSONObject insertIntoDatabase(InputStream fileInputStream, FormDataContentDisposition fileFormDataContentDisposition)
+			throws IOException {
+		DBConnectionUpd dbconnection = new DBConnectionUpd();
+		Connection connection = dbconnection.getConnection();
 		
-		System.out.println("checkpoint 1");
-		System.out.println(sheet.getLastRowNum());
+		EmployeeBean empBean = new EmployeeBean();
+		
+		JSONArray jsArr = new JSONArray();
+		JSONArray jsValidateArr = new JSONArray();
+		JSONObject validateJSON = new JSONObject();
+		JSONObject js2;
+		Iterator jsonKeys;
+		
+		RowCheck rowcheck = new RowCheck();
+		File file = new File("C:\\Users\\AG250497\\Desktop\\output.txt");
+		FileWriter f0;
+		FileWriter fw;
+		
+	    int last_row_valid = 0;
+		int index = 1;
+	    int ct = 0;
+	    int totalRows = 0;
+	    int totalSuccessful = 0;
 
-		for (i = sheet.getLastRowNum(); i >= 0; i--) {
-			Row row_check_test = (Row) sheet.getRow(i);
-			boolean flag = RowCheck.isRowEmpty(row_check_test);
-			if (flag == true) {
-				System.out.println("Empty row Existed, Iterating Backwards");
-				continue;
-			} else {
-				System.out.println("The Index is " + i);
-				last_row_valid = i;
-				break;
-			}
-		}
-	//	System.out.println(last_row_valid);
-		qlid_arr = new String[last_row_valid];
-	//	cab_arr = new String[last_row_valid];
-		System.out.println("checkpoint 2");
-		Row row;
-		String newLine = System.getProperty("line.separator");
-		for (i = 0; i <= last_row_valid; i++) {
-			row = (Row) sheet.getRow(i);
-			System.out.println("checkpoint 3");
-			String qlid = row.getCell(0, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
-		//	qlid_arr[i - 1] = qlid;
-			System.out.println("id: " + qlid);
-
-			String m1_qlid = row.getCell(1, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
-//			m1_qlid_arr[i - 1] = m1_qlid;
-        	System.out.println("id: " + m1_qlid);
-
-			String m2_qlid = row.getCell(2, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
-//			m2_qlid_arr[i - 1] = m2_qlid;
-			System.out.println("id: " + m2_qlid);
-			
-			String its = row.getCell(3, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
-			System.out.println("ITS: " + its);
-			
-			
-			String fname = row.getCell(4, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
-			System.out.println("Full name: " + fname);
-						
-			String mname = row.getCell(5, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
-			System.out.println("Middle name : " + mname);
-						
-			String lname = row.getCell(6, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
-			System.out.println("Last name: " + lname);
-						
-			String gen = row.getCell(7,Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
-//			if(gen != "m" ||gen != "f" ||gen != "M" ||gen != "F")
-//			{
-//				System.out.println("Error");
-//			}
-			System.out.println("Gender: " + gen);
-				
-//			String date = "" + row.getCell(8, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getDateCellValue();
-//			DateFormat formatter = new SimpleDateFormat("E MMM dd HH:mm:ss Z yyyy");
-//			Date date1 = (Date)formatter.parse(date);			 
-//			//System.out.println("DOB: " + date1);
-//			
-//			Calendar cal = Calendar.getInstance();
-//			cal.setTime(date1);
-//			String formatedDate = cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH) + 1) + "-" + cal.get(Calendar.DATE);
-//			System.out.println("formatedDate : " + formatedDate);  
-					
-			String m_nbr = row.getCell(8,Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
-			System.out.println("Mobile number: " + m_nbr);
-			
-			String h_nbr = row.getCell(9, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
-			System.out.println("Home number: " + h_nbr);
-			
-			String e_nbr = row.getCell(10,Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
-			System.out.println("Emergency Number: " + e_nbr);
-			
-			String add1 = row.getCell(11, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
-			System.out.println("Address Line 1: " + add1);
-			
-			String add2 = row.getCell(12, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
-			System.out.println("Address Line 2: " + add2);
-			
-			int pin = (int)row.getCell(13, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getNumericCellValue();
-			System.out.println("Pin Code: " + pin);
-			
-			String pickup = row.getCell(14, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
-			System.out.println("Pickup Location: " + pickup);
-			
-			String status = row.getCell(15, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
-//			if(status != "i" ||status != "a" ||status != "A" ||status != "I")
-//			{
-//				System.out.println("Error");
-//			}
-			System.out.println("Cab Status: " + status);
-			
-			String bgrp = row.getCell(16, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
-			System.out.println("Blood Group: " + bgrp);
-			
-			String created_by = row.getCell(17, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
-			System.out.println("Record Created by: " + created_by);
-			
-			String creation_date = "" + row.getCell(18, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getDateCellValue();
-			DateFormat formatter1 = new SimpleDateFormat("E MMM dd HH:mm:ss Z yyyy");
-			Date date2 = (Date)formatter1.parse(creation_date);			 
-			
-			Calendar cal1 = Calendar.getInstance();
-			cal1.setTime(date2);
-			String formatedDate1 = cal1.get(Calendar.YEAR) + "-" + (cal1.get(Calendar.MONTH) + 1) + "-" + cal1.get(Calendar.DATE);  
-			System.out.println("Record Creation date: " + formatedDate1);
-			
-			String last_updated_by = row.getCell(19, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();	
-			System.out.println("Record last Updated By: " + last_updated_by);
-			
-			String last_updated_date = "" + row.getCell(20, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getDateCellValue();
-			DateFormat formatter2 = new SimpleDateFormat("E MMM dd HH:mm:ss Z yyyy");
-            Date date3 = (Date)formatter1.parse(last_updated_date);
-            
-			Calendar cal2 = Calendar.getInstance();
-			cal2.setTime(date3);
-			String formatedDate2 = cal2.get(Calendar.YEAR) + "-" + (cal2.get(Calendar.MONTH) + 1) + "-" + cal2.get(Calendar.DATE);
-			System.out.println("Record last updated date: " + formatedDate2);
-			
-			int roles_id = (int)row.getCell(21,Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getNumericCellValue();
-			System.out.println("Roles id: " + roles_id);
-			
-			String zone = row.getCell(22, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
-			System.out.println("Zone: " + zone);
-			
-			int j = i+1;
-			System.out.println("Import rows " + j);
-			connection.setAutoCommit(false);
-			
-			System.out.println("hello");
-			String query = "INSERT into ncab_master_employee_tbl (Emp_Qlid, Emp_Mgr_Qlid1, Emp_Mgr_Qlid2, Emp_Org_Id, Emp_Fname, Emp_Mname, Emp_Lname, Emp_Gender, Emp_DOB, Emp_Mob_Nbr, Emp_Home_Nbr, Emp_Emerg_Nbr, Emp_Add_Line1, Emp_Add_Line2, Emp_PIN, Emp_Pickup_Area, Emp_Status, Emp_BloodGrp, Emp_Created_By, Emp_Creation_Date, Emp_Last_Updated_By, Emp_Last_Update_Date, Roles_Id, Emp_Zone)"
-			        + " values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-			
-				PreparedStatement object = connection.prepareStatement(query);
-//				object.setString(1, "Emp_Qlid");
-//				object.setString(2, "Emp_Mgr_Qlid1");
-//				object.setString(3, "Emp_Mgr_Qlid2");
-//				object.setString(4, "Emp_Org_Id");
-//				object.setString(5, "Emp_Fname");
-//				object.setString(6, "Emp_Mname");
-//				object.setString(7, "Emp_Lname");
-//				object.setString(8, "Emp_Gender");
-//				object.setString(9, "Emp_DOB");
-//				object.setString(10, "Emp_Mob_Nbr");
-//				object.setString(11, "Emp_Home_Nbr");
-//				object.setString(12, "Emp_Emerg_Nbr");
-//				object.setString(13, "Emp_Add_Line1");
-//				object.setString(14, "Emp_Add_Line2");
-//				object.setString(15, "Emp_PIN");
-//				object.setString(16, "Emp_Pickup_Area");
-//				object.setString(17,"Emp_Status");
-//				object.setString(18, "Emp_BloodGrp");
-//				object.setString(19, "Emp_Created_By");
-//				object.setString(20, "Emp_Creation_Date");
-//				object.setString(21, "Emp_Last_Updated_By");
-//				object.setString(22, "Emp_Last_Update_Date");
-//				object.setString(23, "Roles_Id");
-//				object.setString(24,"Emp_Zone");
-				object.setString(1, qlid);
-				object.setString(2, m1_qlid);
-				object.setString(3, m2_qlid);
-				object.setString(4, its);
-				object.setString(5, fname);
-				object.setString(6, mname);
-				object.setString(7, lname);
-				object.setString(8, gen);
-			//	object.setString(9, formatedDate); 
-				object.setString(9, m_nbr);
-				object.setString(10, h_nbr);
-				object.setString(11, e_nbr);
-				object.setString(12, add1);
-				object.setString(13, add2);
-				object.setInt(14, pin);
-				object.setString(15, pickup);
-				object.setString(16, status);
-				object.setString(17, bgrp);
-				object.setString(18, created_by);
-				object.setString(19, formatedDate1);
-				object.setString(20, last_updated_by);
-				object.setString(21, formatedDate2);
-				object.setInt(22, roles_id);
-				object.setString(23, zone);
-				object.executeUpdate();
-				
-				System.out.println("hello1");
- System.out.println("Success import excel to mysql table");
-				object.close();
-				
-				jsArr.put(
-					(new JSONObject())
-						.put("qlid", qlid)
-						.put("name", fname+" "+mname+" "+lname)
-				);
-				
-	}
-		workbook.close();		
-		connection.commit();
-		connection.close();
-	}catch (Exception e) {		
-		System.out.println(e.toString());
-	      e.printStackTrace();
-	    } 
-
-	return (new JSONObject()).put("successfulUpload", jsArr);
+	    String[] qlid_arr = null;
 	
+		HashMap<String, String> link = new HashMap<>();	
+	    XSSFWorkbook workbook = null;
+	    Sheet sheet = null;
+	    
+		boolean success = true;
+		boolean empAlreadyExists = false;
+		
+		DateFormat formatter = new SimpleDateFormat("E MMM dd HH:mm:ss Z yyyy");
+		
+		
+		try {
+			f0 = new FileWriter(file);	
+			
+			if (fileFormDataContentDisposition.getFileName().endsWith("xlsx")) {
+//				System.out.println("Yes check succeed");
+				workbook = new XSSFWorkbook(fileInputStream);
+			} else {
+				workbook = new XSSFWorkbook(fileInputStream);
+				System.out.println("Yes check succeed for other file type");
+			}
+			sheet = workbook.getSheetAt(0);
+			//Sheet sheet = workbook.getSheetAt(0);
+	
+			//System.out.println(sheet.getLastRowNum());
+			// Generating right LastRowNum
+			
+//			System.out.println("checkpoint 1");
+//			System.out.println(sheet.getLastRowNum());
+	
+			for (int i = sheet.getLastRowNum(); i >= 0; i--) {
+				Row row_check_test = (Row) sheet.getRow(i);
+				boolean flag = RowCheck.isRowEmpty(row_check_test);
+				if (flag == true) {
+//					System.out.println("Empty row!, Iterating Backwards");
+					continue;
+				} else {
+//					System.out.println("The Index is " + i);
+					last_row_valid = i;
+					break;
+				}
+			}
+		//	System.out.println(last_row_valid);
+			qlid_arr = new String[last_row_valid];
+		//	cab_arr = new String[last_row_valid];
+//			System.out.println("checkpoint 2");
+			
+			String newLine = System.getProperty("line.separator");
+		}catch(FileNotFoundException c){			//// for new FileWriter(file) statement
+			System.out.println("File not found!");
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		Row row;
+		for (int i = 0; i <= last_row_valid; i++) {
+			success = true;
+			
+			 //// Clearing out the validateJSON object....
+//			jsonKeys = validateJSON.keys();
+//			
+//			validateJSON.removeAk
+//			while(jsonKeys.hasNext()) {
+//				validateJSON.remove(jsonKeys.next().toString());
+//			}
+			validateJSON = null;			
+			
+			try {
+				row = (Row) sheet.getRow(i);
+				String creation_date = "" + row.getCell(18, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getDateCellValue();
+				DateFormat formatter1 = new SimpleDateFormat("E MMM dd HH:mm:ss Z yyyy");
+				Date date2 = (Date)formatter1.parse(creation_date);			 
+				
+				Calendar cal1 = Calendar.getInstance();
+				cal1.setTime(date2);
+				String formatedDate1 = cal1.get(Calendar.YEAR) + "-" + (cal1.get(Calendar.MONTH) + 1) + "-" + cal1.get(Calendar.DATE);
+				String last_updated_date = "" + row.getCell(20, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getDateCellValue();
+				DateFormat formatter2 = new SimpleDateFormat("E MMM dd HH:mm:ss Z yyyy");
+	            Date date3 = (Date)formatter1.parse(last_updated_date);
+	            
+				Calendar cal2 = Calendar.getInstance();
+				cal2.setTime(date3);
+				String formatedDate2 = cal2.get(Calendar.YEAR) + "-" + (cal2.get(Calendar.MONTH) + 1) + "-" + cal2.get(Calendar.DATE);
+				
+				empBean.setEmpQlid(row.getCell(0, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue().trim());
+				empBean.setEmpMgrQlid1(row.getCell(1, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue().trim());
+				empBean.setEmpMgrQlid2(row.getCell(2, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue().trim());
+				empBean.setEmpOrgId(row.getCell(3, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue().trim());
+				empBean.setEmpFName(row.getCell(4, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue().trim());
+				empBean.setEmpMName(row.getCell(5, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue().trim());
+				empBean.setEmpLName(row.getCell(6, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue().trim());
+				empBean.setEmpGender(row.getCell(7,Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue().trim());
+				empBean.setEmpMobNbr(((long)row.getCell(8, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getNumericCellValue()+"").trim());
+				empBean.setEmpHomeNbr(((long)row.getCell(9, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getNumericCellValue()+"").trim());
+				empBean.setEmpEmergNbr(((long)row.getCell(10,Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getNumericCellValue()+"").trim());
+				empBean.setEmpAddLine1(row.getCell(11, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue().trim());
+				empBean.setEmpAddLine2(row.getCell(12, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue().trim());
+				empBean.setEmpPin((int)row.getCell(13, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getNumericCellValue());
+				empBean.setEmpPickupArea(row.getCell(14, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue().trim());
+				empBean.setEmpStatus(row.getCell(15, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue().trim());
+				empBean.setEmpBloodGrp(row.getCell(16, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue().trim());
+				empBean.setEmpCreatedBy(row.getCell(17, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue().trim());
+				empBean.setEmpCreationDate(formatedDate1);
+				empBean.setEmpLastUpdatedBy(row.getCell(19, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue());
+				empBean.setEmpLastUpdateDate(formatedDate1);
+				empBean.setRolesId((int)row.getCell(21,Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getNumericCellValue()+"");
+				empBean.setEmpZone(row.getCell(22, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue());
+				
+				if(empBean.getEmpAddLine1().length() > 60) {
+					empBean.setEmpAddLine1(empBean.getEmpAddLine1().substring(0, 60));
+				}				
+
+				if(empBean.getEmpAddLine2().length() > 60) {
+					empBean.setEmpAddLine2(empBean.getEmpAddLine2().substring(0, 60));
+				}			
+				
+				if(empBean.getEmpHomeNbr().equals("0")) {
+					System.out.println("Home no is 0");
+					empBean.setEmpHomeNbr(null);
+				}
+				
+				validateJSON = validateAddEmployeeFormData(empBean);
+				System.out.println("Home Number: " + empBean.getEmpHomeNbr());
+				jsonKeys = validateJSON.keys();
+				
+				String key;
+				while(jsonKeys.hasNext()) {
+					key = jsonKeys.next().toString();
+					if(key != "message" && key != "success") {
+						js2 = validateJSON.getJSONObject(key);
+						if(Boolean.parseBoolean(js2.getString("error"))) {
+							success = false;
+						}
+					}
+				}
+				
+				
+//				String qlid = row.getCell(0, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+			//	qlid_arr[i - 1] = qlid;
+//				System.out.println("id: " + qlid);
+	
+//				String m1_qlid = row.getCell(1, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+	//			m1_qlid_arr[i - 1] = m1_qlid;
+//	        	System.out.println("id: " + m1_qlid);
+	
+//				String m2_qlid = row.getCell(2, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+	//			m2_qlid_arr[i - 1] = m2_qlid;
+//				System.out.println("id: " + m2_qlid);
+				
+				String its = row.getCell(3, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+				System.out.println("ITS: " + its);
+				
+				
+//				String fname = row.getCell(4, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+//				System.out.println("Full name: " + fname);
+							
+//				String mname = row.getCell(5, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+//				System.out.println("Middle name : " + mname);
+							
+//				String lname = row.getCell(6, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+//				System.out.println("Last name: " + lname);
+							
+//				String gen = row.getCell(7,Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+	//			if(gen != "m" ||gen != "f" ||gen != "M" ||gen != "F")
+	//			{
+	//				System.out.println("Error");
+	//			}
+//				System.out.println("Gender: " + gen);
+					
+	//			String date = "" + row.getCell(8, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getDateCellValue();
+	//			DateFormat formatter = new SimpleDateFormat("E MMM dd HH:mm:ss Z yyyy");
+	//			Date date1 = (Date)formatter.parse(date);			 
+	//			//System.out.println("DOB: " + date1);
+	//			
+	//			Calendar cal = Calendar.getInstance();
+	//			cal.setTime(date1);
+	//			String formatedDate = cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH) + 1) + "-" + cal.get(Calendar.DATE);
+	//			System.out.println("formatedDate : " + formatedDate);  
+						
+//				long m_nbr = (long)row.getCell(8, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getNumericCellValue();
+//				System.out.println("Mobile number: " + m_nbr);
+				
+//				long h_nbr = (long)row.getCell(9, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getNumericCellValue();
+//				System.out.println("Home number: " + h_nbr);
+				
+//				long e_nbr = (long)row.getCell(10,Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getNumericCellValue();
+//				System.out.println("Emergency Number: " + e_nbr);
+				
+//				String add1 = row.getCell(11, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+//				System.out.println("Address Line 1: " + add1);
+				
+//				String add2 = row.getCell(12, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+//				System.out.println("Address Line 2: " + add2);
+				
+//				int pin = (int)row.getCell(13, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getNumericCellValue();
+//				System.out.println("Pin Code: " + pin);
+				
+//				String pickup = row.getCell(14, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+//				System.out.println("Pickup Location: " + pickup);
+				
+//				String status = row.getCell(15, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+	//			if(status != "i" ||status != "a" ||status != "A" ||status != "I")
+	//			{
+	//				System.out.println("Error");
+	//			}
+//				System.out.println("Cab Status: " + status);
+				
+//				String bgrp = row.getCell(16, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+//				System.out.println("Blood Group: " + bgrp);
+				
+//				String created_by = row.getCell(17, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+//				System.out.println("Record Created by: " + created_by);
+				
+				  
+//				System.out.println("Record Creation date: " + formatedDate1);
+				
+//				String last_updated_by = row.getCell(19, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();	
+//				System.out.println("Record last Updated By: " + last_updated_by);
+				
+				
+//				System.out.println("Record last updated date: " + formatedDate2);
+				
+//				int roles_id = (int)row.getCell(21,Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getNumericCellValue();
+//				System.out.println("Roles id: " + roles_id);
+				
+//				String zone = row.getCell(22, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+//				System.out.println("Zone: " + zone);
+				
+//				int j = i+1;
+//				System.out.println("Import rows " + j);
+				
+				PreparedStatement psCheck = connection.prepareStatement(
+						"SELECT emp_qlid FROM "+DBTables.EMPLOYEE+
+							" WHERE emp_qlid = ?"
+						);
+				psCheck.setString(1, empBean.getEmpQlid());
+				ResultSet rsCheck = psCheck.executeQuery();
+				while(rsCheck.next()) {
+					empAlreadyExists = true;
+				}
+
+				connection.setAutoCommit(false);
+
+				if(success) {
+					PreparedStatement ps;
+					if(empAlreadyExists) {
+						System.out.println("already exists! updating....");
+						ps = connection.prepareStatement(
+							"UPDATE "+DBTables.EMPLOYEE+" SET "+
+								"Emp_Mgr_Qlid1 = ?, " + 
+								"Emp_Mgr_Qlid2 = ?, Emp_Org_Id = ?, Emp_Fname = ?, Emp_Mname = ?, Emp_Lname = ?,"+
+								"Emp_Gender = ?, Emp_Mob_Nbr = ?, Emp_Home_Nbr = ?, Emp_Emerg_Nbr = ?, Emp_Add_Line1 = ?, "+
+								"Emp_Add_Line2 = ?, Emp_PIN = ?, Emp_Pickup_Area = ?, Emp_Status = ?, Emp_BloodGrp = ?,"+
+								"Emp_Created_By = ?, Emp_Creation_Date = ?, Emp_Last_Updated_By = ?, Emp_Last_Update_Date = ?,"+
+								"Roles_Id = ?, Emp_Zone = ?"
+								+ " WHERE emp_qlid = ?"
+						);						
+						
+						ps.setString(1, empBean.getEmpMgrQlid1());
+						ps.setString(2, empBean.getEmpMgrQlid1());
+						ps.setString(3, its);
+						ps.setString(4, empBean.getEmpFName());
+						ps.setString(5, empBean.getEmpMName());
+						ps.setString(6, empBean.getEmpLName());
+						ps.setString(7, empBean.getEmpGender());
+						ps.setString(8, empBean.getEmpMobNbr());
+						ps.setString(9, empBean.getEmpHomeNbr());
+						ps.setString(10, empBean.getEmpEmergNbr());
+						ps.setString(11, empBean.getEmpAddLine1());
+						ps.setString(12, empBean.getEmpAddLine2());
+						ps.setInt(13, empBean.getEmpPin());
+						ps.setString(14, empBean.getEmpPickupArea());
+						ps.setString(15, empBean.getEmpStatus());
+						ps.setString(16, empBean.getEmpBloodGrp());
+						ps.setString(17, empBean.getEmpCreatedBy());
+						ps.setString(18, empBean.getEmpCreationDate());
+						ps.setString(19, empBean.getEmpCreatedBy());
+						ps.setString(20, empBean.getEmpLastUpdateDate());
+						ps.setString(21, empBean.getRolesId());
+						ps.setString(22, empBean.getEmpZone());
+						ps.setString(23, empBean.getEmpQlid());
+						ps.executeUpdate();
+						ps.close();
+						
+						connection.commit();
+					
+						System.out.println("Success import excel to mysql table");
+						jsArr.put(
+							(new JSONObject())
+								.put("qlid", empBean.getEmpQlid())
+								.put("name", empBean.getEmpFName()+" "+empBean.getEmpMName()+" "+empBean.getEmpLName())
+						);
+						++totalSuccessful;						
+					}else {
+						ps = connection.prepareStatement(
+							"INSERT into "+DBTables.EMPLOYEE+" (Emp_Qlid, Emp_Mgr_Qlid1,"
+								+ "Emp_Mgr_Qlid2, Emp_Org_Id, Emp_Fname, Emp_Mname, Emp_Lname, Emp_Gender,"
+								+ "Emp_Mob_Nbr, Emp_Home_Nbr, Emp_Emerg_Nbr, Emp_Add_Line1, Emp_Add_Line2,"
+								+ "Emp_PIN, Emp_Pickup_Area, Emp_Status, Emp_BloodGrp, Emp_Created_By,"
+								+ "Emp_Creation_Date, Emp_Last_Updated_By, Emp_Last_Update_Date, Roles_Id,"
+								+ "Emp_Zone) values ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+								+ "?, ?, ?, ?, ?, ?)"
+						);
+			
+						ps.setString(1, empBean.getEmpQlid());
+						ps.setString(2, empBean.getEmpMgrQlid1());
+						ps.setString(3, empBean.getEmpMgrQlid1());
+						ps.setString(4, its);
+						ps.setString(5, empBean.getEmpFName());
+						ps.setString(6, empBean.getEmpMName());
+						ps.setString(7, empBean.getEmpLName());
+						ps.setString(8, empBean.getEmpGender());
+						ps.setString(9, empBean.getEmpMobNbr());
+						ps.setString(10, empBean.getEmpHomeNbr());
+						ps.setString(11, empBean.getEmpEmergNbr());
+						ps.setString(12, empBean.getEmpAddLine1());
+						ps.setString(13, empBean.getEmpAddLine2());
+						ps.setInt(14, empBean.getEmpPin());
+						ps.setString(15, empBean.getEmpPickupArea());
+						ps.setString(16, empBean.getEmpStatus());
+						ps.setString(17, empBean.getEmpBloodGrp());
+						ps.setString(18, empBean.getEmpCreatedBy());
+						ps.setString(19, empBean.getEmpCreationDate());
+						ps.setString(20, empBean.getEmpCreatedBy());
+						ps.setString(21, empBean.getEmpLastUpdateDate());
+						ps.setString(22, empBean.getRolesId());
+						ps.setString(23, empBean.getEmpZone());
+						ps.executeUpdate();
+						ps.close();
+						
+						connection.commit();
+					
+						System.out.println("Success import excel to mysql table");
+						jsArr.put(
+							(new JSONObject())
+								.put("qlid", empBean.getEmpQlid())
+								.put("name", empBean.getEmpFName()+" "+empBean.getEmpMName()+" "+empBean.getEmpLName())
+						);
+						++totalSuccessful;
+					}
+				}else {
+					System.out.println("***** Validation Error!");
+//					jsonKeys = validateJSON.keys();
+//					String key;
+					
+//					while(jsonKeys.hasNext()) {
+//						key = jsonKeys.next().toString();
+//						js2 = validateJSON.getJSONObject(key);
+//						
+//						if(Boolean.parseBoolean(js2.getString("error")) == false) {
+//							validateJSON.remove(key);							
+//						}
+//					}					
+//					jsValidateArr.put(validateJSON);
+				}
+
+			}catch (Exception e) {		
+				System.out.println(e.toString());
+			    e.printStackTrace();
+		    }
+		}
+
+		workbook.close();
+		
+		try {
+			connection.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		System.out.println("totalRows: " + (last_row_valid+1));
+		System.out.println("totalSuccessful: " + totalSuccessful);
+		System.out.println("totalFailed: " + (last_row_valid - totalSuccessful));
+	
+		return (new JSONObject())
+					.put("success", success)
+					.put("totalRows", (last_row_valid+1))
+					.put("totalSuccessful", totalSuccessful)
+					.put("totalFailed", (last_row_valid + 1 - totalSuccessful))
+					.put("successfulUpload", jsArr);
+//					.put("errors", jsValidateArr);
 	}
 
 	/**
@@ -2268,7 +2436,8 @@ public JSONObject insertIntoDatabase(InputStream fileInputStream, FormDataConten
 							.put("e_n", "")
 						)
 				)
-				.put("driverDetails", getDriverInfoForEmployee(qlid));
+				.put("driverDetails", getDriverInfoForEmployee(qlid))
+				.put("contacts", getContactJSONArray());
 		
 		
 //		try{
