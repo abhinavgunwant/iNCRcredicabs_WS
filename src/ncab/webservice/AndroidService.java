@@ -18,9 +18,8 @@ public class AndroidService {
 
               public AndroidService() {
                              // TODO Auto-generated constructor stub
-              }
-
-
+			  }
+			  
               @POST
               @Produces(MediaType.APPLICATION_JSON)
               @Path("/approval")
