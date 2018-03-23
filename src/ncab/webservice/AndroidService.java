@@ -18,9 +18,8 @@ public class AndroidService {
 
               public AndroidService() {
                              // TODO Auto-generated constructor stub
-              }
-
-
+			  }
+			  
               @POST
               @Produces(MediaType.APPLICATION_JSON)
               @Path("/approval")
@@ -59,13 +58,13 @@ public class AndroidService {
                                                                     jsonres = jsonresponse;
                                                       }else {   if(result==7)
                                                       {
-                                                        jsonresponse.put("Request_Id", result );
+                                                    	  jsonresponse.put("Request_Id", result );
                                                           jsonresponse.put("status", "Already");
                                                          
                                                           jsonres = jsonresponse;
-                                                        
-                                                        
-                                                        
+                                                    	  
+                                                    	  
+                                                    	  
                                                       }else {
                                                              return Response.status(200).type("application/json").entity(new JSONObject().put("result", "fail").toString()).build();
                                                  }}
@@ -147,5 +146,4 @@ public class AndroidService {
           return response;
   	 }
 }
-
 
