@@ -13,12 +13,21 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Iterator;
-
+import javax.mail.Authenticator;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+import java.awt.HeadlessException;
 import javax.ws.rs.core.Response;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import ncab.dao.DBConnectionRo;
 import ncab.dao.DBConnectionUpd;
 
 
@@ -26,101 +35,102 @@ import ncab.dao.DBConnectionUpd;
 public class VendorServiceImpl {
 
 	public JSONObject getVendorDetails(){
-		DBConnectionUpd dbconnection = new DBConnectionUpd();
-		Connection connection = dbconnection.getConnection();
-		JSONArray jsonarray = new JSONArray();
-		PreparedStatement ps;
-		try {
-			ps = connection.prepareStatement("SELECT * FROM ncab_vendor_master_tbl ORDER BY vendor_status , vendor_name ASC");
-			ResultSet rs = ps.executeQuery();
-			System.out.println(rs);
-			String id;
-			String name="";
-			String bussAddr="";
-			String bussType="";
-			String venContact="";
-			String venEmail="";
-			String website;	
-			String pan="";
-			String gstNum;
-			int cabs_prov;
-			String supervisorName="";
-			String supContact="";
-			String supEmail;
-			String manName;
-			String manContact;
-			String manEmail;
-			String ownerName;
-			String ownerContact;
-			String ownerEmail;
-			int vendorStatus;
-			Date agreementExpiry;
+        DBConnectionRo dbconnection = new DBConnectionRo();
+        Connection connection = dbconnection.getConnection();
+        JSONArray jsonarray = new JSONArray();
+        PreparedStatement ps;
+        try {
+               ps = connection.prepareStatement("SELECT * FROM ncab_vendor_master_tbl ORDER BY vendor_name ASC");
+               ResultSet rs = ps.executeQuery();
+               System.out.println(rs);
+               String id;
+               String name="";
+               String bussAddr="";
+               String bussType="";
+               String venContact="";
+               String venEmail="";
+               String website;     
+               String pan="";
+               String gstNum;
+               int cabs_prov;
+               String supervisorName="";
+               String supContact="";
+               String supEmail;
+               String manName;
+               String manContact;
+               String manEmail;
+               String ownerName;
+               String ownerContact;
+               String ownerEmail;
+               
+               String agreementExpiry;
 
-			//int markDeleted=0;
+               //int markDeleted=0;
 
 
-			while(rs.next()){
-				JSONObject jsonresponse = new JSONObject();
-				id=rs.getString(1);
-				name=rs.getString(2);
-				bussAddr=rs.getString(3);
-				bussType=rs.getString(4);
-				venContact=rs.getString(5);
-				cabs_prov=rs.getInt(6);
-				venEmail=rs.getString(7);
-				website=rs.getString(8);
-				pan=rs.getString(9);
-				gstNum=rs.getString(10);
-				vendorStatus=rs.getInt(11);
-				agreementExpiry=rs.getDate(12);
-				System.out.println(rs.getDate(12));
-				System.out.println(agreementExpiry.toString());
-				supervisorName=rs.getString(13);
-				supContact=rs.getString(14);
-				supEmail=rs.getString(15);
-				manName=rs.getString(16);
-				manContact=rs.getString(17);
-				manEmail=rs.getString(18);
-				ownerName=rs.getString(19);
-				ownerContact=rs.getString(20);
-				ownerEmail=rs.getString(21);
+               while(rs.next()){
+                     JSONObject jsonresponse = new JSONObject();
+                     id=rs.getString(1);
+                     name=rs.getString(2);
+                     bussAddr=rs.getString(3);
+                     bussType=rs.getString(4);
+                     venContact=rs.getString(5);
+                     cabs_prov=rs.getInt(6);
+                     venEmail=rs.getString(7);
+                     website=rs.getString(8);
+                     pan=rs.getString(9);
+                     gstNum=rs.getString(10);
+                     System.out.println(gstNum);
+                     
+                     agreementExpiry=rs.getString(11);
+                     ownerName=rs.getString(12);
+                     ownerContact=rs.getString(13);
+                     ownerEmail=rs.getString(14);
+                     supervisorName=rs.getString(15);
+                     supContact=rs.getString(16);
+                     supEmail=rs.getString(17);
+                     manName=rs.getString(18);
+                     manContact=rs.getString(19);
+                     manEmail=rs.getString(20);
+                     
 
-				jsonresponse.put("id", id);
-				jsonresponse.put("name", name );
-				jsonresponse.put("bussAddr", bussAddr);
-				jsonresponse.put("bussType", bussType);
-				jsonresponse.put("venContact", venContact);
-				jsonresponse.put("website", website);
-				jsonresponse.put("pan", pan);
-				jsonresponse.put("cabs_prov",cabs_prov);
-				//jsonresponse.put("idProof", imgId);
-				jsonresponse.put("gstnum", gstNum);
-				jsonresponse.put("supervisorName", supervisorName);
-				jsonresponse.put("venEmail", venEmail);
-				jsonresponse.put("supContact", supContact);
-				jsonresponse.put("supEmail", supEmail);
-				jsonresponse.put("manName", manName);
-				jsonresponse.put("manContact", manContact);
-				jsonresponse.put("manEmail", manEmail);
-				jsonresponse.put("ownerName", ownerName);
-				jsonresponse.put("ownerContact", ownerContact);
-				jsonresponse.put("ownerEmail", ownerEmail);
-				jsonresponse.put("status",vendorStatus);
-				//System.out.println(jsonresponse);
-				//System.out.println(agreementExpiry);
-				jsonresponse.put("agreementExpiry",agreementExpiry.toString());
-				//System.out.println(jsonresponse);
-				jsonarray.put(jsonresponse);
-				//System.out.println(jsonarray);
-			}
+                     jsonresponse.put("id", id);
+                     jsonresponse.put("name", name );
+                     jsonresponse.put("bussAddr", bussAddr);
+                     jsonresponse.put("bussType", bussType);
+                     jsonresponse.put("venContact", venContact);
+                     jsonresponse.put("website", website);
+                     jsonresponse.put("pan", pan);
+                     jsonresponse.put("cabs_prov",cabs_prov);
+                     //jsonresponse.put("idProof", imgId);
+                     jsonresponse.put("gstnum", gstNum);
+                     jsonresponse.put("supervisorName", supervisorName);
+                     jsonresponse.put("venEmail", venEmail);
+                     jsonresponse.put("supContact", supContact);
+                     jsonresponse.put("supEmail", supEmail);
+                     jsonresponse.put("manName", manName);
+                     jsonresponse.put("manContact", manContact);
+                     jsonresponse.put("manEmail", manEmail);
+                     jsonresponse.put("ownerName", ownerName);
+                     jsonresponse.put("ownerContact", ownerContact);
+                     jsonresponse.put("ownerEmail", ownerEmail);
+                     
+                     //System.out.println(jsonresponse);
+                     //System.out.println(agreementExpiry);
+                     jsonresponse.put("agreementExpiry",agreementExpiry);
+                     //System.out.println(jsonresponse);
+                     jsonarray.put(jsonresponse);
+                     System.out.println(jsonarray);
+               }
 
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+        } catch (SQLException e) {
+               // TODO Auto-generated catch block
+               e.printStackTrace();
+        }
 
-		return  new JSONObject().put("result", jsonarray);
-	}
+        return  new JSONObject().put("result", jsonarray);
+ }
+
 
 
 public JSONObject deleteVendorDetailsByVendorID(JSONObject jsonrequest){
@@ -175,7 +185,7 @@ public JSONObject deleteVendorDetailsByVendorID(JSONObject jsonrequest){
 	}
 
 	public JSONObject getVendorDetailsByKey(JSONObject jsonrequest) {
-		DBConnectionUpd dbconnection = new DBConnectionUpd();
+		DBConnectionRo dbconnection = new DBConnectionRo();
 		Connection connection = dbconnection.getConnection();
 		JSONArray jsonarray = new JSONArray();
 		JSONObject jsonreq = new JSONObject();
@@ -191,87 +201,97 @@ public JSONObject deleteVendorDetailsByVendorID(JSONObject jsonrequest){
 			String value = jsonreq.getString(key);
 			System.out.println(key + ":" + value);
 			String sql="";
-			if(!key.equals("vendor_status")){
+			/*if(!key.equals("vendor_status")){
 				sql = "select * from ncab_vendor_master_tbl where " + key + " like '%" + value + "%' order by vendor_status, vendor_name ";
 			}
 			else{
 				int v=Integer.parseInt(value);
 				System.out.println(v);
 				sql = "select * from ncab_vendor_master_tbl where " + key + " = "+v+" order by vendor_status, vendor_name ";
-			}
+			}*/
+			sql="select * from ncab_vendor_master_tbl where "+key+" like '"+value+"%' order by vendor_name";
 			System.out.println(sql);
 			PreparedStatement ps = connection.prepareStatement(sql);
 
 			ResultSet rs = ps.executeQuery();
 
 			String id;
-			String name="";
-			String bussAddr="";
-			String bussType="";
-			String venContact="";
-			String venEmail="";
-			String website;	
-			String pan="";
-			String gstNum;
-			String supervisorName="";
-			String supContact="";
-			String supEmail;
-			int cabs_prov;
-			String manName;
-			String manContact;
-			String manEmail;
-			String ownerName;
-			String ownerContact;
-			String ownerEmail;
-			int vendorStatus;
-			Date agreementExpiry;
-			while (rs.next()) {
+            String name="";
+            String bussAddr="";
+            String bussType="";
+            String venContact="";
+            String venEmail="";
+            String website;     
+            String pan="";
+            String gstNum;
+            int cabs_prov;
+            String supervisorName="";
+            String supContact="";
+            String supEmail;
+            String manName;
+            String manContact;
+            String manEmail;
+            String ownerName;
+            String ownerContact;
+            String ownerEmail;
+            
+            String agreementExpiry;
 
-				JSONObject jsonresponse = new JSONObject();
-				id=rs.getString(1);
-				name=rs.getString(2);
-				bussAddr=rs.getString(3);
-				bussType=rs.getString(4);
-				venContact=rs.getString(5);
-				cabs_prov=rs.getInt(6);
-				venEmail=rs.getString(7);
-				website=rs.getString(8);
-				pan=rs.getString(9);
-				gstNum=rs.getString(10);
-				vendorStatus=rs.getInt(11);
-				agreementExpiry=rs.getDate(12);
-				supervisorName=rs.getString(13);
-				supContact=rs.getString(14);
-				supEmail=rs.getString(15);
-				manName=rs.getString(16);
-				manContact=rs.getString(17);
-				manEmail=rs.getString(18);
-				ownerName=rs.getString(19);
-				ownerContact=rs.getString(20);
-				ownerEmail=rs.getString(21);
+            //int markDeleted=0;
 
-				jsonresponse.put("id", id);
-				jsonresponse.put("name", name );
-				jsonresponse.put("bussAddr", bussAddr);
-				jsonresponse.put("bussType", bussType);
-				jsonresponse.put("venContact", venContact);
-				jsonresponse.put("website", website);
-				jsonresponse.put("pan", pan);
-				//jsonresponse.put("idProof", imgId);
-				jsonresponse.put("gstnum", gstNum);
-				jsonresponse.put("supervisorName", supervisorName);
 
-				jsonresponse.put("supContact", supContact);
-				jsonresponse.put("supEmail", supEmail);
-				jsonresponse.put("manName", manName);
-				jsonresponse.put("manContact", manContact);
-				jsonresponse.put("manEmail", manEmail);
-				jsonresponse.put("ownerName", ownerName);
-				jsonresponse.put("ownerContact", ownerContact);
-				jsonresponse.put("ownerEmail", ownerEmail);
-				jsonresponse.put("status",vendorStatus);
-				jsonresponse.put("agreementExpiry", agreementExpiry.toString());
-				jsonarray.put(jsonresponse);
+            while(rs.next()){
+                  JSONObject jsonresponse = new JSONObject();
+                  id=rs.getString(1);
+                  name=rs.getString(2);
+                  bussAddr=rs.getString(3);
+                  bussType=rs.getString(4);
+                  venContact=rs.getString(5);
+                  cabs_prov=rs.getInt(6);
+                  venEmail=rs.getString(7);
+                  website=rs.getString(8);
+                  pan=rs.getString(9);
+                  gstNum=rs.getString(10);
+                  System.out.println(gstNum);
+                  
+                  agreementExpiry=rs.getString(11);
+                  ownerName=rs.getString(12);
+                  ownerContact=rs.getString(13);
+                  ownerEmail=rs.getString(14);
+                  supervisorName=rs.getString(15);
+                  supContact=rs.getString(16);
+                  supEmail=rs.getString(17);
+                  manName=rs.getString(18);
+                  manContact=rs.getString(19);
+                  manEmail=rs.getString(20);
+
+                  jsonresponse.put("id", id);
+                  jsonresponse.put("name", name );
+                  jsonresponse.put("bussAddr", bussAddr);
+                  jsonresponse.put("bussType", bussType);
+                  jsonresponse.put("venContact", venContact);
+                  jsonresponse.put("website", website);
+                  jsonresponse.put("pan", pan);
+                  jsonresponse.put("cabs_prov",cabs_prov);
+                  //jsonresponse.put("idProof", imgId);
+                  jsonresponse.put("gstnum", gstNum);
+                  jsonresponse.put("supervisorName", supervisorName);
+                  jsonresponse.put("venEmail", venEmail);
+                  jsonresponse.put("supContact", supContact);
+                  jsonresponse.put("supEmail", supEmail);
+                  jsonresponse.put("manName", manName);
+                  jsonresponse.put("manContact", manContact);
+                  jsonresponse.put("manEmail", manEmail);
+                  jsonresponse.put("ownerName", ownerName);
+                  jsonresponse.put("ownerContact", ownerContact);
+                  jsonresponse.put("ownerEmail", ownerEmail);
+                  
+                  //System.out.println(jsonresponse);
+                  //System.out.println(agreementExpiry);
+                  jsonresponse.put("agreementExpiry",agreementExpiry);
+                  //System.out.println(jsonresponse);
+                  jsonarray.put(jsonresponse);
+                  System.out.println(jsonarray);
 			}
 
 
@@ -294,15 +314,15 @@ public JSONObject deleteVendorDetailsByVendorID(JSONObject jsonrequest){
 		return new JSONObject().put("result", jsonarray);
 	}
 
-	public String addVendorList(String vendor_name, String business_type, String vendor_contact_num, String vendor_mail_id, String website, String pan_id, String gst_num, int vendor_status, java.util.Date date1, int cabs_provided, String business_address, String supervisor_name, String sup_contact_num, String sup_mail_id, String manager_name, String manager_contact_num, String manager_mail_id, String owner_name, String owner_contact_num, String owner_mail_id )throws Exception 
+	public String addVendorList(String vendor_name, String business_type, String vendor_contact_num, String vendor_mail_id, String website, String pan_id, String gst_num, Date date, int cabs_provided, String business_address, String supervisor_name, String sup_contact_num, String sup_mail_id, String manager_name, String manager_contact_num, String manager_mail_id, String owner_name, String owner_contact_num, String owner_mail_id )throws Exception 
 	{
 		int x=0;
-		Date d1 = new Date(date1.getTime());
+		//Date d1 = new Date(date1.getTime());
 		DBConnectionUpd database= new DBConnectionUpd();
 		Connection connection = database.getConnection();
 		try {
 
-			String query = " insert into ncab_vendor_master_tbl (vendor_name, business_address, business_type, vendor_contact_num, cabs_provided, vendor_mail_id, website, pan_id, gst_num, vendor_status, agreement_expiry_date, supervisor_name, sup_contact_num, sup_mail_id, manager_name, manager_contact_num, manager_mail_id, owner_name, owner_contact_num, owner_mail_id)" + " values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			String query = " insert into ncab_vendor_master_tbl (vendor_name, business_address, business_type, vendor_contact_num, cabs_provided, vendor_mail_id, website, pan_id, gst_num, agreement_expiry_date, supervisor_name, sup_contact_num, sup_mail_id, manager_name, manager_contact_num, manager_mail_id, owner_name, owner_contact_num, owner_mail_id)" + " values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 			PreparedStatement ps = connection.prepareStatement(query);
 
 			ps.setString(1,vendor_name);
@@ -314,17 +334,16 @@ public JSONObject deleteVendorDetailsByVendorID(JSONObject jsonrequest){
 			ps.setString(7,website);
 			ps.setString(8,pan_id);
 			ps.setString(9,gst_num);
-			ps.setInt(10,vendor_status);
-			ps.setDate(11,d1);
-			ps.setString(12,supervisor_name);
-			ps.setString(13,sup_contact_num);
-			ps.setString(14,sup_mail_id);
-			ps.setString(15,manager_name);
-			ps.setString(16,manager_contact_num);
-			ps.setString(17,manager_mail_id);
-			ps.setString(18,owner_name);
-			ps.setString(19,owner_contact_num);
-			ps.setString(20,owner_mail_id);
+			ps.setDate(10,date);
+			ps.setString(11,supervisor_name);
+			ps.setString(12,sup_contact_num);
+			ps.setString(13,sup_mail_id);
+			ps.setString(14,manager_name);
+			ps.setString(15,manager_contact_num);
+			ps.setString(16,manager_mail_id);
+			ps.setString(17,owner_name);
+			ps.setString(18,owner_contact_num);
+			ps.setString(19,owner_mail_id);
 
 
 			x = ps.executeUpdate();
@@ -341,7 +360,7 @@ public JSONObject deleteVendorDetailsByVendorID(JSONObject jsonrequest){
 	}
 
 
-	public JSONObject updatevendor(int vendor_id,String vendor_name, String business_type, String vendor_contact_num, String vendor_mail_id, String website, String pan_id, String gst_num,int vendor_status, Date date1, String business_address, String supervisor_name, String sup_contact_num, String sup_mail_id, String manager_name, String manager_contact_num, String manager_mail_id, String owner_name, String owner_contact_num, String owner_mail_id )throws Exception 
+	public JSONObject updatevendor(int vendor_id,String vendor_name, String business_type, String vendor_contact_num, String vendor_mail_id, String website, String pan_id, String gst_num, Date date1, String business_address, String supervisor_name, String sup_contact_num, String sup_mail_id, String manager_name, String manager_contact_num, String manager_mail_id, String owner_name, String owner_contact_num, String owner_mail_id )throws Exception 
 	{      
 		//java.sql.Date d1 = new Date(date1.getTime());
 
@@ -353,7 +372,7 @@ public JSONObject deleteVendorDetailsByVendorID(JSONObject jsonrequest){
 			System.out.println("working5");
 
 
-			String query = " update ncab_vendor_master_tbl set vendor_name =?,business_address=?, vendor_contact_num=?, vendor_mail_id=?, website = ?, pan_id = ?, gst_num = ?,vendor_status = ?, agreement_expiry_date = ?, supervisor_name = ?, sup_contact_num = ?, sup_mail_id= ? , manager_name = ?,manager_contact_num= ?,manager_mail_id= ?,owner_name= ?,owner_contact_num= ?,owner_mail_id= ? where vendor_id = ?" ;
+			String query = " update ncab_vendor_master_tbl set vendor_name =?,business_address=?, vendor_contact_num=?, vendor_mail_id=?, website = ?, pan_id = ?, gst_num = ?, agreement_expiry_date = ?, supervisor_name = ?, sup_contact_num = ?, sup_mail_id= ? , manager_name = ?,manager_contact_num= ?,manager_mail_id= ?,owner_name= ?,owner_contact_num= ?,owner_mail_id= ?, business_type=? where vendor_id = ?" ;
 			PreparedStatement ps = connection.prepareStatement(query);
 			System.out.println(vendor_id);
 			//ps.setInt(1,vendor_id);
@@ -364,18 +383,20 @@ public JSONObject deleteVendorDetailsByVendorID(JSONObject jsonrequest){
 			ps.setString(5,website);
 			ps.setString(6,pan_id);
 			ps.setString(7,gst_num);
-			ps.setInt(8,vendor_status);
-			ps.setDate(9,date1);
-			ps.setString(10,supervisor_name);
-			ps.setString(11,sup_contact_num);
-			ps.setString(12,sup_mail_id);
-			ps.setString(13,manager_name);
-			ps.setString(14,manager_contact_num);
-			ps.setString(15,manager_mail_id);
-			ps.setString(16,owner_name);
-			ps.setString(17,owner_contact_num);
-			ps.setString(18,owner_mail_id);
+			
+			ps.setDate(8,date1);
+			ps.setString(9,supervisor_name);
+			ps.setString(10,sup_contact_num);
+			ps.setString(11,sup_mail_id);
+			ps.setString(12,manager_name);
+			ps.setString(13,manager_contact_num);
+			ps.setString(14,manager_mail_id);
+			ps.setString(15,owner_name);
+			ps.setString(16,owner_contact_num);
+			ps.setString(17,owner_mail_id);
+			ps.setString(18, business_type);
 			ps.setInt(19,vendor_id);
+			
 
 			int a= ps.executeUpdate();
 			System.out.println(a);
@@ -438,437 +459,388 @@ public JSONObject deleteVendorDetailsByVendorID(JSONObject jsonrequest){
 
 
 	public JSONObject getCabDetails()
-	{
-		String query="SELECT ncab_cab_master_tbl.vendor_id,ncab_cab_master_tbl.cab_license_plate_no,model,fuel_type,contracted_or_owned,cab_type,cab_rate,manufacture_date,reg_certi,pollution_certi,fitness_certi,insurance_certi,entry_tax_haryana_certi,entry_tax_delhi_certi,entry_tax_up_certi,poll_certi_exp_date,fit_certi_exp_date,insur_certi_exp_date,entry_tax_haryana_exp_date,entry_tax_delhi_exp_date,entry_tax_up_exp_date,driver_name,d_contact_num,vendor_name,cab_status,driver_type FROM ncab_cab_master_tbl,ncab_driver_master_tbl,ncab_vendor_master_tbl WHERE ncab_cab_master_tbl. cab_license_plate_no=ncab_driver_master_tbl.cab_license_plate_no AND ncab_vendor_master_tbl.vendor_id=ncab_cab_master_tbl.vendor_id order by cab_status";
-
-		DBConnectionUpd dbconnection = new DBConnectionUpd();
-		Connection connection = dbconnection.getConnection();
-		JSONArray jsonarray = new JSONArray();
-		PreparedStatement ps;
-		try{
-			//		ps = connection.prepareStatement("SELECT * FROM cab_tbl,driver_tbl WHERE cab_status = 0 AND driver_status=0 AND driver_tbl.cab_license_plate_no=cab_tbl.cab_license_plate_no" );
-			ps= connection.prepareStatement(query);
-			ResultSet rs = ps.executeQuery();
-
-			String vendor_id="";
-			String cab_no="";
-			String model="";
-			String fuel="";
-			String cab_type="";
-			int cab_rate;
-			String contract_owned;
-			String reg_certi;
-			String poll_certi;
-			String fit_certi;
-			String insur_certi;
-			String tax_haryana_certi;
-			String tax_up_certi;
-			String tax_delhi_certi;
-
-			String manufacture_date="";
-			String poll_exp;
-			String fit_exp;
-			String insur_exp;
-			String tax_haryana_exp;
-			String tax_up_exp;
-			String tax_delhi_exp;
-			String driver_name;
-			String driver_contact_num;
-			String vendor_name;
-			int cab_status;
-			String driver_type;
-
-
-			while(rs.next())
-			{
-				JSONObject jsonresponse = new JSONObject();
-
-				vendor_id=rs.getString(1);
-				cab_no=rs.getString(2);
-				model=rs.getString(3);
-				fuel=rs.getString(4);
-				contract_owned=rs.getString(5);
-				cab_type=rs.getString(6);
-				if(cab_type.equals("BIG"))
-					cab_type="6";
-				else
-					cab_type="4";
-				cab_rate=rs.getInt(7);
-				manufacture_date=rs.getString(8);
-
-				reg_certi=rs.getString(9);
-				poll_certi=rs.getString(10);
-				fit_certi=rs.getString(11);
-				insur_certi=rs.getString(12);
-				tax_haryana_certi=rs.getString(13);
-				tax_delhi_certi=rs.getString(14);
-				tax_up_certi=rs.getString(15);
-				poll_exp=rs.getString(16);
-				fit_exp=rs.getString(17);
-				insur_exp=rs.getString(18);
-				tax_haryana_exp=rs.getString(19);
-
-				tax_delhi_exp=rs.getString(20);
-				tax_up_exp=rs.getString(21);
-				driver_name=rs.getString(22);
-				driver_contact_num=rs.getString(23);
-				vendor_name=rs.getString(24);
-				cab_status=rs.getInt(25);
-				driver_type=rs.getString(26);
-				System.out.println(cab_status);
-				jsonresponse.put("vendor_id", vendor_id);
-				jsonresponse.put("cab_no", cab_no);
-				jsonresponse.put("model", model);
-				jsonresponse.put("fuel", fuel);
-				jsonresponse.put("cab_type", cab_type);
-				jsonresponse.put("cab_rate", cab_rate);
-				jsonresponse.put("contract_owned", contract_owned);
-				jsonresponse.put("manufacture_date", manufacture_date);
-				jsonresponse.put("poll_exp", poll_exp);
-				jsonresponse.put("fit_exp", fit_exp);
-				jsonresponse.put("insur_exp", insur_exp);
-				jsonresponse.put("tax_haryana_exp", tax_haryana_exp);
-				jsonresponse.put("tax_up_exp", tax_up_exp);
-				jsonresponse.put("tax_delhi_exp", tax_delhi_exp);
-				jsonresponse.put("driver_name", driver_name);
-				jsonresponse.put("driver_contact_num", driver_contact_num);
-				jsonresponse.put("vendor_name", vendor_name);
-				jsonresponse.put("reg_certi", reg_certi);
-				jsonresponse.put("poll_certi",poll_certi);
-				jsonresponse.put("fit_certi", fit_certi);
-				jsonresponse.put("insur_certi",insur_certi);
-				jsonresponse.put("tax_haryana_certi", tax_haryana_certi);
-				jsonresponse.put("tax_delhi_certi", tax_delhi_certi);
-				jsonresponse.put("tax_up_certi",tax_up_certi);
-				jsonresponse.put("status", cab_status);
-				jsonresponse.put("driver_type", driver_type);
-
-
-
-				jsonarray.put(jsonresponse);
-
-
-			}
-
-		} catch (SQLException e) {
-			//		 TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return new JSONObject().put("result", jsonarray);
-
-	}
-public JSONObject enableCabDetailsById(JSONObject jsonrequest){
-		
-		DBConnectionUpd dbconnection = new DBConnectionUpd();
-		Connection connection = dbconnection.getConnection();
-	    int i = 0;
-		JSONObject jsonreq = new JSONObject();
-		int vendor_status=-1;
-		
-        try 
-         {
-	      jsonreq = jsonrequest.getJSONObject("request");
-	      System.out.println(jsonreq.toString());
-	      String vid = jsonreq.getString("vendor_id");
-	      System.out.println(vid);
-	      String sql="Select vendor_status from ncab_vendor_master_tbl where vendor_id = ?";
-	      System.out.println("sql"+sql);
-	      PreparedStatement ps1 = connection.prepareStatement(sql);
-	      ps1.setString(1, vid);
-	      ResultSet rs = ps1.executeQuery();
-	      while(rs.next()){
-	    	  vendor_status=rs.getInt(1);
-	      }
-	      System.out.println("ven"+vendor_status);
-	      if(vendor_status==0){
-	      PreparedStatement ps = connection.prepareStatement("update ncab_cab_master_tbl set cab_status=0 where vendor_id = ?");
-	      ps.setString(1,  vid);
-	    	 i=ps.executeUpdate();
-	    	 System.out.println(i);
-	      }
-         } catch (SQLException e)
-        {
-        	 // TODO Auto-generated catch block
-        	 e.printStackTrace();
-        }
-		
-        finally {
-        	if (connection != null) {
-        		try
-        		{
-        			connection.close();
-        		}
-        		catch (SQLException e) 
-        		{
-        			// TODO Auto-generated catch block
-        			e.printStackTrace();
-        		}
-        	}
-        }		
-		if(i>0)
-		{
-		return new JSONObject().put("result", "true");		
-		
-		}
-		else
-			return new JSONObject().put("result", "false");
-	}
-
-public JSONObject deleteCabDetailsByVendorID(JSONObject jsonrequest){
-	DBConnectionUpd dbconnection = new DBConnectionUpd();
-	Connection connection = dbconnection.getConnection();
-    int i = 0;
-    ResultSet rs=null;
-	JSONObject jsonreq = new JSONObject();
-	int j=0;
-    try 
-     {
-      jsonreq = jsonrequest.getJSONObject("request");
-      System.out.println(jsonreq.toString());
-      int vid = jsonreq.getInt("vendor_id");
-      System.out.println(vid);
-
-//      PreparedStatement ps2=connection.prepareStatement("select * from roastertable where cab_no=?");
-//      ps2.setString(1,  vid);
-//      rs=ps2.executeQuery();
-//      
-      PreparedStatement ps1=connection.prepareStatement("update ncab_driver_master_tbl set driver_status=1 where vendor_id = ?");
-      ps1.setInt(1,  vid);
-      j=ps1.executeUpdate();
-    //  System.out.println(j);
-      PreparedStatement ps = connection.prepareStatement("update ncab_cab_master_tbl set cab_status=1 where vendor_id = ?");
-      ps.setInt(1,  vid);
-          i=ps.executeUpdate();
-    	 System.out.println(i);
-
-     } catch (SQLException e)
     {
-    	 // TODO Auto-generated catch block
-    	 e.printStackTrace();
+           //String query="SELECT ncab_cab_master_tbl.cab_license_plate_no,model,fuel_type,contracted_or_owned,cab_type,cab_rate,manufacture_date,reg_certi,pollution_certi,fitness_certi,insurance_certi,entry_tax_haryana_certi,entry_tax_delhi_certi,entry_tax_up_certi,poll_certi_exp_date,fit_certi_exp_date,insur_certi_exp_date,entry_tax_haryana_exp_date,entry_tax_delhi_exp_date,entry_tax_up_exp_date,driver_name,d_contact_num,vendor_name,cab_status,driver_type FROM ncab_cab_master_tbl,ncab_driver_master_tbl,ncab_vendor_master_tbl WHERE ncab_cab_master_tbl. cab_license_plate_no=ncab_driver_master_tbl.cab_license_plate_no AND ncab_vendor_master_tbl.vendor_id=ncab_cab_master_tbl.vendor_id order by cab_status";
+           //String query="SELECT * FROM ncab_cab_master_tbl WHERE ncab_relation_tbl.cab_license_plate_no=ncab_cab_master_tbl.cab_license_plate_no AND vendor_id=?";
+		String query="select * from ncab_cab_master_tbl";
+           
+           DBConnectionUpd dbconnection = new DBConnectionUpd();
+           Connection connection = dbconnection.getConnection();
+           JSONArray jsonarray = new JSONArray();
+           PreparedStatement ps;
+           
+           try{
+                  
+                  
+                  ps= connection.prepareStatement(query);
+                 //ps.setInt(1, vendor_id);
+                  ResultSet rs = ps.executeQuery();
+                  System.out.println(query);
+                  
+                  //int vendor_id;
+                  String cab_no="";
+                  String model="";
+                  String fuel="";
+                  String cab_type="";
+                  int cab_rate;
+                  String contract_owned;
+                  String reg_certi;
+                  String poll_certi;
+                  String fit_certi;
+                  String insur_certi;
+                  String tax_haryana_certi;
+                  String tax_up_certi;
+                  String tax_delhi_certi;
+                  String manufacture_date="";
+                  String poll_exp;
+                  String fit_exp;
+                  String insur_exp;
+                  String tax_haryana_exp;
+                  String tax_up_exp;
+                  String tax_delhi_exp;
+                  String driver_name;
+                  String driver_contact_num;
+                  String vendor_name;
+                  int cab_status;
+                  int cab_compliances;
+
+
+                  while(rs.next())
+                  {
+                        JSONObject jsonresponse = new JSONObject();
+                        
+                        //vendor_id=rs.getString(1);
+                        cab_no=rs.getString(1);
+                        model=rs.getString(2);
+                        fuel=rs.getString(3);
+                        contract_owned=rs.getString(4);
+                        cab_type=rs.getString(5);
+                        if(cab_type.equalsIgnoreCase("BIG"))
+                               cab_type="6";
+                        else
+                               cab_type="4";
+                        cab_rate=rs.getInt(7);
+                        manufacture_date=rs.getString(8);
+                        cab_status=rs.getInt(9);
+                        reg_certi=rs.getString(10);
+                      poll_certi=rs.getString(11);
+                      fit_certi=rs.getString(12);
+                   insur_certi=rs.getString(13);
+                   tax_haryana_certi=rs.getString(14);
+                   tax_delhi_certi=rs.getString(15);
+                   tax_up_certi=rs.getString(16);
+                        poll_exp=rs.getString(17);
+                        fit_exp=rs.getString(18);
+                        insur_exp=rs.getString(19);
+                        tax_haryana_exp=rs.getString(20);
+                        tax_delhi_exp=rs.getString(21);
+                        tax_up_exp=rs.getString(22);
+                        cab_compliances=rs.getInt(23);
+//                      driver_name=rs.getString(22);
+//                      driver_contact_num=rs.getString(23);
+//                      vendor_name=rs.getString(24);
+                        
+                        
+                  //     jsonresponse.put("vendor_id", vendor_id);
+                        jsonresponse.put("cab_no", cab_no);
+                        jsonresponse.put("model", model);
+                        jsonresponse.put("fuel", fuel);
+                        jsonresponse.put("cab_type", cab_type);
+                        jsonresponse.put("cab_rate", cab_rate);
+                        jsonresponse.put("contract_owned", contract_owned);
+                        jsonresponse.put("manufacture_date", manufacture_date);
+                        jsonresponse.put("poll_exp", poll_exp);
+                        jsonresponse.put("fit_exp", fit_exp);
+                        jsonresponse.put("insur_exp", insur_exp);
+                        jsonresponse.put("tax_haryana_exp", tax_haryana_exp);
+                        jsonresponse.put("tax_up_exp", tax_up_exp);
+                        jsonresponse.put("tax_delhi_exp", tax_delhi_exp);
+//                      jsonresponse.put("driver_name", driver_name);
+//                      jsonresponse.put("driver_contact_num", driver_contact_num);
+//                      jsonresponse.put("vendor_name", vendor_name);
+                        jsonresponse.put("reg_certi", reg_certi);
+                        jsonresponse.put("poll_certi",poll_certi);
+                        jsonresponse.put("fit_certi", fit_certi);
+                      jsonresponse.put("insur_certi",insur_certi);
+                        jsonresponse.put("tax_haryana_certi", tax_haryana_certi);
+                        jsonresponse.put("tax_delhi_certi", tax_delhi_certi);
+                        jsonresponse.put("tax_up_certi",tax_up_certi);
+                        jsonresponse.put("status", cab_status);
+                        jsonresponse.put("compliance", cab_compliances);
+                                 
+                        
+                        
+                        jsonarray.put(jsonresponse);
+                        
+                        
+                  }
+
+
+           } catch (SQLException e) {
+                  //            TODO Auto-generated catch block
+                  e.printStackTrace();
+           }
+           return new JSONObject().put("result", jsonarray);
+
     }
-	
+
+
+	public JSONObject enableCabDetailsById(JSONObject jsonrequest){
+
+        DBConnectionUpd dbconnection = new DBConnectionUpd();
+        Connection connection = dbconnection.getConnection();
+        int i = 0;
+        System.out.println(jsonrequest);
+
+        String cab_no=jsonrequest.getJSONObject("request").getString("cab_license_plate_no");
+        System.out.println(cab_no);
+        try 
+        {
+
+               PreparedStatement ps = connection.prepareStatement("update ncab_cab_master_tbl set cab_status=1 where cab_license_plate_no = ?");
+               ps.setString(1, cab_no);
+               i=ps.executeUpdate();
+               System.out.println(i);
+
+        } catch (SQLException e)
+        {
+               // TODO Auto-generated catch block
+               e.printStackTrace();
+        }
+
+        finally {
+               if (connection != null) {
+                     try
+                     {
+                            connection.close();
+                     }
+                     catch (SQLException e) 
+                     {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                     }
+               }
+        }             
+        if(i>0)
+        {
+               System.out.println("true");
+               return new JSONObject().put("result", "true");              
+
+        }
+        else
+               return new JSONObject().put("result", "false");
+ }
+
+
+public JSONObject deleteCabDetailsByCabID(JSONObject jsonrequest){
+    DBConnectionUpd dbconnection = new DBConnectionUpd();
+    Connection connection = dbconnection.getConnection();
+    int i = 0;
+    String result="";
+    JSONObject jsonres=new JSONObject();
+    ResultSet rs=null;
+    JSONObject jsonreq = new JSONObject();
+    int j=0;
+    try 
+    {
+           jsonreq = jsonrequest.getJSONObject("request");
+           System.out.println(jsonreq.toString());
+           String cab_no = jsonreq.getString("cab_license_plate_no");
+           System.out.println(cab_no);
+
+           //      PreparedStatement ps2=connection.prepareStatement("select * from roastertable where cab_no=?");
+           //      ps2.setString(1,  vid);
+           //      rs=ps2.executeQuery();
+           //      
+           PreparedStatement ps1=connection.prepareStatement("select Route_Status from ncab_roster_tbl where Cab_No = ?");
+           ps1.setString(1,  cab_no);
+           rs=ps1.executeQuery();
+           while(rs.next()) {
+                 String status=rs.getString(1);
+                 if(status.equalsIgnoreCase("active")) {
+                        result="active";
+                 }
+
+           }
+           if(result.equals("active")) {
+                 jsonres.put("result",result);
+           }
+           else {
+                 PreparedStatement ps=connection.prepareStatement("update ncab_cab_master_tbl set cab_status=0 where cab_license_plate_no = ?");
+                 ps.setString(1, cab_no);
+                 int res=ps.executeUpdate();
+                 jsonres.put("result","inactive");
+           }
+
+
+
+    } catch (SQLException e)
+    {
+           // TODO Auto-generated catch block
+           e.printStackTrace();
+    }
+
     finally {
-    	if (connection != null) {
-    		try
-    		{
-    			connection.close();
-    		}
-    		catch (SQLException e) 
-    		{
-    			// TODO Auto-generated catch block
-    			e.printStackTrace();
-    		}
-    	}
-    }		
-	if(i>0)
-	{
-	return new JSONObject().put("result", "true");		
-	
-	}
-	else
-		return new JSONObject().put("result", "false");
+           if (connection != null) {
+                 try
+                 {
+                        connection.close();
+                 }
+                 catch (SQLException e) 
+                 {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                 }
+           }
+    }
+
+    return jsonres;
 }
 
-	public Response getDriverType(String cabno)
+
+	
+public JSONObject getDriverDetails()
+{
+
+       //String query="SELECT ncab_vendor_master_tbl.vendor_id,driver_name,d_contact_num,driver_type,driver_local_address,driver_permanent_address,driver_photo,police_verification,driver_local_address_proof,driver_permanent_address_proof,driving_license,ncab_driver_master_tbl.cab_license_plate_no,vendor_name,license_exp_date,driver_status,driver_id FROM ncab_cab_master_tbl,ncab_driver_master_tbl,ncab_vendor_master_tbl WHERE ncab_cab_master_tbl. cab_license_plate_no=ncab_driver_master_tbl. cab_license_plate_no AND ncab_vendor_master_tbl.vendor_id=ncab_cab_master_tbl.vendor_id";
+       //String query="SELECT * FROM ncab_driver_master_tbl,ncab_relation_tbl WHERE ncab_driver_master_tbl.driver_id=ncab_relation_tbl.driver_id AND vendor_id=? AND cab_license_plate_no=?";
+	String query="SELECT * FROM ncab_driver_master_tbl";
+       DBConnectionUpd dbconnection = new DBConnectionUpd();
+       Connection connection = dbconnection.getConnection();
+       JSONArray jsonarray = new JSONArray();
+
+       PreparedStatement ps;
+
+       try{
+              //ps = connection.prepareStatement("SELECT driver_name,d_contact_num,driver_local_address,driver_permanent_address,driver_photo,police_verification,driver_local_address_proof,driver_permanent_address_proof,driving_license,driver_tbl.cab_license_plate_no,vendor_name,license_exp_date FROM cab_tbl,driver_tbl,vendor_tbl WHERE cab_status = 0 AND driver_status=0 AND vendor_status=0 AND cab_tbl. cab_license_plate_no=driver_tbl. cab_license_plate_no AND vendor_tbl.vendor_id=cab_tbl.vendor_id");
+              ps=connection.prepareStatement(query);
+              //ps.setInt(1, vendor_id);
+              //ps.setString(2, cab_no);
+
+              //System.out.println("query"+query);
+
+              ResultSet rs = ps.executeQuery();
+              int driver_id;
+              //int vendor_id;
+              String d_name;
+              String d_contact_num;
+              String d_local_add;
+              String d_permanent_add;
+              int driver_status;
+              String d_license;
+             
+              String d_license_num;
+              String license_exp_date;
+              String driver_photo;
+              String police_verification;
+              String d_local_add_proof;
+              String d_permanent_add_proof;
+              int compliance;
+
+              while(rs.next())
+              {
+                    
+                    JSONObject jsonresponse = new JSONObject();
+                    //vendor_id=rs.getInt(1);
+                    driver_id=rs.getInt(1);
+                    d_name=rs.getString(2);
+                    d_contact_num=rs.getString(3);
+                    d_local_add=rs.getString(4);
+                    d_permanent_add=rs.getString(5);
+                    driver_status=rs.getInt(6);
+                    d_license=rs.getString(7);
+                    d_license_num=rs.getString(8);
+                    license_exp_date=rs.getString(9);
+                    d_local_add_proof=rs.getString(10);
+                    d_permanent_add_proof=rs.getString(11);
+                    driver_photo=rs.getString(12);
+                    police_verification=rs.getString(13);
+                    System.out.println(driver_id);
+                    compliance=rs.getInt(15);
+//                  
+//                  cab_no=rs.getString(12);
+//                  vendor_name=rs.getString(13);
+                    
+                    
+                    
+                    //jsonresponse.put("vendor_id", vendor_id);
+                    jsonresponse.put("driver_id", driver_id);
+                    jsonresponse.put("d_name", d_name);
+                    jsonresponse.put("d_contact_num", d_contact_num);
+                    //jsonresponse.put("driver_type", driver_type);
+                    jsonresponse.put("d_local_add", d_local_add);
+                    jsonresponse.put("d_permanent_add", d_permanent_add);
+                    jsonresponse.put("status", driver_status);
+                    jsonresponse.put("d_license", d_license);
+                    jsonresponse.put("license_num", d_license_num);
+                    jsonresponse.put("license_exp_date", license_exp_date);
+                    jsonresponse.put("d_local_add_proof", d_local_add_proof);
+                    jsonresponse.put("d_permanent_add_proof", d_permanent_add_proof);
+                    jsonresponse.put("driver_photo", driver_photo);
+                    jsonresponse.put("police_verification", police_verification);  
+                    jsonresponse.put("compliance", compliance);
+//                  jsonresponse.put("cab_no", cab_no);
+//                  jsonresponse.put("vendor_name", vendor_name);
+//                  
+//                  
+
+                    jsonarray.put(jsonresponse);
+              }
+
+
+       } catch (SQLException e) {
+              // TODO Auto-generated catch block
+              e.printStackTrace();
+       }
+       return new JSONObject().put("result", jsonarray);
+}
+
+
+
+	
+
+	public Response AddCab(String onrshp, String license_plate_number, String model,  String fuel,String type, int occupancy, int cab_rate , String Rcert,String Pcert,String Fcert,String icert,String entry_tax_haryana_certi,String entry_tax_delhi_certi,String entry_tax_up_certi, Date date1, Date date2, Date date3, Date date4, String entry_tax_haryana_exp_date, String entry_tax_delhi_exp_date, String entry_tax_up_exp_date, int compliance ) throws Exception
 	{
-		DBConnectionUpd dbconnection = new DBConnectionUpd();
-		Connection connection = dbconnection.getConnection();
-		//JSONArray jsonarray = new JSONArray();
-		//JSONObject jsonreq = new JSONObject();
-
-		try {
-
-			//System.out.println("hello"+cabno);
-			String sql="SELECT  COUNT(driver_type) FROM ncab_driver_master_tbl,ncab_cab_master_tbl WHERE ncab_cab_master_tbl.cab_license_plate_no=ncab_driver_master_tbl.cab_license_plate_no AND ncab_driver_master_tbl.cab_license_plate_no = '" + cabno + "' ";
-			int count=0;
-			String message="";
-			PreparedStatement ps = connection.prepareStatement(sql);
-
-			//System.out.println(sql);
-			ResultSet rs = ps.executeQuery();
-			while(rs.next())
-			{
-				count=rs.getInt(1);
-			}
-
-			System.out.println(count);
-			if(count==0)
-				message="hell";
-			if(count==2)
-				message="2";
-			if(count==1)
-			{
-				//message="1";
-				sql="SELECT  driver_type FROM ncab_driver_master_tbl,ncab_cab_master_tbl WHERE ncab_cab_master_tbl.cab_license_plate_no=ncab_driver_master_tbl.cab_license_plate_no AND ncab_driver_master_tbl.cab_license_plate_no = '" + cabno + "' ";
-				ps = connection.prepareStatement(sql);
-				rs = ps.executeQuery();
-
-				//message="hello";
-				while(rs.next())
-				{
-					message=rs.getString(1);
-				}
-
-			}
-			System.out.println(message);
-
-			//	int count=(SELECT COUNT(*) FROM ncab_driver_master_tbl,ncab_cab_master_tbl WHERE ncab_cab_master_tbl.cab_license_plate_no=ncab_driver_master_tbl.cab_license_plate_no AND ncab_driver_master_tbl.cab_license_plate_no='HR6D3456');
-			return Response.status(200).entity(message)	.build();
-			//return new JSONObject().put("result", message);
-		}
-
-		catch (SQLException e) {
-			//	 TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		finally {
-			if (connection != null) {
-				try {
-					connection.close();
-				} catch (SQLException e) {
-					//		 TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		}
-
-
-		//return new JSONObject().put("result", jsonarray);
-		return Response.status(200).entity("error")	.build();
-
-
-
-	}
-
-	public JSONObject getDriverDetails()
-	{
-
-		String query="SELECT ncab_vendor_master_tbl.vendor_id,driver_name,d_contact_num,driver_type,driver_local_address,driver_permanent_address,driver_photo,police_verification,driver_local_address_proof,driver_permanent_address_proof,driving_license,ncab_driver_master_tbl.cab_license_plate_no,vendor_name,license_exp_date,driver_status,driver_id FROM ncab_cab_master_tbl,ncab_driver_master_tbl,ncab_vendor_master_tbl WHERE ncab_cab_master_tbl. cab_license_plate_no=ncab_driver_master_tbl. cab_license_plate_no AND ncab_vendor_master_tbl.vendor_id=ncab_cab_master_tbl.vendor_id";
-
-		DBConnectionUpd dbconnection = new DBConnectionUpd();
-		Connection connection = dbconnection.getConnection();
-		JSONArray jsonarray = new JSONArray();
-
-		PreparedStatement ps;
-
-		try{
-			//ps = connection.prepareStatement("SELECT driver_name,d_contact_num,driver_local_address,driver_permanent_address,driver_photo,police_verification,driver_local_address_proof,driver_permanent_address_proof,driving_license,driver_tbl.cab_license_plate_no,vendor_name,license_exp_date FROM cab_tbl,driver_tbl,vendor_tbl WHERE cab_status = 0 AND driver_status=0 AND vendor_status=0 AND cab_tbl. cab_license_plate_no=driver_tbl. cab_license_plate_no AND vendor_tbl.vendor_id=cab_tbl.vendor_id");
-			ps=connection.prepareStatement(query);
-
-			//System.out.println("query"+query);
-
-			ResultSet rs = ps.executeQuery();
-
-			int vendor_id;
-			String d_name;
-			String d_contact_num;
-			String driver_type;
-			String d_local_add;
-			String d_permanent_add;
-			String d_license;
-			String license_exp_date;
-			String driver_photo;
-			String police_verification;
-			String d_local_add_proof;
-			String d_permanent_add_proof;
-			String cab_no;
-			String vendor_name;
-			int driver_status;
-			int driver_id;
-			
-
-
-			while(rs.next())
-			{
-
-				JSONObject jsonresponse = new JSONObject();
-				vendor_id=rs.getInt(1);
-				d_name=rs.getString(2);
-				d_contact_num=rs.getString(3);
-				driver_type=rs.getString(4);
-				d_local_add=rs.getString(5);
-				d_permanent_add=rs.getString(6);
-				driver_photo=rs.getString(7);
-				police_verification=rs.getString(8);
-				d_local_add_proof=rs.getString(9);
-				d_permanent_add_proof=rs.getString(10);
-				d_license=rs.getString(11);
-				cab_no=rs.getString(12);
-				vendor_name=rs.getString(13);
-				license_exp_date=rs.getString(14);
-				driver_status=rs.getInt(15);
-				driver_id=rs.getInt(16);
-				
-				jsonresponse.put("vendor_id", vendor_id);
-				jsonresponse.put("d_name", d_name);
-				jsonresponse.put("d_contact_num", d_contact_num);
-				jsonresponse.put("driver_type", driver_type);
-				jsonresponse.put("d_local_add", d_local_add);
-				jsonresponse.put("d_permanent_add", d_permanent_add);
-				jsonresponse.put("driver_photo", driver_photo);
-				jsonresponse.put("police_verification", police_verification);
-				jsonresponse.put("d_local_add_proof", d_local_add_proof);
-				jsonresponse.put("d_permanent_add_proof", d_permanent_add_proof);
-				jsonresponse.put("d_license", d_license);
-				jsonresponse.put("cab_no", cab_no);
-				jsonresponse.put("vendor_name", vendor_name);
-				jsonresponse.put("license_exp_date", license_exp_date);
-				jsonresponse.put("status", driver_status);
-				jsonresponse.put("driver_id", driver_id);
-				
-				jsonarray.put(jsonresponse);
-			}
-
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return new JSONObject().put("result", jsonarray);
-	}
-
-
-	public Response AddCab(int vendor_id, String onrshp, String license_plate_number, String model,  String fuel,String type, int occupancy, int cab_rate , String Rcert,String Pcert,String Fcert,String icert,String entry_tax_haryana_certi,String entry_tax_delhi_certi,String entry_tax_up_certi, java.util.Date date1, java.util.Date date2, java.util.Date date3, java.util.Date date4, java.util.Date date5, java.util.Date date6, java.util.Date date7 ) throws Exception
-	{
-		int cab_status=0;
-		java.sql.Date d1 = new java.sql.Date(date1.getTime());
-		java.sql.Date  d2 = new java.sql.Date (date2.getTime());
-		java.sql.Date  d3 = new java.sql.Date (date3.getTime());
-		java.sql.Date d4 = new java.sql.Date(date4.getTime());
-		java.sql.Date  d5 = new java.sql.Date (date5.getTime());
-		java.sql.Date  d6 = new java.sql.Date (date6.getTime());
-		java.sql.Date d7 = new java.sql.Date(date7.getTime());
+		int cab_status=1;
+//		java.sql.Date d1 = new java.sql.Date(date1.getTime());
+//		java.sql.Date  d2 = new java.sql.Date (date2.getTime());
+//		java.sql.Date  d3 = new java.sql.Date (date3.getTime());
+//		java.sql.Date d4 = new java.sql.Date(date4.getTime());
+//		java.sql.Date  d5 = new java.sql.Date (date5.getTime());
+//		java.sql.Date  d6 = new java.sql.Date (date6.getTime());
+//		java.sql.Date d7 = new java.sql.Date(date7.getTime());
 		int x=0;
 
 
 		try {
 			DBConnectionUpd database= new DBConnectionUpd();
 			Connection connection = database.getConnection();
-			String query = " insert into ncab_cab_master_tbl (vendor_id, cab_license_plate_no, model, fuel_type, contracted_or_owned, cab_type,cab_capacity, cab_rate, reg_certi ,pollution_certi,fitness_certi,insurance_certi,entry_tax_haryana_certi ,entry_tax_delhi_certi,entry_tax_up_certi ,  manufacture_date, cab_status, poll_certi_exp_date, fit_certi_exp_date, insur_certi_exp_date, entry_tax_haryana_exp_date, entry_tax_delhi_exp_date, entry_tax_up_exp_date)" + " values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+			String query = " insert into ncab_cab_master_tbl (cab_license_plate_no, model, fuel_type, contracted_or_owned, cab_type,cab_capacity, cab_rate, reg_certi ,pollution_certi,fitness_certi,insurance_certi,entry_tax_haryana_certi ,entry_tax_delhi_certi,entry_tax_up_certi ,  manufacture_date, cab_status, poll_certi_exp_date, fit_certi_exp_date, insur_certi_exp_date, entry_tax_haryana_exp_date, entry_tax_delhi_exp_date, entry_tax_up_exp_date, cab_compliance)" + " values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 			PreparedStatement ps = connection.prepareStatement(query);
-			ps.setInt(1,vendor_id);
-			ps.setString(2,license_plate_number);
-			ps.setString(3,model);
-			ps.setString(4,fuel);
-			ps.setString(5,onrshp);
-			ps.setString(6,type);
-			ps.setInt(7, occupancy);
-			ps.setInt(8,cab_rate);
-			ps.setString(9, Rcert);
-			ps.setString(10, Pcert);
-			ps.setString(11, Fcert);
-			ps.setString(12, icert);
-			ps.setString(13, entry_tax_haryana_certi);
-			ps.setString(14, entry_tax_delhi_certi);
-			ps.setString(15, entry_tax_up_certi);
-			ps.setDate(16,d1);
-			ps.setInt(17, cab_status);
-			ps.setDate(18,d2);
-			ps.setDate(19,d3);
-			ps.setDate(20,d4);
-			ps.setDate(21,d5);
-			ps.setDate(22,d6);
-			ps.setDate(23,d7);
+			//ps.setInt(1,vendor_id);
+			ps.setString(1,license_plate_number);
+			ps.setString(2,model);
+			ps.setString(3,fuel);
+			ps.setString(4,onrshp);
+			ps.setString(5,type);
+			ps.setInt(6, occupancy);
+			ps.setInt(7,cab_rate);
+			ps.setString(8, Rcert);
+			ps.setString(9, Pcert);
+			ps.setString(10, Fcert);
+			ps.setString(11, icert);
+			ps.setString(12, entry_tax_haryana_certi);
+			ps.setString(13, entry_tax_delhi_certi);
+			ps.setString(14, entry_tax_up_certi);
+			ps.setDate(15,date1);
+			ps.setInt(16, cab_status);
+			ps.setDate(17,date2);
+			ps.setDate(18,date3);
+			ps.setDate(19,date4);
+			ps.setString(20,entry_tax_haryana_exp_date);
+			ps.setString(21,entry_tax_delhi_exp_date);
+			ps.setString(22,entry_tax_up_exp_date);
+			ps.setInt(23, compliance);
 
 
 
@@ -892,57 +864,63 @@ public JSONObject deleteCabDetailsByVendorID(JSONObject jsonrequest){
 	}
 
 
-	public Response AddDriver(int vendor_id, String d_type,String first_Name, String dPhone_Nbr, String local_Address, String permanent_Address,String c_Plate_Nbr,
-			java.util.Date license,String d_comercial_liscence,String d_police_verification,String d_local_Address_proof,String d_permanent_address_proof,String d_photo)throws Exception 
-	{
-		int driver_status=0;
-		int x=0;
-		DBConnectionUpd database= new DBConnectionUpd();
-		Connection connection = database.getConnection();
-		try {
 
-			String query = " insert into ncab_driver_master_tbl (driver_type, vendor_id, driver_name, d_contact_num, driver_local_address, driver_permanent_address, cab_license_plate_no, license_exp_date, driving_license, police_verification, driver_local_address_proof, driver_permanent_address_proof, driver_photo, driver_status)" + " values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-			PreparedStatement ps = connection.prepareStatement(query);
-			ps.setString(1,d_type);
-			ps.setInt(2,vendor_id);
-			ps.setString(3,first_Name);
-			ps.setString(4,dPhone_Nbr);
-			ps.setString(5,local_Address);
-			ps.setString(6,permanent_Address);
-			ps.setString(7,c_Plate_Nbr);
-			java.sql.Date date=new  java.sql.Date(license.getTime());
-			ps.setDate(8,date);
+	public Response AddDriver(String driver_license_num,String Name, String dPhone_Nbr, String local_Address, String permanent_Address,Date license,String d_comercial_liscence,String d_police_verification,String d_local_Address_proof,String d_permanent_address_proof,String d_photo)throws Exception 
+    {
+          int driver_status=1;
+          int x=0;
+          DBConnectionUpd database= new DBConnectionUpd();
+          Connection connection = database.getConnection();
+          try {
 
-			ps.setString(9,d_comercial_liscence);
-			ps.setString(10,d_police_verification);
-			ps.setString(11,d_local_Address_proof);
-			ps.setString(12,d_permanent_address_proof);
-			ps.setString(13,d_photo);
-			ps.setInt(14,driver_status);
-			x = ps.executeUpdate();
-			System.out.println("work ho raha hai");
-			if(x==1){
-				connection.close();
+                 String query = " insert into ncab_driver_master_tbl (driver_license_num, driver_name, d_contact_num, driver_local_address, driver_permanent_address, license_exp_date, driving_license, police_verification, driver_local_address_proof, driver_permanent_address_proof, driver_photo, driver_status, driver_compliance)" + " values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
+                 PreparedStatement ps = connection.prepareStatement(query);
+                 ps.setString(1,driver_license_num);
+                 ps.setString(2,Name);
+                 ps.setString(3,dPhone_Nbr);
+                 ps.setString(4,local_Address);
+                 ps.setString(5,permanent_Address);
+                 ps.setDate(6,license);
 
-				return Response.status(200).entity("Insert Data success").build();
+                 ps.setString(7,d_comercial_liscence);
+                 ps.setString(8,d_police_verification);
+                 ps.setString(9,d_local_Address_proof);
+                 ps.setString(10,d_permanent_address_proof);
+                 ps.setString(11,d_photo);
+                 ps.setInt(12,driver_status);
+                 if(d_local_Address_proof.equals(""))
+                 {
+                	 ps.setInt(13, 0);
+                 }
+                 else
+                 {
+                	 ps.setInt(13, 1);
+                 }
+                 x = ps.executeUpdate();
 
-			}else
-			{
-				connection.close();
-				return Response.status(200).entity("Failed").build();
-			}
+                 if(x==1){
+                       connection.close();
+
+                       return Response.status(200).entity("Insert Data success").build();
+
+                 }else
+                 {
+                       connection.close();
+                       return Response.status(200).entity("Failed").build();
+                 }
 
 
-		} catch (Exception e) {
-			throw e;
-		}
-	}
+          } catch (Exception e) {
+                 throw e;
+          }
+    }
+
 
 	public JSONObject getCabDetailsByKey(JSONObject jsonrequest)
 	{
 
-		String query="SELECT ncab_cab_master_tbl.vendor_id,ncab_cab_master_tbl.cab_license_plate_no,model,fuel_type,contracted_or_owned,cab_type,cab_rate,manufacture_date,reg_certi,pollution_certi,fitness_certi,insurance_certi,entry_tax_haryana_certi,entry_tax_delhi_certi,entry_tax_up_certi,poll_certi_exp_date,fit_certi_exp_date,insur_certi_exp_date,entry_tax_haryana_exp_date,entry_tax_delhi_exp_date,entry_tax_up_exp_date,driver_name,d_contact_num,vendor_name,cab_status,driver_type FROM ncab_cab_master_tbl,ncab_driver_master_tbl,ncab_vendor_master_tbl WHERE ncab_cab_master_tbl. cab_license_plate_no=ncab_driver_master_tbl.cab_license_plate_no AND ncab_vendor_master_tbl.vendor_id=ncab_cab_master_tbl.vendor_id";
-
+	//	String query="SELECT cab_license_plate_no,model,fuel_type,contracted_or_owned,cab_type,cab_rate,manufacture_date,reg_certi,pollution_certi,fitness_certi,insurance_certi,entry_tax_haryana_certi,entry_tax_delhi_certi,entry_tax_up_certi,poll_certi_exp_date,fit_certi_exp_date,insur_certi_exp_date,entry_tax_haryana_exp_date,entry_tax_delhi_exp_date,entry_tax_up_exp_date,driver_name,d_contact_num,vendor_name,cab_status,driver_type FROM ncab_cab_master_tbl,ncab_driver_master_tbl,ncab_vendor_master_tbl WHERE ncab_cab_master_tbl. cab_license_plate_no=ncab_driver_master_tbl.cab_license_plate_no AND ncab_vendor_master_tbl.vendor_id=ncab_cab_master_tbl.vendor_id";
+		String query="select * from ncab_cab_master_tbl where ";
 		DBConnectionUpd dbconnection = new DBConnectionUpd();
 		Connection connection = dbconnection.getConnection();
 		JSONArray jsonarray = new JSONArray();
@@ -972,111 +950,111 @@ public JSONObject deleteCabDetailsByVendorID(JSONObject jsonrequest){
 				}
 			}
 
-			if(key.equals("cab_license_plate_no"))
+			/*if(key.equals("cab_license_plate_no"))
 			{
 				key="ncab_cab_master_tbl."+key;
-			}
+			}*/
 			//System.out.println(key);
-			sql=query+" AND "+key+" like '%"+value+"%'";
+			sql=query+""+key+" = '"+value+"'";
+			System.out.println(sql);
 			//	System.out.println(query+" AND "+key+"='"+value+"'");
 			PreparedStatement ps = connection.prepareStatement(sql);
 
 			ResultSet rs = ps.executeQuery();
 
-			String vendor_id="";
 			String cab_no="";
-			String model="";
-			String fuel="";
-			String cab_type="";
-			int cab_rate;
-			String contract_owned;
-			String reg_certi;
-			String poll_certi;
-			String fit_certi;
-			String insur_certi;
-			String tax_haryana_certi;
-			String tax_up_certi;
-			String tax_delhi_certi;
-
-			String manufacture_date="";
-			String poll_exp;
-			String fit_exp;
-			String insur_exp;
-			String tax_haryana_exp;
-			String tax_up_exp;
-			String tax_delhi_exp;
-			String driver_name;
-			String driver_contact_num;
-			String vendor_name;
-			int cab_status;
-			String driver_type;
-
-
-			while(rs.next())
-			{
-				JSONObject jsonresponse = new JSONObject();
-
-				vendor_id=rs.getString(1);
-				cab_no=rs.getString(2);
-				model=rs.getString(3);
-				fuel=rs.getString(4);
-				contract_owned=rs.getString(5);
-				cab_type=rs.getString(6);
-				if(cab_type.equals("BIG"))
-					cab_type="6";
-				else
-					cab_type="4";
-				cab_rate=rs.getInt(7);
-				manufacture_date=rs.getString(8);
-
-				reg_certi=rs.getString(9);
-				poll_certi=rs.getString(10);
-				fit_certi=rs.getString(11);
-				insur_certi=rs.getString(12);
-				tax_haryana_certi=rs.getString(13);
-				tax_delhi_certi=rs.getString(14);
-				tax_up_certi=rs.getString(15);
-				poll_exp=rs.getString(16);
-				fit_exp=rs.getString(17);
-				insur_exp=rs.getString(18);
-				tax_haryana_exp=rs.getString(19);
-
-				tax_delhi_exp=rs.getString(20);
-				tax_up_exp=rs.getString(21);
-				driver_name=rs.getString(22);
-				driver_contact_num=rs.getString(23);
-				vendor_name=rs.getString(24);
-				cab_status=rs.getInt(25);
-				driver_type=rs.getString(26);
-				jsonresponse.put("vendor_id", vendor_id);
-				jsonresponse.put("cab_no", cab_no);
-				jsonresponse.put("model", model);
-				jsonresponse.put("fuel", fuel);
-				jsonresponse.put("cab_type", cab_type);
-				jsonresponse.put("cab_rate", cab_rate);
-				jsonresponse.put("contract_owned", contract_owned);
-				jsonresponse.put("manufacture_date", manufacture_date);
-				jsonresponse.put("poll_exp", poll_exp);
-				jsonresponse.put("fit_exp", fit_exp);
-				jsonresponse.put("insur_exp", insur_exp);
-				jsonresponse.put("tax_haryana_exp", tax_haryana_exp);
-				jsonresponse.put("tax_up_exp", tax_up_exp);
-				jsonresponse.put("tax_delhi_exp", tax_delhi_exp);
-				jsonresponse.put("driver_name", driver_name);
-				jsonresponse.put("driver_contact_num", driver_contact_num);
-				jsonresponse.put("vendor_name", vendor_name);
-				jsonresponse.put("reg_certi", reg_certi);
-				jsonresponse.put("poll_certi",poll_certi);
-				jsonresponse.put("fit_certi", fit_certi);
-				jsonresponse.put("insur_certi",insur_certi);
-				jsonresponse.put("tax_haryana_certi", tax_haryana_certi);
-				jsonresponse.put("tax_delhi_certi", tax_delhi_certi);
-				jsonresponse.put("tax_up_certi",tax_up_certi);
-				jsonresponse.put("status", cab_status);
-				jsonresponse.put("driver_type", driver_type);
+            String model="";
+            String fuel="";
+            String cab_type="";
+            int cab_rate;
+            String contract_owned;
+            String reg_certi;
+            String poll_certi;
+            String fit_certi;
+            String insur_certi;
+            String tax_haryana_certi;
+            String tax_up_certi;
+            String tax_delhi_certi;
+            String manufacture_date="";
+            String poll_exp;
+            String fit_exp;
+            String insur_exp;
+            String tax_haryana_exp;
+            String tax_up_exp;
+            String tax_delhi_exp;
+            String driver_name;
+            String driver_contact_num;
+            String vendor_name;
+            int cab_status;
+            int cab_compliances;
 
 
-				jsonarray.put(jsonresponse);
+            while(rs.next())
+            {
+                  JSONObject jsonresponse = new JSONObject();
+                  
+                  //vendor_id=rs.getString(1);
+                  cab_no=rs.getString(1);
+                  model=rs.getString(2);
+                  fuel=rs.getString(3);
+                  contract_owned=rs.getString(4);
+                  cab_type=rs.getString(5);
+                  if(cab_type.equals("BIG"))
+                         cab_type="6";
+                  else
+                         cab_type="4";
+                  cab_rate=rs.getInt(7);
+                  manufacture_date=rs.getString(8);
+                  cab_status=rs.getInt(9);
+                  reg_certi=rs.getString(10);
+                poll_certi=rs.getString(11);
+                fit_certi=rs.getString(12);
+             insur_certi=rs.getString(13);
+             tax_haryana_certi=rs.getString(14);
+             tax_delhi_certi=rs.getString(15);
+             tax_up_certi=rs.getString(16);
+                  poll_exp=rs.getString(17);
+                  fit_exp=rs.getString(18);
+                  insur_exp=rs.getString(19);
+                  tax_haryana_exp=rs.getString(20);
+                  tax_delhi_exp=rs.getString(21);
+                  tax_up_exp=rs.getString(22);
+                  cab_compliances=rs.getInt(23);
+//                driver_name=rs.getString(22);
+//                driver_contact_num=rs.getString(23);
+//                vendor_name=rs.getString(24);
+                  
+                  
+            //     jsonresponse.put("vendor_id", vendor_id);
+                  jsonresponse.put("cab_no", cab_no);
+                  jsonresponse.put("model", model);
+                  jsonresponse.put("fuel", fuel);
+                  jsonresponse.put("cab_type", cab_type);
+                  jsonresponse.put("cab_rate", cab_rate);
+                  jsonresponse.put("contract_owned", contract_owned);
+                  jsonresponse.put("manufacture_date", manufacture_date);
+                  jsonresponse.put("poll_exp", poll_exp);
+                  jsonresponse.put("fit_exp", fit_exp);
+                  jsonresponse.put("insur_exp", insur_exp);
+                  jsonresponse.put("tax_haryana_exp", tax_haryana_exp);
+                  jsonresponse.put("tax_up_exp", tax_up_exp);
+                  jsonresponse.put("tax_delhi_exp", tax_delhi_exp);
+//                jsonresponse.put("driver_name", driver_name);
+//                jsonresponse.put("driver_contact_num", driver_contact_num);
+//                jsonresponse.put("vendor_name", vendor_name);
+                  jsonresponse.put("reg_certi", reg_certi);
+                  jsonresponse.put("poll_certi",poll_certi);
+                  jsonresponse.put("fit_certi", fit_certi);
+                jsonresponse.put("insur_certi",insur_certi);
+                  jsonresponse.put("tax_haryana_certi", tax_haryana_certi);
+                  jsonresponse.put("tax_delhi_certi", tax_delhi_certi);
+                  jsonresponse.put("tax_up_certi",tax_up_certi);
+                  jsonresponse.put("status", cab_status);
+                  jsonresponse.put("compliance", cab_compliances);
+                           
+                  
+                  
+                  jsonarray.put(jsonresponse);
 
 
 			}
@@ -1105,7 +1083,7 @@ public JSONObject deleteCabDetailsByVendorID(JSONObject jsonrequest){
 	public JSONObject getDriverDetailsByKey(JSONObject jsonrequest)
 	{
 
-		String query="SELECT ncab_vendor_master_tbl.vendor_id,driver_name,d_contact_num,driver_type,driver_local_address,driver_permanent_address,driver_photo,police_verification,driver_local_address_proof,driver_permanent_address_proof,driving_license,ncab_driver_master_tbl.cab_license_plate_no,vendor_name,license_exp_date,driver_status,driver_id FROM ncab_cab_master_tbl,ncab_driver_master_tbl,ncab_vendor_master_tbl WHERE ncab_cab_master_tbl. cab_license_plate_no=ncab_driver_master_tbl. cab_license_plate_no AND ncab_vendor_master_tbl.vendor_id=ncab_cab_master_tbl.vendor_id";
+		String query="SELECT * FROM ncab_driver_master_tbl";
 
 		DBConnectionUpd dbconnection = new DBConnectionUpd();
 		Connection connection = dbconnection.getConnection();
@@ -1123,56 +1101,56 @@ public JSONObject deleteCabDetailsByVendorID(JSONObject jsonrequest){
 			String value = jsonreq.getString(key);
 			System.out.println(key + ":" + value);
 			String sql="";
-			sql=query+" AND "+key+" like '%"+value+"%'";
+			sql=query+" where "+key+" like '%"+value+"%'";
 			System.out.println(sql);
 			ps=connection.prepareStatement(sql);
 
 			//System.out.println("query"+query);
 
 			ResultSet rs = ps.executeQuery();
-			int vendor_id;
-			String d_name;
-			String d_contact_num;
-			String driver_type;
-			String d_local_add;
-			String d_permanent_add;
-			String d_license;
-			String license_exp_date;
-			String driver_photo;
-			String police_verification;
-			String d_local_add_proof;
-			String d_permanent_add_proof;
-			String cab_no;
-			String vendor_name;
-			int driver_status;
 			int driver_id;
-
+            //int vendor_id;
+            String d_name;
+            String d_contact_num;
+            String d_local_add;
+            String d_permanent_add;
+            int driver_status;
+            String d_license;
+           
+            String d_license_num;
+            String license_exp_date;
+            String driver_photo;
+            String police_verification;
+            String d_local_add_proof;
+            String d_permanent_add_proof;
+            int compliance;
+			
 
 			while(rs.next())
 			{
 
 				JSONObject jsonresponse = new JSONObject();
-				vendor_id=rs.getInt(1);
-				d_name=rs.getString(2);
-				d_contact_num=rs.getString(3);
-				driver_type=rs.getString(4);
-				d_local_add=rs.getString(5);
-				d_permanent_add=rs.getString(6);
-				driver_photo=rs.getString(7);
-				police_verification=rs.getString(8);
-				d_local_add_proof=rs.getString(9);
-				d_permanent_add_proof=rs.getString(10);
-				d_license=rs.getString(11);
-				cab_no=rs.getString(12);
-				vendor_name=rs.getString(13);
-				license_exp_date=rs.getString(14);
-				driver_status=rs.getInt(15);
-				driver_id=rs.getInt(16);
+//				vendor_id=rs.getInt(1);
+				driver_id=rs.getInt(1);
+                d_name=rs.getString(2);
+                d_contact_num=rs.getString(3);
+                d_local_add=rs.getString(4);
+                d_permanent_add=rs.getString(5);
+                driver_status=rs.getInt(6);
+                d_license=rs.getString(7);
+                d_license_num=rs.getString(8);
+                license_exp_date=rs.getString(9);
+                d_local_add_proof=rs.getString(10);
+                d_permanent_add_proof=rs.getString(11);
+                driver_photo=rs.getString(12);
+                police_verification=rs.getString(13);
+                System.out.println(driver_id);
+                compliance=rs.getInt(15);
 				
-				jsonresponse.put("vendor_id", vendor_id);
+//				jsonresponse.put("vendor_id", vendor_id);
 				jsonresponse.put("d_name", d_name);
 				jsonresponse.put("d_contact_num", d_contact_num);
-				jsonresponse.put("driver_type", driver_type);
+//				jsonresponse.put("driver_type", driver_type);
 				jsonresponse.put("d_local_add", d_local_add);
 				jsonresponse.put("d_permanent_add", d_permanent_add);
 				jsonresponse.put("driver_photo", driver_photo);
@@ -1180,11 +1158,13 @@ public JSONObject deleteCabDetailsByVendorID(JSONObject jsonrequest){
 				jsonresponse.put("d_local_add_proof", d_local_add_proof);
 				jsonresponse.put("d_permanent_add_proof", d_permanent_add_proof);
 				jsonresponse.put("d_license", d_license);
-				jsonresponse.put("cab_no", cab_no);
-				jsonresponse.put("vendor_name", vendor_name);
+				jsonresponse.put("d_license_num", d_license_num);
+//				jsonresponse.put("cab_no", cab_no);
+//				jsonresponse.put("vendor_name", vendor_name);
 				jsonresponse.put("license_exp_date", license_exp_date);
 				jsonresponse.put("status", driver_status);
 				jsonresponse.put("driver_id", driver_id);
+				jsonresponse.put("compliance",compliance);
 				
 				jsonarray.put(jsonresponse);
 			}
@@ -1218,9 +1198,9 @@ public JSONObject deleteCabDetailsByVendorID(JSONObject jsonrequest){
 		}
 	}
 
-	public Response updateCab(String onrshp, String cab_license_plate_number, String model,  String fuel_type,String type,int occupancy, int cab_rate , String Rcert,String Pcert,String Fcert,String icert,String entry_tax_haryana_certi,String entry_tax_delhi_certi,String entry_tax_up_certi, Date date1, Date date2, Date date3, Date date4, Date date5, Date date6, Date date7 )throws Exception 
+	public Response updateCab(String onrshp, String cab_license_plate_number, String model,  String fuel_type,String type,int occupancy, int cab_rate , String Rcert,String Pcert,String Fcert,String icert,String entry_tax_haryana_certi,String entry_tax_delhi_certi,String entry_tax_up_certi, Date date1, Date date2, Date date3, Date date4, String entry_tax_haryana_exp_date, String entry_tax_delhi_exp_date, String entry_tax_up_exp_date )throws Exception 
 	{
-		int cab_status=0;
+		//int cab_status=0;
 		//int vendor_id = 98898;
 
 		int x=0;
@@ -1229,7 +1209,7 @@ public JSONObject deleteCabDetailsByVendorID(JSONObject jsonrequest){
 
 		try {
 
-			String query = " update ncab_cab_master_tbl set model=?, fuel_type=?, contracted_or_owned=?, cab_type=?,cab_capacity=?, cab_rate=?,  manufacture_date=?,cab_status=?,reg_certi=? ,pollution_certi=?,fitness_certi=?,insurance_certi=?,entry_tax_haryana_certi=? ,entry_tax_delhi_certi=?,entry_tax_up_certi=? ,   poll_certi_exp_date=?, fit_certi_exp_date=?, insur_certi_exp_date=?, entry_tax_haryana_exp_date=?, entry_tax_delhi_exp_date=?, entry_tax_up_exp_date=? where cab_license_plate_no= ?";
+			String query = " update ncab_cab_master_tbl set model=?, fuel_type=?, contracted_or_owned=?, cab_type=?,cab_capacity=?, cab_rate=?,  manufacture_date=?,reg_certi=? ,pollution_certi=?,fitness_certi=?,insurance_certi=?,entry_tax_haryana_certi=? ,entry_tax_delhi_certi=?,entry_tax_up_certi=? ,   poll_certi_exp_date=?, fit_certi_exp_date=?, insur_certi_exp_date=?, entry_tax_haryana_exp_date=?, entry_tax_delhi_exp_date=?, entry_tax_up_exp_date=?, cab_compliance=? where cab_license_plate_no= ?";
 			PreparedStatement ps = connection.prepareStatement(query);
 			//ps.setInt(1,vendor_id);
 
@@ -1240,23 +1220,32 @@ public JSONObject deleteCabDetailsByVendorID(JSONObject jsonrequest){
 			ps.setInt(5, occupancy);
 			ps.setInt(6,cab_rate);
 			ps.setDate(7,date1);
-			ps.setInt(8, cab_status);
-			ps.setString(9, Rcert);
-			ps.setString(10, Pcert);
-			ps.setString(11, Fcert);
-			ps.setString(12, icert);
-			ps.setString(13, entry_tax_haryana_certi);
-			ps.setString(14, entry_tax_delhi_certi);
-			ps.setString(15, entry_tax_up_certi);
+			//ps.setInt(8, cab_status);
+			ps.setString(8, Rcert);
+			ps.setString(9, Pcert);
+			ps.setString(10, Fcert);
+			ps.setString(11, icert);
+			ps.setString(12, entry_tax_haryana_certi);
+			ps.setString(13, entry_tax_delhi_certi);
+			ps.setString(14, entry_tax_up_certi);
 
 
-			ps.setDate(16,date2);
-			ps.setDate(17,date3);
-			ps.setDate(18,date4);
-			ps.setDate(19,date5);
-			ps.setDate(20,date6);
-			ps.setDate(21,date7);
+			ps.setDate(15,date2);
+			ps.setDate(16,date3);
+			ps.setDate(17,date4);
+			ps.setString(18,entry_tax_haryana_exp_date);
+			ps.setString(19,entry_tax_delhi_exp_date);
+			ps.setString(20,entry_tax_up_exp_date);
+			if(entry_tax_haryana_certi.equals("") || entry_tax_delhi_certi.equals("") || entry_tax_up_certi.equals(""))
+			{
+				ps.setInt(21, 0);
+			}
+			else
+			{
+				ps.setInt(21, 1);
+			}
 			ps.setString(22,cab_license_plate_number);
+			
 
 
 			x = ps.executeUpdate();
@@ -1275,9 +1264,11 @@ public JSONObject deleteCabDetailsByVendorID(JSONObject jsonrequest){
 		//return "Insert Data success";
 	}
 
-	public Response getAllDriverList(String cab_license_plate_number, String driver_name,String d_contact_num,String driver_type,String driver_local_address,String driver_permanent_address,String driving_license,String driver_local_address_proof,String driver_permanent_address_proof,String driver_photo,String police_verification, Date date1)throws Exception 
+	public Response getAllDriverList(String driver_name,String d_contact_num,String driver_local_address,String driver_permanent_address,String driving_license,String driver_local_address_proof,String driver_permanent_address_proof,String driver_photo,String police_verification, Date date1,int driver_id,int driver_status, String license_num)throws Exception 
 	{
-		int driver_status=0;
+		//int driver_status=0;
+		
+		
 		//int vendor_ id = 98898;
 		//java.sql.Date d1 = new java.sql.Date(date1.getTime());
 		//java.sql.Date  d2 = new java.sql.Date (date2.getTime());
@@ -1292,26 +1283,35 @@ public JSONObject deleteCabDetailsByVendorID(JSONObject jsonrequest){
 
 		try {
 
-			String query = " update ncab_driver_master_tbl set driver_name=?,d_contact_num=?,driver_type=?,driver_local_address=?, driver_permanent_address=?,license_exp_date=?,driver_status=?,driving_license=?,driver_local_address_proof=?,driver_permanent_address_proof=?,driver_photo=?,police_verification=? where cab_license_plate_no=? ";
+			String query = " update ncab_driver_master_tbl set driver_name=?,d_contact_num=?,driver_local_address=?, driver_permanent_address=?,license_exp_date=?,driver_compliance=?,driving_license=?,driver_local_address_proof=?,driver_permanent_address_proof=?,driver_photo=?,police_verification=?,driver_license_num=? where driver_id= ? ";
 			PreparedStatement ps = connection.prepareStatement(query);
 			//ps.setInt(1,driver_id);
 			//	ps.setString(2,cab_license_plate_number);
 			ps.setString(1,driver_name);
 			ps.setString(2,d_contact_num);
-			ps.setString(3,driver_type);
-			ps.setString(4,driver_local_address);
-			ps.setString(5, driver_permanent_address);
-			ps.setDate(6,date1);
-			ps.setInt(7,driver_status);
-			ps.setString(8, driving_license);
-			ps.setString(9,driver_local_address_proof);
+			//ps.setString(3,driver_type);
+			ps.setString(3,driver_local_address);
+			ps.setString(4, driver_permanent_address);
+			ps.setDate(5,date1);
+			if(driver_local_address_proof.equals(""))
+			{
+				ps.setInt(6, 0);
+			}
+			else
+			{
+				ps.setInt(6,1);
+			}
+			
+			ps.setString(7, driving_license);
+			ps.setString(8,driver_local_address_proof);
 			//ps.setString(12, icert);
 			//	ps.setString(13, entry_tax_haryana_certi);
 			//	ps.setString(14, entry_tax_delhi_certi);
-			ps.setString(10,driver_permanent_address_proof);
-			ps.setString(11, driver_photo);
-			ps.setString(12,police_verification);
-			ps.setString(13, cab_license_plate_number);
+			ps.setString(9,driver_permanent_address_proof);
+			ps.setString(10, driver_photo);
+			ps.setString(11,police_verification);
+			ps.setString(12, license_num);
+			ps.setInt(13, driver_id);
 			//ps.setDate(13,d1);
 			//ps.setInt(17, cab_status);
 			//ps.setDate(18,d2);
@@ -1339,115 +1339,242 @@ public JSONObject deleteCabDetailsByVendorID(JSONObject jsonrequest){
 	}
 	
 
-public JSONObject enableDriverDetailsById(JSONObject jsonrequest){
-		
-		DBConnectionUpd dbconnection = new DBConnectionUpd();
-		Connection connection = dbconnection.getConnection();
-	    int i = 0;
-		JSONObject jsonreq = new JSONObject();
-		int vid=-1, driverid=-1;
-		
-	    try 
-	     {
-	      jsonreq = jsonrequest.getJSONObject("request");
-	      System.out.println(jsonreq.toString());
-	      String did = jsonreq.getString("driver_id");
-	      System.out.println(did);
-	      
-	      PreparedStatement ps1 = connection.prepareStatement("select vendor_id from ncab_driver_master_tbl where driver_id = ?");
-	      ps1.setString(1, did);
-	      ResultSet rs = ps1.executeQuery();
-	      while(rs.next()){
-	    	   vid=rs.getInt(1);
-	      }
-	      
-	      PreparedStatement ps2 = connection.prepareStatement("select cab_status from ncab_cab_master_tbl where vendor_id = ?");
-	      ps2.setInt(1, vid);
-	      ResultSet rs1 = ps2.executeQuery();
-	      while(rs1.next()){
-	    	  driverid=rs1.getInt(1);
-	      }
-	      System.out.println("driveriddd"+driverid);
-	      
-	      if(driverid==0){
-	      PreparedStatement ps = connection.prepareStatement("update ncab_driver_master_tbl set driver_status=0 where driver_id = ?");
-	      ps.setString(1,  did);
-	    	 i=ps.executeUpdate();
-	    	 System.out.println(i);
-	      }
-	     } catch (SQLException e)
-	    {
-	    	 // TODO Auto-generated catch block
-	    	 e.printStackTrace();
-	    }
-		
-	    finally {
-	    	if (connection != null) {
-	    		try
-	    		{
-	    			connection.close();
-	    		}
-	    		catch (SQLException e) 
-	    		{
-	    			// TODO Auto-generated catch block
-	    			e.printStackTrace();
-	    		}
-	    	}
-	    }		
-		if(i>0)
-		{
-		return new JSONObject().put("result", "true");		
-		
-		}
-		else
-			return new JSONObject().put("result", "false");
-	}
 
+	public JSONObject enableDriverDetailsById(JSONObject jsonrequest){
 
-public JSONObject deleteDriverDetailsByDriverID(JSONObject jsonrequest){
-		DBConnectionUpd dbconnection = new DBConnectionUpd();
-		Connection connection = dbconnection.getConnection();
-	    int i = 0;
-		JSONObject jsonreq = new JSONObject();
-		
+        DBConnectionUpd dbconnection = new DBConnectionUpd();
+        Connection connection = dbconnection.getConnection();
+        int i = 0;
+        JSONObject jsonreq = new JSONObject();
+        //int vid=-1, driverid=-1;
+
         try 
-         {
-	      jsonreq = jsonrequest.getJSONObject("request");
-	      System.out.println(jsonreq.toString());
-	      String did = jsonreq.getString("driver_id");
-	      System.out.println(did);
-	      PreparedStatement ps = connection.prepareStatement("update ncab_driver_master_tbl set driver_status=1 where driver_id = ?");
-	      ps.setString(1,  did);
-	    	 i=ps.executeUpdate();
-	    	 System.out.println(i);
-	
-         } catch (SQLException e)
         {
-        	 // TODO Auto-generated catch block
-        	 e.printStackTrace();
+               jsonreq = jsonrequest.getJSONObject("request");
+               System.out.println(jsonreq.toString());
+               String did = jsonreq.getString("driver_id");
+               System.out.println(did);
+
+
+
+
+
+
+
+               PreparedStatement ps = connection.prepareStatement("update ncab_driver_master_tbl set driver_status=0 where driver_id = ?");
+               ps.setString(1,  did);
+               i=ps.executeUpdate();
+               System.out.println(i);
+
+        } catch (SQLException e)
+        {
+               // TODO Auto-generated catch block
+               e.printStackTrace();
         }
-		
+
         finally {
-        	if (connection != null) {
-        		try
-        		{
-        			connection.close();
-        		}
-        		catch (SQLException e) 
-        		{
-        			// TODO Auto-generated catch block
-        			e.printStackTrace();
-        		}
-        	}
-        }		
-		if(i>0)
-		{
-		return new JSONObject().put("result", "true");		
+               if (connection != null) {
+                     try
+                     {
+                            connection.close();
+                     }
+                     catch (SQLException e) 
+                     {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                     }
+               }
+        }             
+        if(i>0)
+        {
+               return new JSONObject().put("result", "true");              
+
+        }
+        else
+               return new JSONObject().put("result", "false");
+ }
+
+
+
+
+	public JSONObject deleteDriverDetailsByDriverID(JSONObject jsonrequest){
+        DBConnectionUpd dbconnection = new DBConnectionUpd();
+        Connection connection = dbconnection.getConnection();
+        int i = 0;
+        JSONObject jsonreq = new JSONObject();
+        JSONObject jsonres = new JSONObject();
+        String result="";
+        try 
+        {
+               jsonreq = jsonrequest.getJSONObject("request");
+               System.out.println(jsonreq.toString());
+               String did = jsonreq.getString("driver_id");
+               System.out.println(did);
+
+
+               PreparedStatement ps1=connection.prepareStatement("select Route_Status from ncab_roster_tbl where Driver_Id = ?");
+               ps1.setString(1,  did);
+               ResultSet rs=ps1.executeQuery();
+               while(rs.next()) {
+                     String status=rs.getString(1);
+                     if(status.equalsIgnoreCase("active")) {
+                            result="active";
+                     }
+
+               }
+               if(result.equals("active")) {
+                     jsonres.put("result",result);
+               }
+
+               else {
+
+                     PreparedStatement ps = connection.prepareStatement("update ncab_driver_master_tbl set driver_status=1 where driver_id = ?");
+                     ps.setString(1,  did);
+                     i=ps.executeUpdate();
+                     System.out.println(i);
+               }
+        } catch (SQLException e)
+        {
+               // TODO Auto-generated catch block
+               e.printStackTrace();
+        }
+
+        finally {
+               if (connection != null) {
+                     try
+                     {
+                            connection.close();
+                     }
+                     catch (SQLException e) 
+                     {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                     }
+               }
+        }             
+        return jsonres;
+ }
+	
+	public boolean sendnotification(){
+	    DBConnectionUpd dbconnection = new DBConnectionUpd();
+	    Connection connection = dbconnection.getConnection();
+	    int count =0;
+	    PreparedStatement ps;
+	    int flag = 0;
+	    try {
+	    	ps = connection.prepareStatement("SELECT count(*) FROM ncab_expiry_notification_tbl where flag_sent = '" + flag + "' ");
+	    	ResultSet rs1 = ps.executeQuery();
+	    	while(rs1.next())
+	    	{
+	    		count = rs1.getInt(1);
+	    	}
+	    	ps = connection.prepareStatement("SELECT * FROM ncab_expiry_notification_tbl where flag_sent = '" + flag + "' ");
+	        ResultSet rs = ps.executeQuery();
+	           
+	        String[] document_name= new String[count];
+	        String[] entity_name= new String[count];
+	        String[] entity_identifier= new String[count];
+	        String[] contact_number= new String[count];
+	        String[] expiry_date= new String[count];
+	        int[] days_left = new int[count];
+	        int i = 0;
+	          
+	           while(rs.next()){
+	        	     document_name[i]=rs.getString(1);
+	        	     entity_name[i]=rs.getString(2);
+	        	     entity_identifier[i]=rs.getString(3);
+	        	     contact_number[i]=rs.getString(4);
+	        	     expiry_date[i]=rs.getString(5);
+	        	     days_left[i]=rs.getInt(6);
+	        	     i++;
+	           }                  
+	           
+	           Properties props = new Properties();
+				props.put("mail.smtp.host", "smtp.gmail.com");
+				props.put("mail.smtp.socketFactory.port", "465");
+				props.put("mail.smtp.socketFactory.class","javax.net.ssl.SSLSocketFactory");
+				props.put("mail.smtp.auth", "true");
+				props.put("mail.smtp.port", "465");
+				    
+				    
+				Session mySession = Session.getInstance(props, new Authenticator(){
+
+					protected PasswordAuthentication getPasswordAuthentication()
+				    	{
+				    		return new PasswordAuthentication("javamailsystem1@gmail.com","javamail1");
+					
+				    	}
+				    });
+				if(count == 0)
+				{
+					return false;
+				}
+				else{
+			    try
+			    {
+			    	MimeMessage message = new MimeMessage(mySession);
+			    	message.setFrom(new InternetAddress("javamailsystem1@gmail.com"));
+			    	message.addRecipient(Message.RecipientType.TO,new InternetAddress("Hanif.Mohd@ncr.com"));
+			    	message.addRecipients(Message.RecipientType.CC,InternetAddress.parse("sk250865@ncr.com"));
+			    	//message.addRecipient(Message.RecipientType.CC,new InternetAddress(recepient2 + ","+recepient3));
+			    //	message.addRecipient(Message.RecipientType.BCC,new InternetAddress(recepient3));
+
+		String subject = "Expiry Notification";
 		
+		String body = "Hi Transport Team, <br><br>"
+		         + "<table width='100%' border='1' align='center'>"
+		                + "<tr align='center'>"
+		                + "<td><b>Document Name<b></td>"
+		                + "<td><b>Entity Name<b></td>"
+		                + "<td><b>Entity Identifier<b></td>"
+		                + "<td><b>Contact Number<b></td>"
+		                + "<td><b>Expiry Date<b></td>"
+		                + "<td><b>Days Left<b></td>"
+		                + "</tr>";
+		for(int j=0;j<count;j++)
+		{
+				body += "<tr>"
+		        + "<td>" + document_name[j] + "</td>"
+		        + "<td>" + entity_name[j] + "</td>"
+		        + "<td>" + entity_identifier[j] + "</td>"
+		        + "<td>" + contact_number[j] + "</td>"
+		        + "<td>" + expiry_date[j] + "</td>"
+		        + "<td>" + days_left[j] + "</td>"
+		        + "</tr>";
 		}
-		else
-			return new JSONObject().put("result", "false");
+		body += "</table><br>";
+		message.setSubject(subject);
+
+		//message.setText(body);
+		message.setContent(body, "text/html");
+		Transport.send(message);
+		System.out.println("AppEngine: Message Sent");
+
+
+			    }catch( HeadlessException | MessagingException e)
+			    {
+			    	e.printStackTrace();
+			    	return false;
+			    }
+
+
+	           
+	           
+	                 //int f=1;
+	                 ps = connection.prepareStatement("update ncab_expiry_notification_tbl set flag_sent = 1 where flag_sent = 0");
+	                 ps.executeUpdate();
+	     	    	 System.out.println("Flag Updated");                 
+	     	    	 return true;
+				}
+	    } catch (SQLException e) {
+	           // TODO Auto-generated catch block
+	           e.printStackTrace();
+	           return false;
+	           }
+	  
 	}
+
+
 
 
 }
