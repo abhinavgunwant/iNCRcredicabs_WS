@@ -159,13 +159,140 @@ public class AndroidServiceImpl {
                   return push_token;
                   
             }
+      
+              public JSONObject postCheckInDetails(String Emp_Qlid,String Route_No,String date,String Check_in_Time,String Trip_Type,String Cab_Type) {
+                  // TODO Auto-generated method stub
+                  int x=0;
+                  DBConnectionUpd database= new DBConnectionUpd();
+                  JSONObject ob=new JSONObject();
+                  Connection connection = (Connection) database.getConnection();
+                  try {
+                String query_check="Select * from ncab_emp_checkin_tbl where Emp_Qlid=? AND Trip_Date=? AND Trip_Type=?";
+                PreparedStatement ps_check = connection.prepareStatement(query_check);
+                         ps_check.setString(1,Emp_Qlid);
+                         ps_check.setString(2,date);
+                         ps_check.setString(3,Trip_Type );
+                         ResultSet rs=ps_check.executeQuery();
+                         if(rs!=null)
+                         { 
+
+                               ob.put("Check_In","ALREADY");
+                               return new JSONObject().put("result",ob);
+                         }
+                         else
+                         {
+                               String query = "INSERT INTO ncab_emp_checkin_tbl(Emp_Qlid,Route_No,Trip_Date,Check_in_Time,Trip_Type,Cab_Type) VALUES(?,?,?,?,?,?);";
+                               PreparedStatement ps = connection.prepareStatement(query);
+                               ps.setString(1,Emp_Qlid);
+                               ps.setString(2,Route_No);
+                               ps.setString(3,date);
+                               ps.setString(4,Check_in_Time);
+                               ps.setString(5,Trip_Type);
+                               ps.setString(6,Cab_Type);
+                               //     ps.setString(5, Pickup_Time );
+                               x = ps.executeUpdate();
+                               if(x==1){
+                                      ob.put("Check_In","Done");
+                                      return new JSONObject().put("result",ob);
+                               }
+                  
+                         }
+                         connection.close();
+
+                  } catch (Exception e) {
+                         try {
+                               throw e;
+                         } catch (Exception e1) {
+                               // TODO Auto-generated catch block
+                               e1.printStackTrace();
+                         }
+                  }
+
+                  return null;
+           }
+              public JSONObject postCheckOutDetails(String Emp_Qlid,String date,String Check_out_Time,String Trip_Type) {
+                  // TODO Auto-generated method stub
+                  int x=0;
+                  DBConnectionUpd database= new DBConnectionUpd();
+                  Connection connection = (Connection) database.getConnection();
+                  try {
+
+                         String query = "UPDATE ncab_emp_checkin_tbl SET Check_out_Time=? WHERE Emp_Qlid=? AND Trip_Date=? AND Trip_Type=?;";
+                         PreparedStatement ps = connection.prepareStatement(query);
+                         ps.setString(1,Check_out_Time);
+                         ps.setString(2,Emp_Qlid);
+                         ps.setString(3,date);
+                         ps.setString(4,Trip_Type);
+                         x = ps.executeUpdate();
+                         System.out.println("Check1");
+                         if(x==1){
+                         }
+
+                         connection.close();
+
+                  } catch (Exception e) {
+                         try {
+                               throw e;
+                         } catch (Exception e1) {
+                               // TODO Auto-generated catch block
+                               e1.printStackTrace();
+                         }
+                  }
+                  JSONObject ob=new JSONObject();
+
+                  ob.put("Emp_Qlid", Emp_Qlid);
+                  return new JSONObject().put("result",ob);
+
+           }
+
+              public JSONObject getRoasterDetailsByEmpID(String emp_Qlid) {
+                  // TODO Auto-generated method stub
+                  DBConnectionRo dbconnection = new DBConnectionRo();
+                  Connection connection = (Connection) dbconnection.getConnection();
+                  String sql = "select Route_No,Pickup_Time,Shift_Id from ncab_roster_tbl where Emp_Qlid=?";
+                  PreparedStatement ps;
+                  PreparedStatement ps1;
+                  JSONObject jsonresponse=null;
+                  try {
+                         ps = connection.prepareStatement(sql);
+                         ps.setString(1,emp_Qlid);
+                         ResultSet rs = ps.executeQuery();
+                         String Route_No=null;
+                         String Pickup_Time=null;
+                         jsonresponse= new JSONObject();
+                         String Shift_Id=null;
+               
+                         while (rs.next()) {
+
+                               Route_No=rs.getString(1);
+                               Pickup_Time=rs.getString(2);
+                               jsonresponse.put("Route_No", Route_No);
+                               System.out.println(Pickup_Time);
+                               jsonresponse.put("Pickup_Time", Pickup_Time);
+                               Shift_Id=rs.getString(3);
+                               System.out.println(Shift_Id);
+                               String sql1 = "select Start_Time from NCAB_SHIFT_MASTER_TBL where Shift_ID=?";
+                               ps1 = connection.prepareStatement(sql1);
+                               System.out.println(Shift_Id);
+                               ps1.setString(1,Shift_Id);
+                               ResultSet rs1=ps1.executeQuery();
+                               while(rs1.next())
+                               {
+                                      String Start_Time = rs1.getString(1);
+                                      jsonresponse.put("Start_Time",Start_Time);
+                                      System.out.println(Start_Time);
+                               }
+
+                         }
 
 
+                  } catch (SQLException e) {
+                         // TODO Auto-generated catch block
+                         e.printStackTrace();
+                  }
+                  return new JSONObject().put("result", jsonresponse);
 
-
-
-
-
+           }
 
 
 }
