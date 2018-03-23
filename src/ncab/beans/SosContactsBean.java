@@ -4,6 +4,19 @@ public class SosContactsBean {
 	private int sosContactId;
 	private String sosNbr;
 	private String sosName;
+	private String sosEmail;
+	/**
+	 * @return the sosEmail
+	 */
+	public String getSosEmail() {
+		return sosEmail;
+	}
+	/**
+	 * @param sosEmail the sosEmail to set
+	 */
+	public void setSosEmail(String sosEmail) {
+		this.sosEmail = sosEmail;
+	}
 	/**
 	 * @return the sosContactId
 	 */

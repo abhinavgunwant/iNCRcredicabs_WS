@@ -3,6 +3,19 @@ package ncab.beans;
 public class SOSRequestBean {
 	private String empQlid;
 	private String rosterId;
+	private String cabLicensePlateNo;
+	/**
+	 * @return the cabLicensePlateNo
+	 */
+	public String getCabLicensePlateNo() {
+		return cabLicensePlateNo;
+	}
+	/**
+	 * @param cabLicensePlateNo the cabLicensePlateNo to set
+	 */
+	public void setCabLicensePlateNo(String cabLicensePlateNo) {
+		this.cabLicensePlateNo = cabLicensePlateNo;
+	}
 	/**
 	 * @return the empQlid
 	 */

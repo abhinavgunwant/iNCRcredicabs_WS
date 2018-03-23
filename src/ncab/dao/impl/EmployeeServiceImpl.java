@@ -37,6 +37,7 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.ws.rs.core.Response;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Row;
@@ -46,6 +47,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.mindrot.jbcrypt.BCrypt;
 
 import com.mysql.jdbc.CallableStatement;
 
@@ -68,6 +70,20 @@ public class EmployeeServiceImpl {
 	
 	public static final String DEFAULT_QLID = "NO_QLID";
 	public static final String DEFAULT_TOKEN = "NO_TOKEN";
+	
+	public static String noLoginMessage() {
+		return (new JSONObject())
+				.put("login", false)
+				.put("message", "You must be logged-in!")
+				.toString();
+	}
+	
+	public static Response noLoginMessageResponse() {
+		return Response.ok((new JSONObject())
+				.put("login", false)
+				.put("message", "You must be logged-in!")
+				.toString()).build();
+	}
 	
 	public JSONObject grecaptchaVerify(String grecaptchaResponse) {
 		JSONObject grecaptchaResponseJSON = new JSONObject();
@@ -215,7 +231,7 @@ public class EmployeeServiceImpl {
 			PreparedStatement ps = connection.prepareStatement( 
 				"UPDATE ncab_master_employee_tbl SET "
 					+ "emp_mgr_qlid1 = ?, emp_mgr_qlid2 = ?, emp_fname = ?, emp_mname = ?, "
-					+ "emp_lname = ?, emp_gender = ?, emp_dob = ?, emp_mob_nbr = ?, "
+					+ "emp_lname = ?, emp_gender = ?, emp_mob_nbr = ?, "
 					+ "emp_home_nbr = ?, emp_emerg_nbr = ?, emp_add_line1 = ?, "
 					+ "emp_add_line2 = ?, emp_pin = ?, emp_pickup_area = ?, "
 					+ "emp_bloodgrp = ?, emp_last_updated_by = ?, "
@@ -229,21 +245,20 @@ public class EmployeeServiceImpl {
 			ps.setString(4, employeeBean.getEmpMName());
 			ps.setString(5, employeeBean.getEmpLName());
 			ps.setString(6, employeeBean.getEmpGender());
-			ps.setString(7, employeeBean.getEmpDOB());
-			ps.setString(8, employeeBean.getEmpMobNbr());
-			ps.setString(9, employeeBean.getEmpHomeNbr());
-			ps.setString(10, employeeBean.getEmpEmergNbr());
-			ps.setString(11, employeeBean.getEmpAddLine1());
-			ps.setString(12, employeeBean.getEmpAddLine2());
-			ps.setInt(13, employeeBean.getEmpPin());
-			ps.setString(14, employeeBean.getEmpPickupArea());
-			ps.setString(15, employeeBean.getEmpBloodGrp());
-			ps.setString(16, employeeBean.getEmpLastUpdatedBy());
-			ps.setString(17, df.format(today));
-			ps.setString(18, employeeBean.getEmpStatus());
-			ps.setString(19, employeeBean.getRolesId());
-			ps.setString(20, employeeBean.getEmpZone());
-			ps.setString(21, employeeBean.getEmpQlid());
+			ps.setString(7, employeeBean.getEmpMobNbr());
+			ps.setString(8, employeeBean.getEmpHomeNbr());
+			ps.setString(9, employeeBean.getEmpEmergNbr());
+			ps.setString(10, employeeBean.getEmpAddLine1());
+			ps.setString(11, employeeBean.getEmpAddLine2());
+			ps.setInt(12, employeeBean.getEmpPin());
+			ps.setString(13, employeeBean.getEmpPickupArea());
+			ps.setString(14, employeeBean.getEmpBloodGrp());
+			ps.setString(15, employeeBean.getEmpLastUpdatedBy());
+			ps.setString(16, df.format(today));
+			ps.setString(17, employeeBean.getEmpStatus());
+			ps.setString(18, employeeBean.getRolesId());
+			ps.setString(19, employeeBean.getEmpZone());
+			ps.setString(20, employeeBean.getEmpQlid());
 
 			ps.executeUpdate();
 			System.out.println("SQL update executed succesfully!");
@@ -1291,6 +1306,8 @@ public class EmployeeServiceImpl {
 		DBConnectionUpd dbCon = new DBConnectionUpd();
 		Connection con = dbCon.getConnection();
 		PreparedStatement ps;
+		
+		String passwordHash = BCrypt.hashpw(password, BCrypt.gensalt());
 		try {
 			ps = con.prepareStatement(
 				"INSERT INTO "+DBTables.LOGIN_CREDENTIALS+" ("
@@ -1301,7 +1318,7 @@ public class EmployeeServiceImpl {
 			);
 			
 			ps.setString(1, qlid);
-			ps.setString(2, password);
+			ps.setString(2, passwordHash);
 			ps.executeUpdate();
 			
 			return true;
@@ -2310,11 +2327,7 @@ public class EmployeeServiceImpl {
 	 * 		returns level1 and level2 manager names for the signed in user
 	 * @return
 	 */
-	public EmployeeBean[] getManagerDetailsEmployee() {
-		String qlid = "AP250624";
-	//	DBConnectionUpd dbCon = new DBConnectionUpd();
-	//	Connection con = dbCon.getConnection();
-		
+	public EmployeeBean[] getManagerDetailsEmployee(String qlid) {		
 		EmployeeBean emp = getEmployeeFromQLID(qlid);
 		
 		EmployeeBean[] mgrArr = new EmployeeBean[2];
@@ -2367,10 +2380,12 @@ public class EmployeeServiceImpl {
 				"SELECT login_password from "+DBTables.LOGIN_CREDENTIALS+" WHERE emp_qlid = ?"
 			);
 			setPassPs = con.prepareStatement(
-				"UPDATE "+DBTables.LOGIN_CREDENTIALS+" SET login_password = ?"
-						+ " WHERE emp_qlid = ?"
-					);
+				"UPDATE "+DBTables.LOGIN_CREDENTIALS+" SET login_password = ?, "
+					+ "login_last_update_date = CURDATE(), login_last_updated_by = ? "
+				+ " WHERE emp_qlid = ?"
+			);
 			setPassPs.setString(2, qlid);
+			setPassPs.setString(3, qlid);
 
 			ps.setString(1, qlid);
 			rs = ps.executeQuery();
@@ -2563,19 +2578,19 @@ public class EmployeeServiceImpl {
 		
 		DBConnectionUpd dbCon = new DBConnectionUpd();
 		Connection con = dbCon.getConnection();
-		PreparedStatement psCabno;
-		ResultSet rs;
-		String cabLicensePlateNo = "";
+//		PreparedStatement psCabno;
+//		ResultSet rs;
+//		String cabLicensePlateNo = "";
 		
 		try {
-			psCabno = con.prepareStatement(
-					"SELECT cab_no FROM ncab_roster_tbl WHERE emp_qlid = ?"
-					);
-			rs = psCabno.executeQuery();
-			while(rs.next()) {
-				cabLicensePlateNo = rs.getString("cab_no");
-				break;
-			}
+//			psCabno = con.prepareStatement(
+//					"SELECT cab_no FROM ncab_roster_tbl WHERE emp_qlid = ?"
+//					);
+//			rs = psCabno.executeQuery();
+//			while(rs.next()) {
+//				cabLicensePlateNo = rs.getString("cab_no");
+//				break;
+//			}
 			
 			PreparedStatement ps = con.prepareStatement(
 					"INSERT INTO "+DBTables.SOS+" SET emp_qlid = ?, sos_date_time = CURDATE(),"
@@ -2585,7 +2600,7 @@ public class EmployeeServiceImpl {
 			
 			ps.setString(1, srb.getEmpQlid());
 			ps.setString(2, srb.getRosterId());
-			ps.setString(3, cabLicensePlateNo);
+			ps.setString(3, srb.getCabLicensePlateNo());
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -2804,6 +2819,7 @@ public class EmployeeServiceImpl {
 						.put("contactSos", rs.getString("contact_sos"))
 						.put("contactRole", rs.getString("contact_role"))
 						.put("contactSosPriority", rs.getString("contact_sos_priority"))
+						.put("contactEmail", rs.getString("contact_email"))
 				);
 			}
 		}catch(SQLException e) {

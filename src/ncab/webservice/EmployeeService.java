@@ -36,8 +36,10 @@ import org.json.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import ncab.beans.EmployeeBean;
+import ncab.dao.DBConnectionUpd;
 import ncab.dao.impl.EmployeeServiceImpl;
 import ncab.dao.impl.RosterServiceImpl;
+import ncab.dao.impl.UtilServiceImpl;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Path("/EmployeeService")
@@ -47,6 +49,7 @@ public class EmployeeService {
 	
 	private static final String FORGOT_PASSWORD_SET_URL = BASE_URL+"/forgot-password/set-password";
 	private static final String NEW_ACC_SETUP_SET_PASSWORD_URL = BASE_URL+"/new-acc-setup/set-password";
+	private static final String URL_ALLOWED_ON_NO_SESSION_PATTERN = "login|logout|forgot-password|new-acc-setup|ndroid";
 	
 	public EmployeeService() {}
 	
@@ -59,17 +62,28 @@ public class EmployeeService {
 	public void checksBeforePath(
 			@Context HttpServletRequest req
 			) {
-//		System.out.println("Hello!");
-		if(EmployeeServiceImpl.isLoginValid(req)){
-//			System.out.println(req.getSession().getAttribute("role"));
+		HttpSession sess = req.getSession();
+		String qlid = (String)sess.getAttribute("qlid");
+		String token = (String)sess.getAttribute("token");
+		
+		if(!qlid.equals(EmployeeServiceImpl.DEFAULT_QLID)
+				&& !token.equals(EmployeeServiceImpl.DEFAULT_TOKEN)
+				&& EmployeeServiceImpl.isLoginValid(req)){
 			//// TODO things to do when user is logged in...
 		}else {
-			HttpSession sess = req.getSession();
-			sess.setAttribute("qlid", EmployeeServiceImpl.DEFAULT_QLID);
-			sess.setAttribute("token", EmployeeServiceImpl.DEFAULT_TOKEN);
-			System.out.println("No session found, assigning a dummy session....");
-//			return;
+			String url = req.getRequestURL().toString();
+//			if(url.matches(URL_ALLOWED_ON_NO_SESSION_PATTERN)) {
+				sess.setAttribute("qlid", EmployeeServiceImpl.DEFAULT_QLID);
+				sess.setAttribute("token", EmployeeServiceImpl.DEFAULT_TOKEN);
+				System.out.println("No session found, assigning a dummy session....");
+//			}else {
+//				System.out.println("No session for you!");
+//			}
 		}
+	}
+	
+	public Response returnWithError() {
+		return Response.ok("You are not logged in!").build();
 	}
 
 	@Path("/text")
@@ -85,7 +99,20 @@ public class EmployeeService {
 	@Path("/activate-employee")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	public String activateEmployee(EmployeeBean employeeBean){
+	public String activateEmployee(
+						EmployeeBean		employeeBean,
+			@Context	HttpServletRequest	req		
+			){
+		HttpSession sess = req.getSession();
+		String qlid = (String)sess.getAttribute("qlid");
+		String sessRole = (String)sess.getAttribute("role");
+		
+		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID ||
+				sessRole.toUpperCase() != "ADMIN") {
+			return EmployeeServiceImpl.noLoginMessage();
+		}		
+		
+		
 		EmployeeServiceImpl empSrvImpl = new EmployeeServiceImpl();
 		if(empSrvImpl.activateEmployee(employeeBean)) {
 			System.out.println("Activate Success!!");
@@ -106,6 +133,15 @@ public class EmployeeService {
 		@Context	HttpServletRequest	req,
 		@Context	HttpServletResponse	res
 	) {
+		HttpSession sess = req.getSession();
+		String qlid = (String)sess.getAttribute("qlid");
+		String sessRole = (String)sess.getAttribute("role");
+		
+		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID ||
+				sessRole.toUpperCase() != "ADMIN") {
+			return EmployeeServiceImpl.noLoginMessage();
+		}		
+		
 		EmployeeServiceImpl empSrvImpl = new EmployeeServiceImpl();
 		JSONObject jsObj = new JSONObject();
 		JSONObject jsAddResp = new JSONObject();
@@ -164,6 +200,7 @@ public class EmployeeService {
 		}
 		
 		if(sess.getAttribute("token").equals(tokenCookie.getValue())
+				&& sess.getAttribute("qlid").equals(cookie.getValue())
 				&& !sess.getAttribute("token").equals(EmployeeServiceImpl.DEFAULT_TOKEN)) {
 			return Response.ok(
 					(new JSONObject())
@@ -187,7 +224,19 @@ public class EmployeeService {
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	public String deactivateEmployee(EmployeeBean employeeBean) {
+	public String deactivateEmployee(
+						EmployeeBean employeeBean,
+			@Context	HttpServletRequest	req
+			) {
+		HttpSession sess = req.getSession();
+		String qlid = (String)sess.getAttribute("qlid");
+		String sessRole = (String)sess.getAttribute("role");
+		
+		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID ||
+				sessRole.toUpperCase() != "ADMIN") {
+			return EmployeeServiceImpl.noLoginMessage();
+		}		
+		
 		EmployeeServiceImpl empSrvImpl = new EmployeeServiceImpl();
 		if(empSrvImpl.deactivateEmployee(employeeBean)) {
 			System.out.println("Deactivate Success!!");
@@ -203,8 +252,19 @@ public class EmployeeService {
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	public String editEmployee(EmployeeBean	employeeBean) {
-		System.out.println("!!");
+	public String editEmployee(
+						EmployeeBean		employeeBean,
+			@Context	HttpServletRequest	req
+			) {
+		HttpSession sess = req.getSession();
+		String qlid = (String)sess.getAttribute("qlid");
+		String sessRole = (String)sess.getAttribute("role");
+		
+		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID ||
+				sessRole.toUpperCase() != "ADMIN") {
+			return EmployeeServiceImpl.noLoginMessage();
+		}		
+		
 		EmployeeServiceImpl empSrvImpl = new EmployeeServiceImpl();
 		
 		JSONObject editJSON = empSrvImpl.editEmployee(employeeBean);
@@ -308,7 +368,18 @@ public class EmployeeService {
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)	
-	public String passwordChangeEmployee(UserCredBean ucb){
+	public String passwordChangeEmployee(
+						UserCredBean		ucb,
+			@Context	HttpServletRequest	req
+			){
+		HttpSession sess = req.getSession();
+		String qlid = (String)sess.getAttribute("qlid");
+		String sessRole = (String)sess.getAttribute("role");
+		
+		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID) {
+			return EmployeeServiceImpl.noLoginMessage();
+		}		
+		
 		JSONObject jsObj = new JSONObject();
 		EmployeeServiceImpl	empSrvImpl = new EmployeeServiceImpl();
 
@@ -425,8 +496,8 @@ public class EmployeeService {
 			return Response.ok(
 						jsObj.toString()
 					).cookie(
-						new NewCookie("qlid", qlid, "/", "localhost", "", 7200, false),
-						new NewCookie("token", (String)session.getAttribute("token"), "/", "localhost", "", 3600, false)
+						new NewCookie("qlid", qlid, "/", "", "", 7200, false),
+						new NewCookie("token", (String)session.getAttribute("token"), "/", "", "", 7200, false)
 					).build();
 		}
 		
@@ -620,6 +691,15 @@ public class EmployeeService {
 					EmployeeFilterBean	employeeFilterBean,
 		@Context	HttpServletRequest	req
 	) {
+//		HttpSession sess = req.getSession();
+//		String qlid = (String)sess.getAttribute("qlid");
+//		String sessRole = (String)sess.getAttribute("role");
+//		
+//		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID ||
+//				sessRole.toUpperCase() != "ADMIN") {
+//			return EmployeeServiceImpl.noLoginMessage();
+//		}		
+		
 		EmployeeServiceImpl	empSrvImpl = new EmployeeServiceImpl();
 		JSONArray jsArr = new JSONArray();
 		
@@ -644,7 +724,10 @@ public class EmployeeService {
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	public String viewEmpByQlid(UserCredBean ucb) {
+	public String viewEmpByQlid(
+						UserCredBean		ucb,
+			@Context	HttpServletRequest	req
+			) {
 		EmployeeServiceImpl esImpl = new EmployeeServiceImpl();
 		if(esImpl.validateUser(ucb.getQlid())) {
 			EmployeeFilterBean efb = new EmployeeFilterBean();
@@ -671,6 +754,14 @@ public class EmployeeService {
 		@PathParam("urlToken")	String				urlToken,
 		@Context				HttpServletRequest	req
 	) {
+		HttpSession sess = req.getSession();
+		String qlid = (String)sess.getAttribute("qlid");
+		String sessRole = (String)sess.getAttribute("role");
+		
+		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID ||
+				sessRole.toUpperCase() != "ADMIN") {
+			return EmployeeServiceImpl.noLoginMessage();
+		}		
 		EmployeeServiceImpl	empSrvImpl = new EmployeeServiceImpl();
 		JSONArray jsArr = new JSONArray();
 		EmployeeBean employeeBean[] = empSrvImpl.getEmployeeArray(
@@ -690,18 +781,22 @@ public class EmployeeService {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public String employeeManagerDetails() {
+	public String employeeManagerDetails(
+			@Context	HttpServletRequest	req
+		) {
 		//// TODO: verify that user is logged in, use user qlid
 		////	return "success": false if not logged in....
 		JSONObject jsObj = new JSONObject();
 		EmployeeBean empBean = new EmployeeBean();
 		EmployeeServiceImpl empSrvImpl  = new EmployeeServiceImpl();
-		String qlid = "AP250624";
+		
+		HttpSession sess = req.getSession();
+		String qlid = (String)sess.getAttribute("qlid");
 		
 //		empBean = empSrvImpl.getEmployeeArray()
 		empBean = empSrvImpl.getEmployeeFromQLID(qlid);
 		jsObj = empSrvImpl.createJSON(empBean);
-		EmployeeBean mgrArr[] = empSrvImpl.getManagerDetailsEmployee();
+		EmployeeBean mgrArr[] = empSrvImpl.getManagerDetailsEmployee(qlid);
 		
 		jsObj.put("mgr1Name", mgrArr[0].getEmpFName()
 								+" "+mgrArr[0].getEmpMName()
@@ -725,9 +820,17 @@ public class EmployeeService {
 		@Context	HttpServletRequest	req,
 		@Context	HttpServletResponse	res
 	) {
-//		System.out.println(employeeBean.getEmpQlid());
 		HttpSession sess = req.getSession();
 		String qlid = (String)sess.getAttribute("qlid");
+		String sessRole = (String)sess.getAttribute("role");
+		
+		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID) {
+			return EmployeeServiceImpl.noLoginMessage();
+		}		
+		
+//		System.out.println(employeeBean.getEmpQlid());
+//		HttpSession sess = req.getSession();
+//		String qlid = (String)sess.getAttribute("qlid");
 //		String qlid = employeeBean.getEmpQlid();
 		
 		JSONObject			jsObj			= new JSONObject();
@@ -814,10 +917,38 @@ public class EmployeeService {
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	public String sosTriggerAndroid() {
+	public String sosTriggerAndroid(
+			SOSRequestBean sos
+			) {
 		//// TODO: add entry to sos table
 		////		send mails to transport admins and managers
+		EmployeeServiceImpl empSrvImpl = new EmployeeServiceImpl();
+		empSrvImpl.addEntryToSOSTable(sos);
 		
+		//// send SOS mail
+		EmployeeBean emp = empSrvImpl.getEmployeeFromQLID(sos.getEmpQlid());
+		
+		JSONArray sosArr = empSrvImpl.getContactJSONArray();
+		int len = sosArr.length();
+		
+		String mail[] = new String[3];
+		String from		= sos.getEmpQlid()+"@ncr.com";
+		String subject	= "";
+		String message	= "";
+		
+		JSONObject jsObj;
+		
+		for(int i=0, s=0; i<3; ++i) {
+			jsObj = sosArr.getJSONObject(i);
+			if(jsObj == null) {
+				mail[i] = "";
+			}else {				
+				mail[i] = jsObj.getString("contactEmail");
+			}
+		}
+		
+		UtilServiceImpl us = new UtilServiceImpl();
+		us.sendEmailMessage(from, mail[0], mail[1], mail[2], subject, message);
 		
 		
 		return "";
@@ -829,9 +960,18 @@ public class EmployeeService {
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_JSON)
 	public String uploadFile(
-			@FormDataParam("uploadFile") InputStream				fileInputStream,
-			@FormDataParam("uploadFile") FormDataContentDisposition fileFormDataContentDisposition
+			@Context						HttpServletRequest			req,
+			@FormDataParam("uploadFile") 	InputStream					fileInputStream,
+			@FormDataParam("uploadFile") 	FormDataContentDisposition	fileFormDataContentDisposition
 		) throws Exception {
+//		HttpSession sess = req.getSession();
+//		String qlid = (String)sess.getAttribute("qlid");
+//		String sessRole = (String)sess.getAttribute("role");
+//		
+//		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID ||
+//				sessRole.toUpperCase() != "ADMIN") {
+//			return EmployeeServiceImpl.noLoginMessage();
+//		}
 		System.out.println("TestCheck");
 		EmployeeServiceImpl frd = new EmployeeServiceImpl();
 		JSONObject sUpl = frd.insertIntoDatabase(fileInputStream, fileFormDataContentDisposition);
@@ -856,6 +996,15 @@ public class EmployeeService {
 		@Context	HttpServletRequest	req,
 		@Context	HttpServletResponse	res
 	) {
+		HttpSession sess = req.getSession();
+		String qlid = (String)sess.getAttribute("qlid");
+		String sessRole = (String)sess.getAttribute("role");
+		
+		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID ||
+				sessRole.toUpperCase() != "ADMIN") {
+			return EmployeeServiceImpl.noLoginMessage();
+		}		
+		
 		JSONObject			jsObj			= new JSONObject();
 		EmployeeServiceImpl	empSrvImpl		= new EmployeeServiceImpl();	
 		jsObj = empSrvImpl.disableContact(contactBean);
@@ -874,6 +1023,14 @@ public class EmployeeService {
 		@Context	HttpServletRequest	req,
 		@Context	HttpServletResponse	res
 	) {
+		HttpSession sess = req.getSession();
+		String qlid = (String)sess.getAttribute("qlid");
+		String sessRole = (String)sess.getAttribute("role");
+		
+		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID ||
+				sessRole.toUpperCase() != "ADMIN") {
+			return EmployeeServiceImpl.noLoginMessage();
+		}		
 		
 		
 		JSONObject			jsObj			= new JSONObject();
@@ -902,6 +1059,14 @@ public class EmployeeService {
 		@Context	HttpServletRequest	req,
 		@Context	HttpServletResponse	res
 	) {
+		HttpSession sess = req.getSession();
+		String qlid = (String)sess.getAttribute("qlid");
+		String sessRole = (String)sess.getAttribute("role");
+		
+		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID ||
+				sessRole.toUpperCase() != "ADMIN") {
+			return EmployeeServiceImpl.noLoginMessage();
+		}		
 		EmployeeServiceImpl	empSrvImpl = new EmployeeServiceImpl();
 		JSONArray jsArr = new JSONArray();
 		
