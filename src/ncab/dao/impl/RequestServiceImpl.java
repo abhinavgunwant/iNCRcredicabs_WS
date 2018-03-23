@@ -32,6 +32,98 @@ public class RequestServiceImpl {
 	DBConnectionUpd dbconnectionUpd=new DBConnectionUpd();
 	Connection con = null;
 
+	 public String getCurrentDate()
+		{
+			Date date=new Date();
+			SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+			String str=df.format(date);
+	                return str;
+		}
+
+	public int saveRequest(String emp_QLID, String shift_ID, String Start_Date_Time, String End_Date_Time,String source ,String destination , String other_addr,String reason) {
+		// TODO Auto-generated method stub
+		int result=0;
+		
+		try {	
+			con=(Connection) dbconnectionUpd.getConnection();
+
+			PreparedStatement ps = con.prepareStatement("insert into NCAB_UNSCHEDULE_RQST_TBL (Emp_Qlid,Shift_ID,Rqst_Date_Time,Start_Date_Time,End_Date_Time,Source,Destination, Other_Addr ,Reason) values (?,?,?,?,?,?,?,?,?) "
+					,Statement.RETURN_GENERATED_KEYS);
+		
+			ps.setString(1,emp_QLID);
+			ps.setString(2,shift_ID);
+			ps.setString(3,getCurrentDate());
+			ps.setString(4,Start_Date_Time);
+			ps.setString(5,End_Date_Time);
+			ps.setString(6,source);
+			ps.setString(7,destination);
+			ps.setString(8,other_addr);
+			ps.setString(9,reason);
+			 ps.executeUpdate();
+		
+			 ResultSet rs = ps.getGeneratedKeys();
+			 
+			 if(rs.next()){
+				 
+				 result = rs.getInt(1);
+				 
+				 
+			 }
+		
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+				
+		    finally {
+		    	if (con != null) {
+		    		try {
+						con.close();
+					} catch (SQLException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+		    	}
+		    }		
+		
+		 return result;
+
+	}
+
+public String getDate(String dateTime) {
+		
+		return dateTime.substring(8,10)+"-"+dateTime.substring(5,7)+"-"+dateTime.substring(0,4);
+	
+	}
+
+public String getTime(String dateTime) {
+	
+	String resultTime="";
+	 Calendar time = Calendar.getInstance();
+
+	    //Calendar.HOUR_OF_DAY is in 24-hour format
+	    time.set(Calendar.HOUR_OF_DAY, Integer.parseInt(dateTime.substring(11,13)));
+
+	    time.set(Calendar.MINUTE, Integer.parseInt(dateTime.substring(14,16)));
+	    int am_pm = time.get(GregorianCalendar.AM_PM);
+	    String zone ;
+	    switch (am_pm) {
+	        case  Calendar.AM:
+	        zone="AM";
+	            //System.out.println("AM");
+	            break;
+	        default:
+	        zone="PM";
+	            //System.out.println("PM");
+	            break;
+	       }
+	    
+	    resultTime+=time.get(Calendar.HOUR) + ":" + time.get(Calendar.MINUTE) + " " +zone;
+	
+	return resultTime;
+}
+
+	
 	public ArrayList<ArrayList<String>> getUnscheduledRequestByIdImpl(String requestIds,String allocatedFlag) throws SQLException {
 		
 		ArrayList<ArrayList<String>> excelBody = new ArrayList<ArrayList<String>>();	
@@ -112,148 +204,6 @@ public class RequestServiceImpl {
 		return excelBody;
 
 	}
-
-    public String getCurrentDate()
-    {
-        Date date=new Date();
-        SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-        String str=df.format(date);
-                return str;
-    }
-	
-	
-/*	public int saveRequest(String emp_QLID, String shift_ID, String Start_Date_Time, String End_Date_Time,String source ,String destination , String other_addr,String reason) {
-		// TODO Auto-generated method stub
-		int result=0;
-
-		try {	
-			con=(Connection) dbconnectionUpd.getConnection();
-
-			PreparedStatement ps = con.prepareStatement("insert into NCAB_UNSCHEDULE_RQST_TBL (Emp_Qlid,Shift_ID,Rqst_Date_Time,Start_Date_Time,End_Date_Time,Source,Destination, Other_Addr ,Reason) values (?,?,"+new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())+",?,?,?,?,?,?) "
-					,Statement.RETURN_GENERATED_KEYS);
-
-			ps.setString(1,emp_QLID);
-			ps.setString(2,shift_ID);
-			ps.setString(3,Start_Date_Time);
-			ps.setString(4,End_Date_Time);
-			ps.setString(5,source);
-			ps.setString(6,destination);
-			ps.setString(7,other_addr);
-			ps.setString(8,reason);
-			ps.executeUpdate();
-
-			ResultSet rs = ps.getGeneratedKeys();
-
-			if(rs.next()){
-
-				result = rs.getInt(1);
-
-
-			}
-
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		finally {
-			if (con != null) {
-				try {
-					con.close();
-				} catch (SQLException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		}		
-
-		return result;
-
-	}
-*/
-    
-    public int saveRequest(String emp_QLID, String shift_ID, String Start_Date_Time, String End_Date_Time,String source ,String destination , String other_addr,String reason) {
-        // TODO Auto-generated method stub
-        int result=0;
-        
-        try {   
-            con=(Connection) dbconnectionUpd.getConnection();
-
-            PreparedStatement ps = con.prepareStatement("insert into NCAB_UNSCHEDULE_RQST_TBL (Emp_Qlid,Shift_ID,Rqst_Date_Time,Start_Date_Time,End_Date_Time,Source,Destination, Other_Addr ,Reason) values (?,?,?,?,?,?,?,?,?) "
-                    ,Statement.RETURN_GENERATED_KEYS);
-        
-            ps.setString(1,emp_QLID);
-            ps.setString(2,shift_ID);
-            ps.setString(3,getCurrentDate());
-            ps.setString(4,Start_Date_Time);
-            ps.setString(5,End_Date_Time);
-            ps.setString(6,source);
-            ps.setString(7,destination);
-            ps.setString(8,other_addr);
-            ps.setString(9,reason);
-             ps.executeUpdate();
-        
-             ResultSet rs = ps.getGeneratedKeys();
-             
-             if(rs.next()){
-                 
-                 result = rs.getInt(1);
-                 
-                 
-             }
-        
-        } catch (SQLException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-                
-            finally {
-                if (con != null) {
-                    try {
-                        con.close();
-                    } catch (SQLException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                }
-            }       
-        
-         return result;
-
-    }
-    
-	public String getDate(String dateTime) {
-
-		return dateTime.substring(8,10)+"-"+dateTime.substring(5,7)+"-"+dateTime.substring(0,4);
-
-	}
-
-	public String getTime(String dateTime) {
-
-		String resultTime="";
-		Calendar time = Calendar.getInstance();
-
-		//Calendar.HOUR_OF_DAY is in 24-hour format
-		time.set(Calendar.HOUR_OF_DAY, Integer.parseInt(dateTime.substring(11,13)));
-
-		time.set(Calendar.MINUTE, Integer.parseInt(dateTime.substring(14,16)));
-		int am_pm = time.get(GregorianCalendar.AM_PM);
-		String zone ;
-		switch (am_pm) {
-		case  Calendar.AM:
-			zone="AM";
-			//System.out.println("AM");
-			break;
-		default:
-			zone="PM";
-			//System.out.println("PM");
-			break;
-		}
-
-		resultTime+=time.get(Calendar.HOUR) + ":" + time.get(Calendar.MINUTE) + " " +zone;
-		return resultTime;
-	}
-
 
 	public List<JSONObject> getUnscheduledRequest(String requestJson) throws SQLException {
 		jsonArray = new ArrayList<JSONObject>();	
