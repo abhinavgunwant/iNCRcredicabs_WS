@@ -66,8 +66,8 @@ public class EmployeeService {
 		String qlid = (String)sess.getAttribute("qlid");
 		String token = (String)sess.getAttribute("token");
 		
-		if(!qlid.equals(EmployeeServiceImpl.DEFAULT_QLID)
-				&& !token.equals(EmployeeServiceImpl.DEFAULT_TOKEN)
+		if(qlid != null && !qlid.equals(EmployeeServiceImpl.DEFAULT_QLID)
+				&& token != null && !token.equals(EmployeeServiceImpl.DEFAULT_TOKEN)
 				&& EmployeeServiceImpl.isLoginValid(req)){
 			//// TODO things to do when user is logged in...
 		}else {
