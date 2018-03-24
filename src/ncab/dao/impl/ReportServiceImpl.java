@@ -413,24 +413,29 @@ public class ReportServiceImpl {
 		JSONArray jsonarray=new JSONArray();
 		DBConnectionRo dbconnection=new DBConnectionRo();
 		Connection connection=dbconnection.getConnection();
-		PreparedStatement ps=(PreparedStatement) connection.prepareStatement("SELECT b.Emp_Qlid AS Emp_Qlid,a.vendor_name AS Vendor_Name,c.Emp_FName AS Emp_FName,c.Emp_Mgr_Qlid1 AS Emp_Mgr_Qlid1 ,\n" + 
-				"a.Start_Date AS Start_Date_Time,a.Cab_Cost AS Cab_Cost,a.Cab_No AS Cab_No,d.model AS Cab_Type,\n" + 
-				"b.Source,b.Destination,b.Other_addr AS TripType,c.Emp_Zone AS Zone\n" + 
-				"FROM ncab_roster_tbl  a,NCAB_UNSCHEDULE_RQST_TBL  b ,ncab_master_employee_tbl c ,ncab_cab_master_tbl d\n" + 
-				"WHERE b.Shift_ID=a.Shift_Id AND b.Emp_Qlid=c.Emp_Qlid AND a.Emp_Qlid=b.Emp_Qlid AND d.cab_license_plate_no=a.Cab_No;");
+        PreparedStatement ps=(PreparedStatement) connection.prepareStatement("SELECT b.Emp_Qlid AS Emp_Qlid,a.vendor_name AS Vendor_Name,c.Emp_FName AS Emp_FName,c.Emp_Mgr_Qlid1 AS Emp_Mgr_Qlid1 ,\n" + 
+                "a.Start_Date AS Start_Date_Time,a.Cab_Cost AS Cab_Cost,a.Cab_No AS Cab_No,d.model AS Cab_Type,\n" + 
+                "b.Source,b.Destination,b.Other_addr AS TripType,c.Emp_Zone AS Zone\n" + 
+                "FROM ncab_roster_tbl  a,NCAB_UNSCHEDULE_RQST_TBL  b ,ncab_master_employee_tbl c ,ncab_cab_master_tbl d\n" + 
+                "WHERE b.Shift_ID=a.Shift_Id AND b.Emp_Qlid=c.Emp_Qlid AND a.Emp_Qlid=b.Emp_Qlid AND d.cab_license_plate_no=a.Cab_No;");
+
 		ResultSet rs=ps.executeQuery();
 		while(rs.next())
 		{
 			JSONObject jsonresponse=new JSONObject();
-			jsonresponse.put("Emp_Qlid", rs.getString(1));
-			jsonresponse.put("Vendor_Name", rs.getString(2));
-			jsonresponse.put("Emp_FName", rs.getString(3));
-			jsonresponse.put("Emp_Mgr_Qlid1", rs.getString(4));
-			jsonresponse.put("Start_Date_Time", rs.getString(5));
-			jsonresponse.put("Cab_Cost", rs.getString(6));
-			//jsonresponse.put("Shift_ID", rs.getString(7));
-			jsonresponse.put("Cab_No", rs.getString(7));
-			jsonresponse.put("Cab_Type", rs.getString(8));
+            jsonresponse.put("Emp_Qlid", rs.getString(1));
+            jsonresponse.put("Vendor_Name", rs.getString(2));
+            jsonresponse.put("Emp_FName", rs.getString(3));
+            jsonresponse.put("Emp_Mgr_Qlid1", rs.getString(4));
+            jsonresponse.put("Start_Date_Time", rs.getString(5));
+            jsonresponse.put("Cab_Cost", rs.getString(6));
+            //jsonresponse.put("Shift_ID", rs.getString(7));
+            jsonresponse.put("Cab_No", rs.getString(7));
+            jsonresponse.put("Cab_Type", rs.getString(8));
+            jsonresponse.put("Zone", rs.getString(9));
+            jsonresponse.put("Destination", rs.getString(10));
+            jsonresponse.put("Source", rs.getString(11));
+            jsonresponse.put("TripType", rs.getString(12));
 
 			jsonarray.put(jsonresponse);
 		}
@@ -769,7 +774,7 @@ public class ReportServiceImpl {
 			String ratePerKm, String extraMileageCost, String standByCost, String standByTax, String otherCabCost,
 			String otherCabGST, String escortGuardCost, String escortGuardDropDutyCost, String escortGuardTaxes,
 			String tptMobCost, String overallUPtax, String overallHRtax, String overallTaxes, String overallToll,
-			String overallGPS, String foreignExPrice ) throws ClassNotFoundException, SQLException
+			String overallGPS, String foreignExPrice, String toll_regular_cab  ) throws ClassNotFoundException, SQLException
 	{ 
 		int total_no_regular_cab_small=0,total_no_regular_cab_big = 0;
 		DBConnectionRo dbconnection=new DBConnectionRo();
@@ -804,13 +809,13 @@ public class ReportServiceImpl {
 		int in=0;
 		while (rs.next())
 		{
-			JSONObject jsonobj=new JSONObject();                                                if(rs.getString(3).equalsIgnoreCase("3") && rs.getString(4).equals("2018")) {
-				JSONObject jsonresponse=new JSONObject();
-				jsonresponse.put("vendor_name",rs.getString(1));
-				jsonresponse.put("vendor_total_cost",rs.getString(2));
+			JSONObject jsonobj=new JSONObject();      
+			if(rs.getString(3).equalsIgnoreCase(month) && rs.getString(4).equalsIgnoreCase(year)) {
+				jsonobj.put("vendor_name",rs.getString(1));
+				jsonobj.put("vendor_total_cost",rs.getString(2));
 
-				jsonobj.put("vendor"+in++, jsonresponse);
-				jsonarray0.put(jsonobj);}
+				jsonarray0.put(jsonobj);
+				}
 		}
 
 		//unscheduled report
@@ -828,7 +833,7 @@ public class ReportServiceImpl {
 		String unscheduled_Total_Employees_No=rs1.getString("Total_Employees_No");
 		String unscheduled_no_of_cabs=rs1.getString("no_of_cabs");
 
-		if(Roster_Month.equals("3") && Roster_Year.equals("2018"))
+		if(Roster_Month.equals(month) && Roster_Year.equalsIgnoreCase(year))
 		{
 			jsonobjfinal.put("total_no_of_unscheduled_employees",unscheduled_Total_Employees_No);
 			jsonobjfinal.put("total_no_of_unscheduled_cabs",unscheduled_no_of_cabs);
@@ -848,7 +853,7 @@ public class ReportServiceImpl {
 		String Roster_Month=rs5.getString("Roster_Month");
 		String Roster_Year=rs5.getString("Roster_Year");
 		String unscheduled_cost=rs5.getString("total_cost_of_Unscheduled_cabs");
-		if(Roster_Month.equals("3") && Roster_Year.equals("2018"))
+		if(Roster_Month.equals(month) && Roster_Year.equalsIgnoreCase(year))
 		{
 			jsonobjfinal.put("total_unscheduled_cost",unscheduled_cost);
 		}
@@ -871,7 +876,7 @@ public class ReportServiceImpl {
 		//String Total_Cost=rs3.getString("Total_Cost");
 		String Total_Employees=rs3.getString("Total_Employees");
 		System.out.println("in regular ");
-		if(Roster_Month.equalsIgnoreCase("3") && Roster_Year.equals("2018"))
+		if(Roster_Month.equalsIgnoreCase(month) && Roster_Year.equalsIgnoreCase(year))
 		{ System.out.println("in regular if1");
 		if(cab_type.equalsIgnoreCase("Small"))
 		{              System.out.println("in");
@@ -906,7 +911,7 @@ public class ReportServiceImpl {
 		String Roster_Year=rs4.getString("Roster_Year");
 		String cab_type=rs4.getString("cab_type");
 		String Total_Cost=rs4.getString("Total_Cost");
-		if(Roster_Month.equalsIgnoreCase("3") && Roster_Year.equals("2018"))
+		if(Roster_Month.equalsIgnoreCase(month) && Roster_Year.equalsIgnoreCase(year))
 		{ 
 			if(cab_type.equalsIgnoreCase("Small"))
 			{              System.out.println("in");
@@ -941,7 +946,7 @@ public class ReportServiceImpl {
 			//String Total_Cost=rs3.getString("Total_Cost");
 			String Total_Employees=rs6.getString("Total_Employees");
 
-			if(Roster_Month.equalsIgnoreCase("3") && Roster_Year.equals("2018"))
+			if(Roster_Month.equalsIgnoreCase(month) && Roster_Year.equalsIgnoreCase(year))
 			{ 
 				if(cab_type.equalsIgnoreCase("Small"))
 				{              System.out.println("in");
@@ -976,7 +981,7 @@ public class ReportServiceImpl {
 		String cab_type=rs7.getString("cab_type");
 		String Total_Cost=rs7.getString("Total_Cost");
 
-		if(Roster_Month.equalsIgnoreCase("3") && Roster_Year.equals("2018"))
+		if(Roster_Month.equalsIgnoreCase(month) && Roster_Year.equalsIgnoreCase(year))
 		{ 
 			if(cab_type.equalsIgnoreCase("Small"))
 			{              System.out.println("in");
@@ -998,12 +1003,12 @@ public class ReportServiceImpl {
 		jsonobjfinal.put("total_no_of_shift_employees",Integer.parseInt((String) jsonobjfinal.get("total_no_of_shift_employees_small"))+Integer.parseInt((String) jsonobjfinal.get("total_no_of_shift_employees_big")));
 		jsonobjfinal.put("total_cost_shift_cab",Integer.parseInt((String) jsonobjfinal.get("total_cost_shift_cab_small"))+Integer.parseInt((String) jsonobjfinal.get("total_cost_shift_cab_big")));
 		jsonobjfinalnew.put("Cost_of_Scheduled_Cabs", jsonobjfinal.get("total_cost__regular_cab"));
-		jsonobjfinalnew.put("toll_shift_cab", toll_shift_cab);
+		jsonobjfinalnew.put("toll_regular_cab", toll_regular_cab );
 		jsonobjfinalnew.put("gps_regular_cab", gps_regular_cab);
 		jsonobjfinalnew.put("uptax_regular_cab", uptax_regular_cab);
 		jsonobjfinalnew.put("hrtax_regular_cab", hrtax_regular_cab);
 		jsonobjfinalnew.put("gstTax_regular_cab", gstTax_regular_cab);
-		int t1= Integer.parseInt(jsonobjfinal.get("total_cost__regular_cab").toString())+Integer.parseInt(toll_shift_cab)+Integer.parseInt(gps_regular_cab)+Integer.parseInt(uptax_regular_cab)+Integer.parseInt(hrtax_regular_cab)+Integer.parseInt(gstTax_regular_cab);
+		int t1= Integer.parseInt(jsonobjfinal.get("total_cost__regular_cab").toString())+Integer.parseInt(toll_regular_cab )+Integer.parseInt(gps_regular_cab)+Integer.parseInt(uptax_regular_cab)+Integer.parseInt(hrtax_regular_cab)+Integer.parseInt(gstTax_regular_cab);
 		jsonobjfinalnew.put("Scheduled_Cab_Cost",t1);
 		jsonobjfinalnew.put("emp_contrib_regular", emp_contrib_regular);
 		jsonobjfinalnew.put("Scheduled_Cab_Cost_less_Emp_Contribution", t1-Integer.parseInt(emp_contrib_regular));
@@ -1014,7 +1019,7 @@ public class ReportServiceImpl {
 		jsonobjfinalnew.put("hrtax_shift_cab", hrtax_shift_cab);
 		jsonobjfinalnew.put("gstTax_shift_cab", gstTax_shift_cab);
 		int t2=(Integer.parseInt(jsonobjfinal.get("total_cost_shift_cab").toString())+Integer.parseInt(toll_shift_cab)+Integer.parseInt(gps_shift_cab)+Integer.parseInt(uptax_shift_cab)+Integer.parseInt(hrtax_shift_cab)+Integer.parseInt(gstTax_shift_cab));
-		jsonobjfinalnew.put("Shift_Cab_Cost",t1);
+		jsonobjfinalnew.put("Shift_Cab_Cost",t2);
 		jsonobjfinalnew.put("emp_contrib_shift", emp_contrib_shift);
 		jsonobjfinalnew.put("Shift_Cab_Cost_less_Emp_Contribution", t2-Integer.parseInt(emp_contrib_shift));
 		jsonobjfinalnew.put("Cost_of_Unscheduled_Cabs", jsonobjfinal.get("total_unscheduled_cost"));
@@ -1028,14 +1033,14 @@ public class ReportServiceImpl {
 		jsonobjfinalnew.put("Cost_of_Cabs_for_Other_Purposes", otherCabCost);
 		jsonobjfinalnew.put("otherCabGST",otherCabGST);
 		jsonobjfinalnew.put("Cabs_for_Other_Purposes_Cost", Integer.parseInt(otherCabCost)+Integer.parseInt(otherCabGST));
-		jsonobjfinalnew.put("Total_Transortation_Cost_for_the_Month", t1+t2+(Integer.parseInt(jsonobjfinalnew.get("Unscheduled_Cab_Costs").toString()))+(Integer.parseInt(jsonobjfinalnew.get("Standby_Cab_Cost").toString()))+(Integer.parseInt(jsonobjfinalnew.get("Cabs_for_Other_Purposes_Cost").toString())));
+		jsonobjfinalnew.put("Total_Transportation_Cost_for_the_Month", t1+t2+(Integer.parseInt(jsonobjfinalnew.get("Unscheduled_Cab_Costs").toString()))+(Integer.parseInt(jsonobjfinalnew.get("Standby_Cab_Cost").toString()))+(Integer.parseInt(jsonobjfinalnew.get("Cabs_for_Other_Purposes_Cost").toString())));
 		jsonobjfinalnew.put("escortGuardCost", escortGuardCost);
 		jsonobjfinalnew.put("escortGuardTaxes", escortGuardTaxes);
 		jsonobjfinalnew.put("Total_Amount_Security_Guard", Integer.parseInt(escortGuardCost)+Integer.parseInt(escortGuardTaxes));
 		jsonobjfinalnew.put("escortGuardDropDutyCost", escortGuardDropDutyCost);   
 		jsonobjfinalnew.put("Escort_Security_Guards", Integer.parseInt(escortGuardDropDutyCost)+(Integer.parseInt(jsonobjfinalnew.get("Total_Amount_Security_Guard").toString())));
 		jsonobjfinalnew.put("tptMobCost", tptMobCost);
-		jsonobjfinalnew.put("Transport_plus_Escort_Security ", Integer.parseInt(tptMobCost)+Integer.parseInt(otherCabGST)+(Integer.parseInt(jsonobjfinalnew.get("Total_Transortation_Cost_for_the_Month").toString()))+(Integer.parseInt(jsonobjfinalnew.get("Escort_Security_Guards").toString())));
+		jsonobjfinalnew.put("Transport_plus_Escort_Security", Integer.parseInt(tptMobCost)+(Integer.parseInt(jsonobjfinalnew.get("Total_Transportation_Cost_for_the_Month").toString()))+(Integer.parseInt(jsonobjfinalnew.get("Escort_Security_Guards").toString())));
 		jsonobjfinalnew.put("total_no_of_regular_employees", jsonobjfinal.get("total_no_of_regular_employees"));
 		jsonobjfinalnew.put("total_no_of_shift_employees", jsonobjfinal.get("total_no_of_shift_employees"));
 		jsonobjfinalnew.put("total_no_regular_cab_small", jsonobjfinal.get("total_no_regular_cab_small"));
@@ -1047,6 +1052,16 @@ public class ReportServiceImpl {
 		jsonobjfinalnew.put("total_no_regular_and_shift_cab", +(Integer.parseInt(jsonobjfinal.get("total_no_regular_cab").toString()))+(Integer.parseInt(jsonobjfinal.get("total_no_shift_cab").toString())));
 		jsonobjfinalnew.put("total_no_of_unscheduled_cabs", jsonobjfinal.get("total_no_of_unscheduled_cabs"));
 		jsonobjfinalnew.put("vendor", jsonarray0);
+		jsonobjfinalnew.put("foreignExPrice",foreignExPrice);
+		jsonobjfinalnew.put("total_cost_regular_cab_small", jsonobjfinal.get("total_cost_regular_cab_small")); 
+		jsonobjfinalnew.put("total_cost_regular_cab_big", jsonobjfinal.get("total_cost_regular_cab_big")); 
+		jsonobjfinalnew.put("total_cost_shift_cab_small", jsonobjfinal.get("total_cost_shift_cab_small")); 
+		jsonobjfinalnew.put("total_cost_shift_cab_big", jsonobjfinal.get("total_cost_shift_cab_big")); 
+		jsonobjfinalnew.put("total_no_of_unscheduled_employees",jsonobjfinal.get("total_no_of_unscheduled_employees"));  
+		jsonobjfinalnew.put("overall_emp_contri",Integer.parseInt(jsonobjfinalnew.get("Scheduled_Cab_Cost_less_Emp_Contribution").toString())+Integer.parseInt(jsonobjfinalnew.get("Shift_Cab_Cost_less_Emp_Contribution").toString()));
+        jsonobjfinalnew.put("total_cost", Integer.parseInt(jsonobjfinalnew.get("Scheduled_Cab_Cost_less_Emp_Contribution").toString())+Integer.parseInt(jsonobjfinalnew.get("Shift_Cab_Cost_less_Emp_Contribution").toString())+Integer.parseInt(jsonobjfinal.get("total_unscheduled_cost").toString())); 
+
+		
 		jsonarray.put(jsonobjfinalnew);
 
 		return jsonarray;
