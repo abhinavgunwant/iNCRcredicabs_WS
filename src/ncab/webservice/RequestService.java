@@ -236,7 +236,10 @@ public class RequestService {
 
 	}
 
-public Response sendRequest(String jsonrequest) throws ParseException, SQLException{
+	@POST
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path("/sendRequest")
+	public Response sendRequest(String jsonrequest) throws ParseException, SQLException{
 		
 		JSONObject jsonreq = new JSONObject(jsonrequest);
 		JSONObject jsonres = new JSONObject();
@@ -268,7 +271,7 @@ public Response sendRequest(String jsonrequest) throws ParseException, SQLExcept
 			String Employee_Manager_2_Name = jsonreq.getString("Employee_Manager_2_Name");
 			int Counter = jsonreq.getInt("Counter");
 			String date=Start_Date_Time.substring(0,10);;
-					String time=Start_Date_Time.substring(11,19);
+			String time=Start_Date_Time.substring(11,19);
 	
 			String Shift_Name = "";
 			switch(Shift_ID){
@@ -322,6 +325,7 @@ public Response sendRequest(String jsonrequest) throws ParseException, SQLExcept
 	                    		"Employee :"+Employee_Name+"("+Emp_QLID+")"+"\n"+
 	                			"From: "+date+"\n"+
 	                			"To: "+ End_Date_Time+"\n"+
+	                			"Trip Type: "+other+"\n"+ 
 	                			"Source: "+Source+"\n"+
 	                			"Destination: "+Destination+"\n"+
 	                			"Time: "+time+"\n"+
@@ -344,9 +348,9 @@ public Response sendRequest(String jsonrequest) throws ParseException, SQLExcept
                             " <p class='MsoNormal'><!--[if gte vml 1]><v:shape id='_x0000_i1025' type='#_x0000_t75'" +
                             " alt='Are you ready to experience a new world of interaction?' style='width:450pt;" +
                             "height:55.5pt'>" +
-                            "<img src='http://pulkit604.esy.es/image003.jpg'" +
+                            "<img src='https://digitalbridge.000webhostapp.com/images/ncr.jpg'" +
                             " o:href='cid:image005.jpg@01D3AB32.E8728490'/>" +
-                            " </v:shape><![endif]--><!--[if !vml]--><img border='0' width='600' height='74' src='http://pulkit604.esy.es/image003.jpg' style='height:.766in;width:6.25in' alt='Are you ready to experience a new world of interaction?' v:shapes='_x0000_i1025'><!--[endif]--></p>" +
+                            " </v:shape><![endif]--><!--[if !vml]--><img border='0' width='600' height='74' src='https://digitalbridge.000webhostapp.com/images/ncr.jpg' style='height:.766in;width:6.25in' alt='Are you ready to experience a new world of interaction?' v:shapes='_x0000_i1025'><!--[endif]--></p>" +
                             " </td>" +
                             " </tr>" +
                             " <tr style='mso-yfti-irow:1;height:26.4pt'>" +
@@ -418,9 +422,9 @@ public Response sendRequest(String jsonrequest) throws ParseException, SQLExcept
                                                     " <p class='MsoNormal'><!--[if gte vml 1]><v:shape id='_x0000_i1025' type='#_x0000_t75'" +
                                                     " alt='Are you ready to experience a new world of interaction?' style='width:450pt;" +
                                                     "height:55.5pt'>" +
-                                                    "<img src='http://pulkit604.esy.es/image003.jpg'" +
+                                                    "<img src='https://digitalbridge.000webhostapp.com/images/ncr.jpg'" +
                                                     " o:href='cid:image005.jpg@01D3AB32.E8728490'/>" +
-                                                    " </v:shape><![endif]--><!--[if !vml]--><img border='0' width='600' height='74' src='http://pulkit604.esy.es/image003.jpg' style='height:.766in;width:6.25in' alt='Are you ready to experience a new world of interaction?' v:shapes='_x0000_i1025'><!--[endif]--></p>" +
+                                                    " </v:shape><![endif]--><!--[if !vml]--><img border='0' width='600' height='74' src='https://digitalbridge.000webhostapp.com/images/ncr.jpg' style='height:.766in;width:6.25in' alt='Are you ready to experience a new world of interaction?' v:shapes='_x0000_i1025'><!--[endif]--></p>" +
                                                     " </td>" +
                                                     " </tr>" +
                                                     " <tr style='mso-yfti-irow:1;height:26.4pt'>" +
@@ -447,7 +451,7 @@ public Response sendRequest(String jsonrequest) throws ParseException, SQLExcept
                                                     " <tr style='mso-yfti-irow:3'>" +
                                                     "   <td width='1%' valign='top' style='width:1.0%;padding:1.8pt 1.8pt 1.8pt 1.8pt'></td>" +
                                                     "   <td width='67%' valign='top' style='width:67.0%;padding:1.8pt 1.8pt 1.8pt 1.8pt'>" +
-                                                    "   <p><span class='bodytext1'><span style='font-size:8.5pt'>The cab request by <b>"+Employee_Name+"("+Emp_QLID+")"+"</b> for &quot;Cab Request Id:&quot; <b>"+result+ " </b>has been forwarded to the Approvers: <b>"+Employee_Manager_1_Name+"("+Mgr_QLID+")"+"and"+Employee_Manager_2_Name+"("+Level2_mgr+")"+"</b>  for approval. Once the request is approved, it will be forwarded to the" +
+                                                    "   <p><span class='bodytext1'><span style='font-size:8.5pt'>The cab request by <b>"+Employee_Name+"("+Emp_QLID+")"+"</b> for &quot;Cab Request Id:&quot; <b>"+result+ " </b>has been forwarded to the Approvers: <b>"+Employee_Manager_1_Name+"("+Mgr_QLID+")"+" and "+Employee_Manager_2_Name+"("+Level2_mgr+")"+"</b>  for approval. Once the request is approved, it will be forwarded to the" +
                                                     "   concerned person.</span></span><span style='font-size:8.5pt;font-family:&quot;Verdana&quot;,sans-serif;" +
                                                     "   color:black'><br>" +
                                                     "   <span class='bodytext1'>Details about the cab request are below:</span><br>" +
@@ -482,6 +486,7 @@ public Response sendRequest(String jsonrequest) throws ParseException, SQLExcept
                     		"Employee :"+Employee_Name+"("+Emp_QLID+")"+"\n"+
                 			"From: "+date+"\n"+
                 			"To: "+ End_Date_Time+"\n"+
+                			"Trip Type: "+other+"\n"+ 
                 			"Source: "+Source+"\n"+
                 			"Destination: "+Destination+"\n"+
                 			"Time: "+time+"\n"+
@@ -498,6 +503,7 @@ public Response sendRequest(String jsonrequest) throws ParseException, SQLExcept
                     		"Employee QLId:"+Emp_QLID+"\n"+
                 			"From: "+date+"\n"+
                 			"To: "+ End_Date_Time+"\n"+
+                			"Trip Type: "+other+"\n"+ 
                 			"Source: "+Source+"\n"+
                 			"Destination: "+Destination+"\n"+
                 			"Time: "+time+"\n"+
