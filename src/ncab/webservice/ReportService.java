@@ -411,7 +411,7 @@ public class ReportService {
 		jsonreq = new JSONObject(jsonrequest);                                               
 		month = jsonreq.getString("month");
 		year = jsonreq.getString("year");
-		toll_regular_cab  = jsonreq.getString("toll_regular_cab ");
+		toll_regular_cab  = jsonreq.getString("toll_regular_cab");
 		hrtax_regular_cab = jsonreq.getString("hrtax_regular_cab");
 		uptax_regular_cab = jsonreq.getString("uptax_regular_cab");
 		emp_contrib_regular = jsonreq.getString("emp_contrib_regular");
