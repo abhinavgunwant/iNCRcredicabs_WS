@@ -37,6 +37,7 @@ public class RosterService {
 			try {
 				jsonobj = new JSONObject(json);
 				JSONArray jsonArray =new JSONArray();
+				
 				RosterServiceImpl frd=new RosterServiceImpl();
 				jsonArray =frd.showRosterInfo(jsonobj);
 				
@@ -61,12 +62,12 @@ public class RosterService {
 	public Response uploadFile(@FormDataParam("uploadFile") InputStream fileInputStream,
 			@FormDataParam("uploadFile") FormDataContentDisposition fileFormDataContentDisposition) throws Exception {
 		Response response;
-		JSONArray jsarr=new JSONArray();
+		JSONObject jsobj=new JSONObject();
 		System.out.println("TestCheck");
 		RosterServiceImpl frd=new RosterServiceImpl();
-		jsarr=frd.insertIntoDB(fileInputStream, fileFormDataContentDisposition);
+		jsobj=frd.insertIntoDB(fileInputStream, fileFormDataContentDisposition);
 		System.out.println("Success import excel to mysql table");
-		response = Response.status(200).type("application/json").entity(jsarr.toString()).build(); 		
+		response = Response.status(200).type("application/json").entity(jsobj.toString()).build(); 		
 		return response;
 	}
 
@@ -138,7 +139,8 @@ public class RosterService {
 
 	@POST
 	@Path("/inactiveqlid")
-	@Produces(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
 	public Response InactiveEmp(String str){
 		Response response=null;
 		try {
@@ -328,13 +330,14 @@ public class RosterService {
 	@POST
 	@Path("/editd")
 	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
 	public Response editinfo(String str2) {
 		Response respo=null;
 		try {
 			JSONObject obj=new JSONObject(str2);
 			RosterServiceImpl frd=new RosterServiceImpl();
-			String status=frd.sauravkaeditmethod(obj);
-			respo=Response.status(200).type("text/plain").entity(status).build();
+			JSONObject status=frd.sauravkaeditmethod(obj);
+			respo=Response.status(200).type("application/json").entity(status.toString()).build();
 			
 			
 			
@@ -419,6 +422,7 @@ public class RosterService {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response route_update(String route_no ){
 		Response response=null;
+		
 		JSONObject json=null;
 		try {
 			json = new JSONObject(route_no);
@@ -428,10 +432,13 @@ public class RosterService {
 		}
 		System.out.println("implementation class starts");
 		RosterServiceImpl frd=new RosterServiceImpl();
-	String status=frd.updatedRoute(json);		
-	response = Response.status(200).type("application/json").entity(status).build(); 		
+	JSONObject status=frd.updatedRoute(json);		
+	response = Response.status(200).type("application/json").entity(status.toString()).build(); 		
 		return response;
 	}
+	
+	
+	
 	
 	@POST
 	@Path("/downloadexcel")
@@ -441,8 +448,8 @@ public class RosterService {
 		Response response=null;
 		System.out.println("implementation class starts");
 		RosterServiceImpl frd=new RosterServiceImpl();
-	String status=frd.download_data(s);		
-	response = Response.status(200).type("application/json").entity(status).build(); 		
+	    JSONObject status=frd.download_data(s);		
+	response = Response.status(200).type("application/json").entity(status.toString()).build(); 		
 		return response;
 	}
 	
@@ -488,6 +495,29 @@ public class RosterService {
 	return response;
 }
 	
+
+@POST
+@Path("/getStartEndDate")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+	public Response getStartandEnd(String strdiv){
+	
+		Response response=null;
+		try {
+			JSONArray jsonArray =new JSONArray();
+			RosterServiceImpl frd=new RosterServiceImpl();
+			jsonArray =frd.getStartandEndDate(strdiv);
+			response = Response.status(200).type("application/json").entity(jsonArray.toString()).build(); 		
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+
+	return response;
+}
+
 	}
 
 

@@ -1,11 +1,22 @@
 package ncab.dao.impl;
 
 import java.sql.Connection;
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
+import javax.activation.FileDataSource;
+import javax.mail.BodyPart;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Multipart;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart; 
 import java.util.*;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -20,16 +31,12 @@ import java.sql.Types;
 
 import java.util.HashMap;
 
-import javax.activation.DataHandler;
-import javax.activation.FileDataSource;
-import javax.mail.BodyPart;
-import javax.mail.Multipart;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMultipart;
-
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.DataFormat;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -140,14 +147,20 @@ public class RosterServiceImpl {
 					jsonObj.put("shift_id", rm.getShift_id());
 					jsonObj.put("pickup_time", rm.getPickup_time());
 					System.out.println("vendor :- " + rm.getVendor_name());
-					String splitVendor[] = rm.getVendor_name().toString().split(" ");
 					String setVendor = "";
+					if(rm.getVendor_name().equals(" ")){
+						setVendor="";
+					}
+					else{
+					String splitVendor[] = rm.getVendor_name().toString().split(" ");
+					
 					if (splitVendor.length > 3) {
 						setVendor = new String(splitVendor[0] + " " + splitVendor[1] + " " + splitVendor[2]);
 					} else if (splitVendor.length == 2) {
 						setVendor = new String(splitVendor[0] + " " + splitVendor[1]);
 					} else {
 						setVendor = new String(splitVendor[0]);
+					}
 					}
 					jsonObj.put("vendor_name", setVendor);
 
@@ -161,8 +174,18 @@ public class RosterServiceImpl {
 					jsonObj.put("f_name", rm.getFname());
 					jsonObj.put("m_name", rm.getMname());
 					jsonObj.put("l_name", rm.getLname());
-					jsonObj.put("p_a", rm.getPickup_area());
+					
 					jsonObj.put("e_mob", rm.getEmp_Mob());
+					if(!(rm.getShift_id().equals("4"))){
+					jsonObj.put("p_a", rm.getPickup_area());
+					}
+					else{
+						PreparedStatement ps6 = con.prepareStatement("select Pickup_Area from ncab_roster_tbl where Emp_Qlid='"+rm.getQlid()+"' and Cab_No='"+rm.getCab_number()+"' and Shift_Id='"+rm.getShift_id()+"' and Emp_Status='active' and '" + current_date
+						+ "' between Start_Date and End_Date");
+						ResultSet rs6=ps6.executeQuery();
+						rs6.next();
+						jsonObj.put("p_a", rs6.getString(1).toString());
+					}
 				}
 				if (Integer.parseInt(rm.getShift_id()) != 4) {
 					jsonObj.put("occu_left",
@@ -381,8 +404,8 @@ public class RosterServiceImpl {
 							// if all fields are empty
 
 							System.out.println("all filter fields are empty");
-							query = "select Emp_Qlid,Shift_Id,Cab_No from ncab_roster_tbl where Emp_Status='active' AND Route_Status='active'  and '"
-									+ current_date + "' between Start_Date and End_Date order by Route_No";
+							query = "select Emp_Qlid,Shift_Id,Cab_No from ncab_roster_tbl where Emp_Status='active' AND Route_Status='active'  AND '"
+									+ current_date + "' between Start_Date AND End_Date order by Route_No";
 						}
 					}
 				}
@@ -393,8 +416,9 @@ public class RosterServiceImpl {
 		return query;
 	}
 
-	public JSONArray insertIntoDB(InputStream fileInputStream,
+	public JSONObject insertIntoDB(InputStream fileInputStream,
 			FormDataContentDisposition fileFormDataContentDisposition) throws IOException {
+		int counter = 0;
 		JSONObject jsobj = new JSONObject();
 		JSONArray jsarr = new JSONArray();
 		long millis = System.currentTimeMillis();
@@ -474,7 +498,7 @@ public class RosterServiceImpl {
 			// Generating right LastRowNum
 
 			for (i = sheet.getLastRowNum(); i > 0; i--) {
-				Row row_check_test = (Row) sheet.getRow(i);
+				Row row_check_test = sheet.getRow(i);
 				boolean flag = RowCheck.isRowEmpty(row_check_test);
 				if (flag == true) {
 					System.out.println("Empty row Existed, Iterating Backwards");
@@ -493,7 +517,7 @@ public class RosterServiceImpl {
 			Row row;
 			String newLine = System.getProperty("line.separator");
 			for (i = 1; i <= last_row_valid; i++) {
-				row = (Row) sheet.getRow(i);
+				row = sheet.getRow(i);
 				String shift_id = null;
 				String empid = row.getCell(2, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
 				empid_arr[i - 1] = empid;
@@ -649,9 +673,9 @@ public class RosterServiceImpl {
 				String retValue = cs.getString(1);
 
 				System.out.println(retValue + "Point");
-				String[] flag = { "FAILURE", "NO", "NO", "NO", "No", "No", "No", "No" };
+				String[] flag = { "FAILURE", "NO", "NO", "NO", "No", "No", "No", "No" ,"No"};
 				String[] quote = { "FAILURE", "QLID", "Shift_Timing", "Cab_No", "Route No has no Vacancy",
-						"Route Number doesn't match", "Wrong Driver Name", "Wrong Vendor Name" };
+						"Route Number doesn't match", "Wrong Driver Name", "Wrong Vendor Name" ,"Duplicate Record Found"};
 				String[] retValue_token = retValue.split("\\s+");
 				String final_push = "";
 				System.out.println(retValue_token[0] + "SagaCheck");
@@ -731,8 +755,12 @@ public class RosterServiceImpl {
 						System.out.println("Vendor Name wrong");
 						flag[7] = "Yes";
 					}
-					int counter = 0;
-					for (int y = 1; y < 8; y++) {
+					if (retValue_token[8].compareTo("-1") != 0) {
+						System.out.println("Duplicate Record");
+						flag[8] = "Yes";
+					}
+					
+					for (int y = 1; y < 9; y++) {
 						if (flag[y].compareTo("Yes") == 0) {
 							final_push = final_push.concat(quote[y]) + " ";
 							counter++;
@@ -749,8 +777,8 @@ public class RosterServiceImpl {
 				}
 			}
 			jsobj.put("tr", i - 1);
-			jsobj.put("eo", error);
-			jsarr.put(jsobj);
+			jsobj.put("eo", counter);
+			
 			//
 
 			f0.write("XXXXXXXXXXXXXXXXXX " + (i - 1) + " Records Processed @  "
@@ -765,14 +793,76 @@ public class RosterServiceImpl {
 			// TODO: handle exception
 			e.printStackTrace();
 		}
-		System.out.println("Jsarr :- " + jsarr);
-		return jsarr;
+		
+		System.out.println("Jsarr :- " + jsobj);
+		this.SendAttachmentInEmail();
+		return jsobj;
 	}
 
+	public void SendAttachmentInEmail() {
+
+		String to = "sj250305@ncr.com";
+
+		String from = "sauravjoshi123@gmail.com";
+
+		final String username = "sauravjoshi123";// change accordingly
+		final String password = "jhzktcgxbthatpta";// change accordingly
+
+		String host = "smtp.gmail.com";
+
+		Properties props = new Properties();
+		props.put("mail.smtp.auth", "true");
+		props.put("mail.smtp.starttls.enable", "true");
+		props.put("mail.smtp.host", host);
+		props.put("mail.smtp.port", "25");
+
+		Session session = Session.getInstance(props, new javax.mail.Authenticator() {
+			@Override
+			protected PasswordAuthentication getPasswordAuthentication() {
+				return new PasswordAuthentication(username, password);
+			}
+		});
+
+		try {
+
+			Message message = new MimeMessage(session);
+
+			message.setFrom(new InternetAddress(from));
+
+			message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
+
+			message.setSubject("Upload Error Log");
+
+			BodyPart messageBodyPart = new MimeBodyPart();
+
+			messageBodyPart.setText("This is message body");
+
+			Multipart multipart = new MimeMultipart();
+
+			multipart.addBodyPart(messageBodyPart);
+
+			messageBodyPart = new MimeBodyPart();
+			String filename = new String(System.getProperty("user.home") + "/Desktop/output.txt");
+			DataSource source = new FileDataSource(filename);
+			messageBodyPart.setDataHandler(new DataHandler(source));
+			messageBodyPart.setFileName(filename);
+			multipart.addBodyPart(messageBodyPart);
+
+			message.setContent(multipart);
+
+			Transport.send(message);
+
+			System.out.println("Sent message successfully....");
+
+		} catch (MessagingException e) {
+			throw new RuntimeException(e);
+		}
+
+	} 
+	
 	public JSONObject addEmpToDb(JSONObject json) {
 		JSONObject js = new JSONObject();
-		js = null;
-		long millis = System.currentTimeMillis();
+		long millis = System.currentTimeMillis();  
 		java.sql.Date date = new java.sql.Date(millis);
 		String current_date = date.toString();
 
@@ -784,7 +874,7 @@ public class RosterServiceImpl {
 			String sid = json.getString("s_i");
 			System.out.println("The sid is " + sid);
 
-			// long millis = System.currentTimeMillis();
+			//			long millis = System.currentTimeMillis();
 			java.sql.Date startdate = new java.sql.Date(millis);
 			System.out.println("Start Date: " + startdate);
 
@@ -793,20 +883,28 @@ public class RosterServiceImpl {
 			// String pick=json.getString("p_time");
 			System.out.println(cab + "   " + qlid);
 			String r_n = "";
-			PreparedStatement ps1 = con.prepareStatement(
-					"select Route_No,max(End_Date),Vendor_Name, Driver_Id from ncab_roster_tbl where Cab_No=? and Shift_Id=? and '"
-							+ current_date + "' between Start_Date and End_Date");
+			PreparedStatement ps = con.prepareStatement("select count(Emp_Qlid) from ncab_roster_tbl where Cab_No=? and Shift_Id=? and Emp_Qlid=? and '"+current_date+"' between Start_Date and End_Date");
+			ps.setString(1,cab);
+			ps.setString(2,sid);
+			ps.setString(3,qlid);
+			ResultSet rs=ps.executeQuery();
+			rs.next();
+			int count1=Integer.parseInt(rs.getString(1));
+			if(count1 >0){
+				js.put("error_type", "exist");
+			}
+			else{
+			PreparedStatement ps1 = con.prepareStatement("select Route_No,max(End_Date),Vendor_Name, Driver_Id from ncab_roster_tbl where Cab_No=? and Shift_Id=? and '"+current_date+"' between Start_Date and End_Date");
 			ps1.setString(1, cab);
 			ps1.setString(2, sid);
 			ResultSet rs2 = ps1.executeQuery();
-			String vname, did;
+			String vname="",did="";
 			while (rs2.next()) {
 				r_n = rs2.getString(1);
 				enddate = rs2.getString(2);
 				vname = rs2.getString(3);
 				did = rs2.getString(4);
-				PreparedStatement ps2 = con.prepareStatement(
-						"insert into ncab_roster_tbl(Route_No,Emp_Qlid,Shift_Id,Cab_No,Start_Date,End_Date,Vendor_Name,Driver_Id) values(?,?,?,?,?,?,?,?)");
+				PreparedStatement ps2 = con.prepareStatement("insert into ncab_roster_tbl(Route_No,Emp_Qlid,Shift_Id,Cab_No,Start_Date,End_Date,Vendor_Name,Driver_Id) values(?,?,?,?,?,?,?,?)");
 
 				ps2.setString(1, r_n);
 				ps2.setString(2, qlid);
@@ -817,16 +915,18 @@ public class RosterServiceImpl {
 				ps2.setString(7, vname);
 				ps2.setString(8, did);
 
+
 				int i = ps2.executeUpdate();
-				System.out.println("Return value update: " + i);
-				if (i > 1) {
-					js.put("msg", "success");
+				System.out.println("Return value update: "+i);
+				if (i > 0) {
+					js.put("error_type", "success");
 					System.out.println("success in inserting");
 				} else {
-					js.put("msg", "fail");
+					js.put("error_type", "fail");
 				}
 
 			}
+		 }	
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -839,6 +939,7 @@ public class RosterServiceImpl {
 	public JSONArray getAddData(JSONObject json) {
 		String c_no = json.getString("c_n");
 		String s_id = json.getString("s_id");
+		
 		DBConnectionUpd db = new DBConnectionUpd();
 		Connection connection = db.getConnection();
 		JSONArray jsarr = new JSONArray();
@@ -850,13 +951,10 @@ public class RosterServiceImpl {
 			PreparedStatement ps = null;
 			if (s_id.equals("4")) {
 				ps = connection.prepareStatement(
-						"select Emp_Qlid,Emp_FName,Emp_LName from ncab_master_employee_tbl where Emp_Qlid not in (select Emp_Qlid from ncab_roster_tbl where Shift_Id = '"
-								+ s_id + "' and Emp_Status='active' and  '" + current_date
-								+ "' between Start_Date and End_Date)");
+						"select Emp_Qlid,Emp_FName,Emp_LName from ncab_master_employee_tbl where Emp_Qlid not in (select Emp_Qlid from ncab_roster_tbl where Shift_Id = '"+ s_id + "' and Emp_Status='active' and  '" + current_date+ "' between Start_Date and End_Date)");
 			} else {
 				ps = connection.prepareStatement(
-						"select Emp_Qlid,Emp_FName,Emp_LName from ncab_master_employee_tbl where Emp_Qlid not in (select Emp_Qlid from ncab_roster_tbl where Shift_Id <> '4' and Emp_Status='active' and  '"
-								+ current_date + "' between Start_Date and End_Date)");
+						"select Emp_Qlid,Emp_FName,Emp_LName from ncab_master_employee_tbl where Emp_Qlid not in (select Emp_Qlid from ncab_roster_tbl where Shift_Id <> '4' and Emp_Status='active' and  '"+ current_date + "' between Start_Date and End_Date)");
 
 			}
 			ResultSet rs = ps.executeQuery();
@@ -883,22 +981,26 @@ public class RosterServiceImpl {
 
 	public JSONObject inactiveqlid(JSONObject jobj) {
 
-		// String qlid=jobj.getString("e_qlid");
-		// TODO Auto-generated method stub
 		JSONObject js = new JSONObject();
 
 		try {
 			String qlid = jobj.getString("emp_qlid");
+			String s_id =jobj.getString("s_id");
 			System.out.println("Delete :- " + qlid);
 			DBConnectionUpd db = new DBConnectionUpd();
 			Connection con = db.getConnection();
-			String query = "UPDATE ncab_roster_tbl SET Emp_Status='inactive' WHERE Emp_Qlid = '" + qlid + "'";
+			long millis = System.currentTimeMillis();  
+			java.sql.Date date = new java.sql.Date(millis);
+			String current_date = date.toString();
+			String query = "UPDATE ncab_roster_tbl SET Emp_Status='inactive' WHERE Emp_Qlid = '" + qlid + "' and Shift_Id='"+s_id+"' and '"+current_date+"' between Start_Date and End_Date";
 			PreparedStatement ps = con.prepareStatement(query);
 			int i = ps.executeUpdate();
-			if (i > 0)
-				js.put("msg", "success");
-			else
-				js.put("msg", "fail");
+			if (i > 0){
+				js.put("error_msg", "success");
+			}
+			else{
+				js.put("error_msg", "fail");
+			}
 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -979,7 +1081,7 @@ public class RosterServiceImpl {
 		DBConnectionUpd db = new DBConnectionUpd();
 		Connection connection = db.getConnection();
 		String qlid, guard, picktime, cabno, start, end, vendor, Status = "Active";
-		int shiftid = 0, driver = 0;
+		int shiftid = 0, driver = 0, vendorid=0;;
 		try {
 			String routeno = "";
 			int route = 0, cost = 0;
@@ -1028,11 +1130,11 @@ public class RosterServiceImpl {
 				end = json.optString("end");
 				cost = json.optInt("cost");
 				vendor = json.optString("vendor");
-
+				vendorid=json.optInt("vid");
 				System.out.println("Object Created" + qlid);
 				System.out.println("----Query ready" + qlid);
 				PreparedStatement ps1 = connection.prepareStatement(
-						"insert into ncab_roster_tbl (Route_no,Emp_Qlid,Shift_Id,Pickup_Time,Cab_No,Guard_Needed,Start_Date,End_Date,Vendor_Id,Route_Status,Emp_Status,Cab_Cost,Driver_Id) values (?,?,?,?,?,?,?,?,?,?,?,?,?)");
+						"insert into ncab_roster_tbl (Route_no,Emp_Qlid,Shift_Id,Pickup_Time,Cab_No,Guard_Needed,Start_Date,End_Date,Vendor_Name,Route_Status,Emp_Status,Cab_Cost,Driver_Id,Vendor_Id) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 
 				ps1.setString(1, routeno);
 				ps1.setString(2, qlid);
@@ -1047,6 +1149,7 @@ public class RosterServiceImpl {
 				ps1.setString(11, Status);
 				ps1.setInt(12, cost);
 				ps1.setInt(13, driver);
+				ps1.setInt(14, vendorid);
 				flag = ps1.executeUpdate();
 				System.out.println("------query fired");
 			}
@@ -1057,7 +1160,6 @@ public class RosterServiceImpl {
 				try {
 					connection.close();
 				} catch (SQLException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -1094,10 +1196,10 @@ public class RosterServiceImpl {
 				end = json.optString("end");
 				vendor = json.optString("vendor");
 				cost = json.optInt("cost");
-				System.out.println("Object Created" + qlid);
-				System.out.println("----Query ready" + qlid);
+				System.out.println("Object Created" + qlid+" :drop "+drop);
+				System.out.println("----Query ready" + qlid+" :pickup "+pickup);
 				PreparedStatement ps1 = connection.prepareStatement(
-						"insert into ncab_roster_tbl (Route_no,Emp_Qlid,Shift_Id,Pickup_Time,Cab_No,Guard_Needed,Start_Date,End_Date,Vendor_Id,Emp_Status,Cab_Cost,Route_Status,Drop_type,Pickup_Area) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+						"insert into ncab_roster_tbl (Route_no,Emp_Qlid,Shift_Id,Pickup_Time,Cab_No,Guard_Needed,Start_Date,End_Date,Vendor_Name,Emp_Status,Cab_Cost,Route_Status,Drop_type,Pickup_Area) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 
 				ps1.setString(1, routeno);
 				ps1.setString(2, qlid);
@@ -1111,8 +1213,9 @@ public class RosterServiceImpl {
 				ps1.setString(10, Status);
 				ps1.setInt(11, cost);
 				ps1.setString(12, Status);
-				ps1.setString(14, pickup);
 				ps1.setString(13, drop);
+				ps1.setString(14, pickup);
+				
 				flag += ps1.executeUpdate();
 				System.out.println("------query fired");
 
@@ -1132,7 +1235,7 @@ public class RosterServiceImpl {
 		}
 		return flag;
 	}
-
+	
 	public JSONArray showVendor() {
 		DBConnectionUpd dbconnection = new DBConnectionUpd();
 		Connection connection = dbconnection.getConnection();
@@ -1177,13 +1280,14 @@ public class RosterServiceImpl {
 		Connection connection = dbconnection.getConnection();
 		String Fname = "", Mname = "", Lname = "", parea = "", ph = "", route = "";
 		String qlid = json.getString("qlid");
-		String month = "MAR";
+		String month = json.getString("date");
+
 		JSONObject json1 = new JSONObject();
 		System.out.println("inside getEmpDetails");
 		try {
 			System.out.println("inside try before query");
 			PreparedStatement ps1 = connection.prepareStatement(
-					"select Route_No from ncab_roster_tbl where Emp_Qlid = ? and Roster_Month = ? and Emp_Status='active'");
+					"select Route_No from ncab_roster_tbl where Emp_Qlid = ? and  ? Between Start_Date and End_Date and Emp_Status='active'");
 			ps1.setString(1, qlid);
 			ps1.setString(2, month);
 			ResultSet rs1 = ps1.executeQuery();
@@ -1229,7 +1333,6 @@ public class RosterServiceImpl {
 				try {
 					connection.close();
 				} catch (SQLException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -1244,16 +1347,22 @@ public class RosterServiceImpl {
 		Connection connection = dbconnection.getConnection();
 		JSONArray jsonarr = new JSONArray();
 		String qlid = "";
+		String fname="",mname="",lname="",name="";
+
 		try {
 			System.out.println("Inside try before query");
-			PreparedStatement ps = connection.prepareStatement("select Emp_Qlid from ncab_master_employee_tbl");
+			PreparedStatement ps = connection.prepareStatement("select Emp_Qlid,Emp_FName, Emp_MName, Emp_LName from ncab_master_employee_tbl");
 			ResultSet rs = ps.executeQuery();
 			System.out.println("Inside try after query");
 			while (rs.next()) {
 				JSONObject json = new JSONObject();
 				qlid = rs.getString(1);
+				fname=rs.getString(2);
+				mname=rs.getString(3);
+				lname=rs.getString(4);
+				name=fname+" "+mname+" "+lname;
 				json.put("qlid", qlid);
-				jsonarr.put(json);
+				json.put("name", name);	jsonarr.put(json);
 			}
 		} catch (Exception e) {
 			System.out.println("Error: " + e.getMessage());
@@ -1262,7 +1371,6 @@ public class RosterServiceImpl {
 				try {
 					connection.close();
 				} catch (SQLException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -1305,90 +1413,96 @@ public class RosterServiceImpl {
 			}
 		}
 		return jsonarr;
-	}
+	}	// saurav
 
-	// saurav
+	public JSONObject sauravkaeditmethod(JSONObject obj) {
+		JSONObject jobjtodis=new JSONObject();
+	try {
+		System.out.println("edit json:" + obj);
+		String cab_and_shift = obj.getString("cabno");
+		String arr[] = cab_and_shift.split(" ");
+		String cabno = arr[0];
+		String sid = arr[1];
+		System.out.println("CAB NUMBER: " + cabno);
+		System.out.println("SHIFT ID: " + sid);
 
-	public String sauravkaeditmethod(JSONObject obj) {
+		String picktime = obj.getString("picktime");
+		// String shifttime="";
+		String qlid = obj.getString("qlid");
+		String sdate = obj.getString("sdate");
+		String edate = obj.getString("edate");
 
-		try {
-			System.out.println("edit json:" + obj);
-			String cab_and_shift = obj.getString("cabno");
-			String arr[] = cab_and_shift.split(" ");
-			String cabno = arr[0];
-			String sid = arr[1];
-			System.out.println("CAB NUMBER: " + cabno);
-			System.out.println("SHIFT ID: " + sid);
+		System.out.println(cabno);
+		System.out.println(picktime);
+		System.out.println(qlid);
+		System.out.println(sdate);
+		System.out.println(edate);
+		System.out.println(sdate.length());
+		/*
+		 * System.out.println(edate.length()); String sd=sdate.substring(8);
+		 * System.out.println(sd); String ed=edate.substring(8);
+		 * System.out.println(ed);
+		 */
 
-			String picktime = obj.getString("picktime");
-			// String shifttime="";
-			String qlid = obj.getString("qlid");
-			String sdate = obj.getString("sdate");
-			String edate = obj.getString("edate");
+		long millis = System.currentTimeMillis();
+		java.sql.Date date = new java.sql.Date(millis);
+		String current_date = date.toString();
 
-			System.out.println(cabno);
-			System.out.println(picktime);
-			System.out.println(qlid);
-			System.out.println(sdate);
-			System.out.println(edate);
-			System.out.println(sdate.length());
-			/*
-			 * System.out.println(edate.length()); String sd=sdate.substring(8);
-			 * System.out.println(sd); String ed=edate.substring(8);
-			 * System.out.println(ed);
-			 */
+		DBConnectionUpd db = new DBConnectionUpd();
+		Connection con = db.getConnection();
+		String v_n = "";
+		String r_n = "";
+		String query2 = "select Route_No,Vendor_Name,Driver_Id from ncab_roster_tbl where Cab_No='" + cabno
+				+ "' and Shift_Id = '" + sid + "' and '" + current_date
+				+ "' between Start_Date and End_Date and Emp_Status='active' and Route_Status = 'active'";
+		PreparedStatement ps2 = con.prepareStatement(query2);
+		ResultSet rs = ps2.executeQuery();
+		rs.next();
+		r_n = rs.getString(1);
+		String vname = rs.getString(2);
+		String did = rs.getString(3);
 
-			long millis = System.currentTimeMillis();
-			java.sql.Date date = new java.sql.Date(millis);
-			String current_date = date.toString();
+		String query4 = "update ncab_roster_tbl set Emp_Status='inactive' where Emp_Qlid='" + qlid + "' and '"
+				+ current_date + "' between Start_Date and End_Date";
+		PreparedStatement ps4 = con.prepareStatement(query4);
+		ps4.executeUpdate();
+		System.out.println("RN: " + r_n);
+		System.out.println("qlid: " + qlid);
+		System.out.println("Cab_No: " + cabno);
+		System.out.println("PT: " + picktime);
+		System.out.println("SD: " + sdate);
+		System.out.println("ED: " + edate);
+		String query1 = "insert into ncab_roster_tbl (Route_No,Emp_Qlid,Cab_No,Pickup_Time,Shift_Id,Start_Date,End_Date,Vendor_Name,Driver_Id) values(?,?,?,?,?,?,?,?,?) ";
 
-			DBConnectionUpd db = new DBConnectionUpd();
-			Connection con = db.getConnection();
-			String v_n = "";
-			String r_n = "";
-			String query2 = "select Route_No,Vendor_Name,Driver_Id from ncab_roster_tbl where Cab_No='" + cabno
-					+ "' and Shift_Id = '" + sid + "' and '" + current_date
-					+ "' between Start_Date and End_Date and Emp_Status='active' and Route_Status = 'active'";
-			PreparedStatement ps2 = con.prepareStatement(query2);
-			ResultSet rs = ps2.executeQuery();
-			rs.next();
-			r_n = rs.getString(1);
-			String vname = rs.getString(2);
-			String did = rs.getString(3);
+		PreparedStatement ps = con.prepareStatement(query1);
 
-			String query4 = "update ncab_roster_tbl set Emp_Status='inactive' where Emp_Qlid='" + qlid + "' and '"
-					+ current_date + "' between Start_Date and End_Date";
-			PreparedStatement ps4 = con.prepareStatement(query4);
-			ps4.executeUpdate();
-			System.out.println("RN: " + r_n);
-			System.out.println("qlid: " + qlid);
-			System.out.println("Cab_No: " + cabno);
-			System.out.println("PT: " + picktime);
-			System.out.println("SD: " + sdate);
-			System.out.println("ED: " + edate);
-			String query1 = "insert into ncab_roster_tbl (Route_No,Emp_Qlid,Cab_No,Pickup_Time,Shift_Id,Start_Date,End_Date,Vendor_Name,Driver_Id) values(?,?,?,?,?,?,?,?,?) ";
+		ps.setString(1, r_n);
+		ps.setString(2, qlid);
+		ps.setString(3, cabno);
+		ps.setString(4, picktime);
+		ps.setString(5, sid);
+		ps.setString(6, sdate);
+		ps.setString(7, edate);
+		ps.setString(8, vname);
+		ps.setString(9, did);
 
-			PreparedStatement ps = con.prepareStatement(query1);
-
-			ps.setString(1, r_n);
-			ps.setString(2, qlid);
-			ps.setString(3, cabno);
-			ps.setString(4, picktime);
-			ps.setString(5, sid);
-			ps.setString(6, sdate);
-			ps.setString(7, edate);
-			ps.setString(8, vname);
-			ps.setString(9, did);
-
-			ps.executeUpdate();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		int i=ps.executeUpdate();
+		if(i>=1){
+			jobjtodis.put("error_type", "success");
 		}
-
-		// TODO Auto-generated method stub
-		return ("success");
+		else{
+			jobjtodis.put("error_type", "fail");
+		}
+		System.out.println(jobjtodis);
+	} catch (Exception e) {
+		// TODO Auto-generated catch block
+		jobjtodis.put("error_type", "fail");
+		e.printStackTrace();
 	}
+
+	// TODO Auto-generated method stub
+	return (jobjtodis);
+}
 
 	// richa
 	public JSONArray getAllRoute() {
@@ -1461,8 +1575,9 @@ public class RosterServiceImpl {
 		return jarr;
 	}
 
-	public String updatedRoute(JSONObject json) {
+	public JSONObject updatedRoute(JSONObject json) {
 		System.out.println("inside fetchroster");
+		JSONObject jsobj=new JSONObject();
 		DBConnectionUpd db = new DBConnectionUpd();
 		Connection con = db.getConnection();
 		String routeno = json.getString("r_n");
@@ -1471,13 +1586,15 @@ public class RosterServiceImpl {
 		String vendor = json.getString("ven");
 		String s_date = json.getString("s_date");
 		String e_date = json.getString("e_date");
+		System.out.println("SD: "+s_date
+				);
 		int s1 = 0;
 		System.out.println(routeno);
 		System.out.println(cabno);
 		System.out.println(shiftid);
 
 		try {
-			if (vendor == "") {
+			if (vendor.equals("")) {
 				PreparedStatement p = con.prepareStatement("select Vendor_Name from ncab_roster_tbl where Route_No='"
 						+ routeno + "' and Route_Status='active'");
 				ResultSet rr = p.executeQuery();
@@ -1485,7 +1602,7 @@ public class RosterServiceImpl {
 					vendor = rr.getString(1);
 				}
 			}
-			if (cabno == "") {
+			if (cabno.equals("")) {
 				PreparedStatement p = con.prepareStatement("select Cab_No from ncab_roster_tbl where Route_No='"
 						+ routeno + "' and Route_Status='active'");
 				ResultSet rr = p.executeQuery();
@@ -1517,21 +1634,42 @@ public class RosterServiceImpl {
 					e_date = rr.getString(1);
 				}
 			}
-			java.sql.Date s_date1 = new java.sql.Date(Long.parseLong(s_date));
-			String start_date = s_date1.toString();
-			java.sql.Date s_date2 = new java.sql.Date(Long.parseLong(e_date));
-			String end_date = s_date2.toString();
-			PreparedStatement ps = con
-					.prepareStatement("UPDATE ncab_roster_tbl SET Route_Status='inactive' WHERE Route_No ='" + routeno
-							+ "' and Route_Status='active'");
-			int i = ps.executeUpdate();
+			
+			
+			long millis = System.currentTimeMillis();
+			java.sql.Date date = new java.sql.Date(millis);
+			String current_date = date.toString();
+
+			if(!cabno.equals("") && shiftid != 0)
+			{
+				PreparedStatement rfe1 = con.prepareStatement("select Route_No,count(Route_No) from ncab_roster_tbl where Cab_No = '"+cabno+"' and Shift_Id = '"+shiftid+"' and '"+current_date+"' between Start_Date and End_Date");
+				ResultSet rsrfe = rfe1.executeQuery();
+				rsrfe.next();
+				
+				if(!routeno.equals(rsrfe.getString(1)) && !rsrfe.getString(2).equals("0"))
+				{
+					System.out.println("Already there is a route of this cab and shift");
+					//throw an error
+					jsobj.put("err_msg", "exist");
+				}
+			}
+			
+			PreparedStatement getcab = con.prepareStatement("select Cab_No from ncab_roster_tbl where Route_No = '"+routeno+"' and Route_Status = 'active'");
+			ResultSet rsgc = getcab.executeQuery();
+			rsgc.next();
+			String cabnoupd = rsgc.getString(1); 
+			System.out.println("Old cab no: "+cabnoupd);
 			PreparedStatement pss = con.prepareStatement(
 					"select Emp_Qlid,Pickup_Time,Cab_Cost,Guard_Needed,Remarks,Driver_Id,Drop_Type from ncab_roster_tbl WHERE Route_No ='"
-							+ routeno + "'");
+							+ routeno + "' and Cab_No = '"+cabnoupd+"' and Emp_Status = 'active' and '"+current_date+"' between Start_Date and End_Date");
 			ResultSet rs = pss.executeQuery();
+			PreparedStatement ps = con
+					.prepareStatement("UPDATE ncab_roster_tbl SET Emp_Status = 'inactive' , Route_Status='inactive' WHERE Route_No ='" + routeno
+							+ "' and Route_Status='active' and Cab_No = '"+cabnoupd+"'");
+			ps.executeUpdate();
 			while (rs.next()) {
 				PreparedStatement fs = con.prepareStatement(
-						"insert into ncab_roster_tbl(Route_No,Emp_Qlid,Shift_Id,Pickup_Time,Cab_No,Guard_Needed,Remarks,Start_Date,End_Date,Cab_Cost,Vendor_Name,Driver_Id,Drop_Type) values(?,?,?,?,?,?,?,?,?,?,?,?,?)");
+						"insert into ncab_roster_tbl(Route_No,Emp_Qlid,Shift_Id,Pickup_Time,Cab_No,Guard_Needed,Remarks,Start_Date,End_Date,Cab_Cost,Vendor_Name,Driver_Id,Drop_Type,Emp_Status,Route_Status) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 				fs.setString(1, routeno);
 				fs.setString(2, rs.getString(1));
 				fs.setInt(3, shiftid);
@@ -1539,39 +1677,50 @@ public class RosterServiceImpl {
 				fs.setString(5, cabno);
 				fs.setString(6, rs.getString(4));
 				fs.setString(7, rs.getString(5));
-				fs.setString(8, start_date);
-				fs.setString(9, end_date);
+				fs.setString(8, s_date);
+				fs.setString(9, e_date);
 				fs.setString(10, rs.getString(3));
 				fs.setString(11, vendor);
 				fs.setString(12, rs.getString(6));
 				fs.setString(13, rs.getString(7));
+				fs.setString(14, "active");
+				fs.setString(15, "active");
 				s1 = fs.executeUpdate();
 				System.out.println("data inserted");
 			}
+			System.out.println("New rows inserted");
+
+			System.out.println("Old rows made inactive");
 
 			if (s1 > 0) {
-				return ("success");
+				jsobj.put("err_msg", "success");
+			}
+			else{
+				jsobj.put("err_msg", "fail");
 			}
 			System.out.println("Success mysql table");
 		} catch (Exception e) {
-			// TODO: handle exception
+			// TODO: handle exception				
+			jsobj.put("err_msg", "fail");
 			e.printStackTrace();
 		}
-		return ("failure");
+		return jsobj;
 	}
 
 	public JSONArray getcablist(String s) {
 		DBConnectionUpd db = new DBConnectionUpd();
 		Connection connection = db.getConnection();
 		JSONArray jsarr = new JSONArray();
+		long millis = System.currentTimeMillis();  
+		java.sql.Date date = new java.sql.Date(millis);
+		String current_date = date.toString();
+		System.out.println("String s: "+s);
 		try {
 			JSONObject json = new JSONObject(s);
-			// String cabno = json.getString("cabno");
+			System.out.println("emp edit json: "+json);
+			 String cabno = json.getString("cabno");
 			String sid = json.getString("shiftid");
-
-			PreparedStatement ps = connection
-					.prepareStatement("select distinct Cab_No,Shift_Id from ncab_roster_tbl where Shift_Id <> '" + sid
-							+ "' and Shift_Id <> 4 and Roster_Month='MAR' and Roster_Year='2018' order by Shift_Id");
+			PreparedStatement ps = connection.prepareStatement("SELECT DISTINCT Cab_No,Shift_Id FROM ncab_roster_tbl WHERE (Cab_No,Shift_Id) NOT IN (SELECT cab_no,shift_id FROM ncab_roster_tbl WHERE cab_no = '"+cabno+"' AND shift_id = '"+sid+"' and '"+current_date+"' BETWEEN Start_Date AND End_Date) AND Shift_Id <> 4 AND '"+current_date+"' BETWEEN Start_Date AND End_Date ORDER BY Shift_Id;");
 			// PreparedStatement ps=connection.prepareStatement("select Emp_Qlid
 			// from master_employee ");
 
@@ -1714,97 +1863,15 @@ public class RosterServiceImpl {
 		// TODO Auto-generated method stub
 
 	}
-
-	public String writeExcel(String s) {
-		DBConnectionUpd dbconnection = new DBConnectionUpd();
-		Connection connection = dbconnection.getConnection();
-		RosterServiceImpl rsi = new RosterServiceImpl();
-		JSONObject jsobj = null;
-		JSONArray jsarr = new JSONArray();
-		try {
-			jsobj = new JSONObject(s);
-			HSSFWorkbook hssfWorkbook = null;
-			HSSFRow row = null;
-			HSSFSheet hssfSheet = null;
-			FileOutputStream fileOutputStream = null;
-			Properties properties = null;
-			String filename = "C:/roster.xls";
-			hssfWorkbook = new HSSFWorkbook();
-			hssfSheet = hssfWorkbook.createSheet("new sheet");
-
-			HSSFRow rowhead = hssfSheet.createRow(0); // Header
-
-			rowhead.createCell(0).setCellValue("S.N");
-			rowhead.createCell(1).setCellValue("Route No");
-			rowhead.createCell(2).setCellValue("QLID");
-			rowhead.createCell(3).setCellValue("Employee Name");
-			rowhead.createCell(4).setCellValue("Shift Time");
-			rowhead.createCell(5).setCellValue("Pick-up Area");
-			rowhead.createCell(6).setCellValue("Pick Time");
-			rowhead.createCell(7).setCellValue("Drop at");
-			rowhead.createCell(8).setCellValue("Vendor Name");
-			rowhead.createCell(9).setCellValue("Start Date");
-			rowhead.createCell(10).setCellValue("End Date");
-			rowhead.createCell(11).setCellValue("Cab Number");
-			rowhead.createCell(12).setCellValue("Driver Name");
-			rowhead.createCell(13).setCellValue("Driver Number");
-			rowhead.createCell(14).setCellValue("Guard Needed");
-			rowhead.createCell(15).setCellValue("Remarks");
-
-			for (int i = 0; i < jsarr.length(); i++) {
-				JSONObject jsonObject1 = jsarr.getJSONObject(i);
-				row = hssfSheet.createRow( i + 1);
-				row.createCell( 0).setCellValue(Integer.parseInt(jsonObject1.getString("Route_number")));
-				row.createCell( 1).setCellValue(jsonObject1.getString("Qlid"));
-				String mname = "";
-				row.createCell( 2)
-						.setCellValue(jsonObject1.getString("f_name") + " " + jsonObject1.getString("l_name"));
-
-				row.createCell( 3).setCellValue(Integer.parseInt(jsonObject1.getString("shift_id")));
-				row.createCell( 4).setCellValue(jsonObject1.getString("p_a"));
-				// row.createCell(
-				// 5).setCellValue(jsonObject1.getString("pickup_time"));
-				row.createCell( 5).setCellValue(jsonObject1.getString("Cab_number"));
-				// row.createCell(
-				// 7).setCellValue(jsonObject1.getString("vendor_name"));
-
-			}
-
-			/*
-			 * for (RosterModel rostermodel : jsonInfo.getRecords()) {
-			 * properties = programInfo.getProperties(); row =
-			 * hssfSheet.createRow( counter); row.createCell(
-			 * 0).setCellValue(counter); row.createCell( 1).setCellValue(
-			 * properties.getRegisteredForActualService());
-			 * row.createCell( 2).setCellValue(
-			 * properties.getEmsCreationTime()); row.createCell(
-			 * 3).setCellValue( properties.getRequestsOffering());
-			 * row.createCell( 4).setCellValue(
-			 * programInfo.getRecord_type()); row.createCell(
-			 * 5).setCellValue("");// This is blank // object without // any
-			 * property counter++; } counter += 5; row =
-			 * hssfSheet.createRow( counter); row.createCell(
-			 * 0).setCellValue("Completion Status : "+
-			 * jsonInfo.getMeta().getCompletion_status());
-			 * row.createCell( 1).setCellValue("Total Count : "+
-			 * jsonInfo.getMeta().getTotal_count());
-			 */
-			fileOutputStream = new FileOutputStream(filename);
-			hssfWorkbook.write(fileOutputStream);
-			fileOutputStream.close();
-
-			System.out.println("JSON data successfully exported to excel!");
-		} catch (Throwable throwable) {
-			System.out.println("Exception in writting data to excel : " + throwable);
-		}
-		return "success";
-	}
-
+	
 	// download data
 
 	@SuppressWarnings("unused")
-	public String download_data(String s) {
+	public JSONObject download_data(String s) {
+		JSONObject msg=new JSONObject();
+
 		try {
+			
 			JSONObject jsn = new JSONObject(s);
 			DBConnectionUpd db = new DBConnectionUpd();
 			RosterModel rm = new RosterModel();
@@ -1826,7 +1893,12 @@ public class RosterServiceImpl {
 
 			hssfWorkbook = new HSSFWorkbook();
 			hssfSheet = hssfWorkbook.createSheet("new sheet");
-
+			DataFormat fmt = hssfWorkbook.createDataFormat();
+			CellStyle textStyle = hssfWorkbook.createCellStyle();
+			textStyle.setDataFormat(fmt.getFormat("@"));
+			hssfSheet.setDefaultColumnStyle(6, textStyle); 
+			
+			
 			HSSFRow rowhead = hssfSheet.createRow(0); // Header
 
 			rowhead.createCell(0).setCellValue("S.N");
@@ -1918,7 +1990,9 @@ public class RosterServiceImpl {
 
 					}
 					row.createCell( 5).setCellValue(rm.getPickup_area());
-					row.createCell( 6).setCellValue(rm.getPickup_time());
+					Cell cell_pickup = row.createCell(6);
+					cell_pickup.setCellStyle(textStyle);
+					cell_pickup.setCellValue(rm.getPickup_time());
 					row.createCell( 7).setCellValue(rm.getDrop_time());
 					row.createCell( 8).setCellValue(rm.getVendor_name());
 					row.createCell( 9).setCellValue(rm.getStart_time());
@@ -1935,13 +2009,55 @@ public class RosterServiceImpl {
 			fileOutputStream = new FileOutputStream(filename);
 			hssfWorkbook.write(fileOutputStream);
 			fileOutputStream.close();
+//			msg.put("err_msg","success");
+//			msg.put("err_msg","success");
+//			System.out.println("Excel Sucessfully Downloaded.");
+//		} catch (Exception e) {
+//			// TODO Auto-generated catch block
+//			msg.put("err_msg", "error_exist");
+			msg.put("err_type","success");
 			System.out.println("Excel Sucessfully Downloaded.");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
+			msg.put("err_type", "fail");
 			e.printStackTrace();
 		}
-
-		return "success";
+System.out.println("error msg download data:- "+msg);
+		return msg;
 	}
+	
+public JSONArray getStartandEndDate(String strdiv) {
+		
+		long millis = System.currentTimeMillis();
+		java.sql.Date date = new java.sql.Date(millis);
+		String current_date = date.toString();
+		DBConnectionUpd dbconnection = new DBConnectionUpd();
+		Connection connection = dbconnection.getConnection();
+
+		JSONArray jarr = new JSONArray();
+
+		try {
+			JSONObject jsobj=new JSONObject(strdiv);
+			String eqlid=jsobj.getString("e_qlid");
+			String ecab=jsobj.getString("e_cab");
+			String eshift=jsobj.getString("e_sid");
+			PreparedStatement ps = connection.prepareStatement("select Start_Date,End_Date,Pickup_Time from ncab_roster_tbl where Cab_No='"+ecab+"'and Shift_Id='"+eshift+"' and Emp_Qlid='"+eqlid+"' and Emp_Status='active' and current_date between Start_Date and End_Date");
+
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				JSONObject json = new JSONObject();
+				json.put("sdate", rs.getString(1));
+				json.put("edate", rs.getString(2));
+				json.put("pickt", rs.getString(3));
+
+				jarr.put(json);
+			}
+				System.out.println(jarr);
+		} catch (Exception e) {
+			System.out.println("error in imp :- " + e.getMessage());
+		}
+		return jarr;
+	}
+		
 
 }
