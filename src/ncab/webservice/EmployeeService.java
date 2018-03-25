@@ -40,6 +40,7 @@ import ncab.dao.DBConnectionUpd;
 import ncab.dao.impl.EmployeeServiceImpl;
 import ncab.dao.impl.RosterServiceImpl;
 import ncab.dao.impl.UtilServiceImpl;
+import ncab.dao.impl.VendorServiceImpl;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Path("/EmployeeService")
@@ -482,6 +483,20 @@ public class EmployeeService {
 				session.setAttribute("qlid", loginFormInputBean.getQlid());
 				session.setAttribute("token", token);
 				session.setAttribute("role", jsObj.get("role"));
+				
+				//// execute sendmail if user is admin....
+				if(jsObj.getString("role").toUpperCase().equals("ADMIN")) {
+					VendorServiceImpl demodaoimpl = new VendorServiceImpl();	
+					
+					if(demodaoimpl.sendnotification())
+					{
+						System.out.println("Success");
+					}
+					else
+					{
+						System.out.println("Failed");
+					}
+				}
 	
 				System.out.println(
 					"\tSession----------\n\t\tqlid: "

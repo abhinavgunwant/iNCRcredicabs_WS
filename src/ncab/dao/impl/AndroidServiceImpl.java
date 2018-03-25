@@ -294,5 +294,33 @@ public class AndroidServiceImpl {
 
            }
 
+//              public JSONObject getRoasterDetailsByEmpID(String emp_Qlid) {
+//                  // TODO Auto-generated method stub
+//                  DBConnectionRo dbconnection = new DBConnectionRo();
+//                  Connection connection = (Connection) dbconnection.getConnection();
+//                                String sql = "select Pickup_Time from ncab_roster_tbl where Emp_Qlid=?";
+//                         PreparedStatement ps;
+//                         JSONObject jsonresponse=null;
+//                         try {
+//                                ps = connection.prepareStatement(sql);
+//                                ps.setString(1,emp_Qlid);
+//                                ResultSet rs = ps.executeQuery();
+//                                String Pickup_Time=null;
+//                                   jsonresponse= new JSONObject();
+//                                while (rs.next()) {
+//
+//                                        Pickup_Time=rs.getString(1);
+//                                      jsonresponse.put("Pickup_Time", Pickup_Time); 
+//                                      jsonresponse.put("status", "success"); 
+//                                                    }
+//
+//
+//                         } catch (SQLException e) {
+//                                // TODO Auto-generated catch block
+//                                e.printStackTrace();
+//                         }
+//                         return jsonresponse;
+//
+//           }
 
 }

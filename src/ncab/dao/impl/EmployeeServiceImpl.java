@@ -128,7 +128,11 @@ public class EmployeeServiceImpl {
 	 * 		Adds an employee to the DataBase
 	 * 
 	 * @param employeeBean: Bean containing the employee to be added to the
-	 * 		datapase
+	 * 		database
+	 * 
+	 * 		An important thing to consider: The password in editEmployee and
+	 * 		addEmployee methods contains "plain-text" of the password in
+	 * 		employeeBean, rest of the methods contain the "Hash" of password!
 	 * 		
 	 * 		On Success, returns JSON:
 	 * 				{"success": true, "message": "Employee successfully added!"}
@@ -150,7 +154,7 @@ public class EmployeeServiceImpl {
 					.put("success", false)
 					.put("message", "An error occured!");
 		}
-		System.out.println("!!2");
+//		System.out.println("!!2");
 		
 		try {
 			Connection connection = (new DBConnectionUpd()).getConnection();
@@ -1338,13 +1342,14 @@ public class EmployeeServiceImpl {
 	 */
 	public boolean updatePassword(String qlid, String password) {
 		try {
+			String passwordHash = BCrypt.hashpw(password, BCrypt.gensalt());
 			Connection connection = (new DBConnectionUpd()).getConnection();
 			PreparedStatement ps = connection.prepareStatement(
 				"UPDATE "+DBTables.LOGIN_CREDENTIALS+" SET "
 				+ "Login_Last_Update_Date = CURDATE(), Login_PasswordChangedOn = CURDATE(), "
 				+ "Login_Password = ?, Login_Last_Updated_By = ? WHERE Emp_Qlid = ?"
 			);
-			ps.setString(1, password);
+			ps.setString(1, passwordHash);
 			ps.setString(2, qlid);
 			ps.setString(3, qlid);
 			ps.executeUpdate();
@@ -1481,7 +1486,10 @@ public class EmployeeServiceImpl {
 				dbPassword = rs.getString("login_password");
 //				System.out.println("DB password: " + dbPassword);
 				
-				if(dbPassword.equals(password)) {
+//				if(dbPassword.equals(password)) {
+				//// Verify that the password is correct!
+				//// (Uses BCrypt)....
+				if(BCrypt.checkpw(password, dbPassword)) {
 					loginSuccess = true;
 					message = "You have been successfully logged in!";
 					messageType = "success";			

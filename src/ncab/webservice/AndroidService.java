@@ -125,6 +125,7 @@ public class AndroidService {
   		 Response   response = Response.status(200).type("application/json").entity(jsonresponse.toString()).build();              
           return response;
   	 }
+       
        @POST
        @Produces(MediaType.APPLICATION_JSON)
        @Path("/RoasterDetailsByEmpID")
@@ -145,5 +146,25 @@ public class AndroidService {
   		 Response   response = Response.status(200).type("application/json").entity(jsonresponse.toString()).build();              
           return response;
   	 }
+
+       public Response DetailsByEmpID(String jsonrequest) {
+          AndroidServiceImpl demodaoimpl=new AndroidServiceImpl();
+          System.out.println(jsonrequest);
+          JSONObject jsonObject = null;
+               try {
+                      jsonObject = new JSONObject(jsonrequest);
+               } catch (ParseException e) {
+                      // TODO Auto-generated catch block
+                      e.printStackTrace();
+               }
+               
+                  System.out.println(jsonObject);
+                  String Emp_Qlid=jsonObject.getString("Emp_QLID");
+           JSONObject jsonresponse = new JSONObject();
+          jsonresponse = demodaoimpl.getRoasterDetailsByEmpID(Emp_Qlid); 
+                Response   response = Response.status(200).type("application/json").entity(jsonresponse.toString()).build();              
+           return response;
+         }
+
 }
 
