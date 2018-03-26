@@ -5,7 +5,6 @@ import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,21 +25,14 @@ import java.util.Iterator;
 import java.util.Properties;
 import java.util.Random;
 
-import javax.activation.DataHandler;
-import javax.activation.DataSource;
-import javax.activation.FileDataSource;
 import javax.mail.Authenticator;
-import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.MessagingException;
-import javax.mail.Multipart;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
 import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -75,9 +67,6 @@ public class EmployeeServiceImpl {
 	private final String USER_AGENT = "Mozilla/5.0";
 	private final String GRECAPTCHA_API_URL = "https://www.google.com/recaptcha/api/siteverify";
 	private final String GRECAPTCHA_SECRET = "6LfobEoUAAAAAMzl6qoNPTKv561siLjKlvFVAMIO";
-//	private final String LOGFILE_DIR = "C:\\Users\\AG250497\\Desktop\\ncab_logs";
-	private final String LOGFILE_DIR = "/tmp/ncab_logs";
-	private final String LOGFILE_PREFIX = "iNCRediCabs_EMP_MASS_UPLOAD_LOG_";
 	
 	public static final String DEFAULT_QLID = "NO_QLID";
 	public static final String DEFAULT_TOKEN = "NO_TOKEN";
@@ -184,11 +173,11 @@ public class EmployeeServiceImpl {
 			}
 			PreparedStatement ps = connection.prepareStatement(
 				"INSERT INTO "+ DBTables.EMPLOYEE +"("
-				+ "emp_qlid, emp_mgr_qlid1, emp_mgr_qlid2, emp_fname, emp_mname, emp_lname, emp_gender,"
+				+ "emp_qlid, emp_mgr_qlid1, emp_mgr_qlid2, emp_fname, emp_mname, emp_lname, emp_gender, emp_dob,"
 				+ "Emp_Mob_Nbr, emp_home_nbr, emp_emerg_nbr, emp_add_line1, emp_add_line2, emp_pin,"
 				+ "emp_pickup_area, emp_status, emp_bloodgrp, emp_created_by, emp_creation_date,"
 				+ "emp_last_updated_by, emp_last_update_date, roles_id, emp_zone, emp_org_id) "
-				+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), ?, CURDATE(), ?, ?, 'ITS')"
+				+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), ?, CURDATE(), ?, ?, 'ITS')"
 			);
 			
 			ps.setString(1, employeeBean.getEmpQlid());
@@ -198,20 +187,20 @@ public class EmployeeServiceImpl {
 			ps.setString(5, employeeBean.getEmpMName());
 			ps.setString(6, employeeBean.getEmpLName());
 			ps.setString(7, employeeBean.getEmpGender());
-//			ps.setString(8, employeeBean.getEmpDOB());
-			ps.setString(8, employeeBean.getEmpMobNbr());
-			ps.setString(9, employeeBean.getEmpHomeNbr());
-			ps.setString(10, employeeBean.getEmpEmergNbr());
-			ps.setString(11, employeeBean.getEmpAddLine1());
-			ps.setString(12, employeeBean.getEmpAddLine2());
-			ps.setInt(13, employeeBean.getEmpPin());
-			ps.setString(14, employeeBean.getEmpPickupArea());
-			ps.setString(15, "A");
-			ps.setString(16, employeeBean.getEmpBloodGrp());
-			ps.setString(17, "SYSTEM");
+			ps.setString(8, employeeBean.getEmpDOB());
+			ps.setString(9, employeeBean.getEmpMobNbr());
+			ps.setString(10, employeeBean.getEmpHomeNbr());
+			ps.setString(11, employeeBean.getEmpEmergNbr());
+			ps.setString(12, employeeBean.getEmpAddLine1());
+			ps.setString(13, employeeBean.getEmpAddLine2());
+			ps.setInt(14, employeeBean.getEmpPin());
+			ps.setString(15, employeeBean.getEmpPickupArea());
+			ps.setString(16, "A");
+			ps.setString(17, employeeBean.getEmpBloodGrp());
 			ps.setString(18, "SYSTEM");
-			ps.setString(19, employeeBean.getRolesId());
-			ps.setString(20, employeeBean.getEmpZone());
+			ps.setString(19, "SYSTEM");
+			ps.setString(20, employeeBean.getRolesId());
+			ps.setString(21, employeeBean.getEmpZone());
 			ps.executeUpdate();
 		} catch(SQLException e) {
 			e.printStackTrace();
@@ -241,7 +230,6 @@ public class EmployeeServiceImpl {
 		if(!Boolean.parseBoolean(validateJSON.getString("success"))) {
 			return validateJSON;
 		}
-		System.out.println("Before sql");
 		try {
 			Connection connection = (new DBConnectionUpd()).getConnection();			
 			PreparedStatement ps = connection.prepareStatement( 
@@ -280,13 +268,11 @@ public class EmployeeServiceImpl {
 			System.out.println("SQL update executed succesfully!");
 		} catch(SQLException e) {
 			e.printStackTrace();
-			System.out.println("Inside Catch");
 			return (new JSONObject())
 					.put("success", false)
 					.put("message", "Error while editing employee!");
 		}
 		
-		System.out.println("Last statement");
 		return (new JSONObject())
 				.put("success", true)
 				.put("message", "Employee edited successfully!");
@@ -388,8 +374,7 @@ public class EmployeeServiceImpl {
 					case "MGRQLID1":
 						ps = connection.prepareStatement(
 								"SELECT * FROM "+ DBTables.EMPLOYEE +" WHERE "
-								+ "emp_mgr_qlid1 LIKE ? "
-								+ "ORDER BY emp_fname, emp_mname, emp_lname, emp_status"
+								+ "emp_mgr_qlid1 LIKE ?"
 						);
 						ps.setString(1, employeeFilterBean.getFilterValue()+"%");
 						break;
@@ -1935,13 +1920,10 @@ public class EmployeeServiceImpl {
 	}
 
 
-	public JSONObject insertIntoDatabase(InputStream fileInputStream, FormDataContentDisposition fileFormDataContentDisposition, String qlid)
+	public JSONObject insertIntoDatabase(InputStream fileInputStream, FormDataContentDisposition fileFormDataContentDisposition)
 			throws IOException {
 		DBConnectionUpd dbconnection = new DBConnectionUpd();
 		Connection connection = dbconnection.getConnection();
-		
-		DateFormat formatter = new SimpleDateFormat("E MMM dd HH:mm:ss Z yyyy");
-		DateFormat logDateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 		
 		EmployeeBean empBean = new EmployeeBean();
 		
@@ -1952,24 +1934,8 @@ public class EmployeeServiceImpl {
 		Iterator jsonKeys;
 		
 		RowCheck rowcheck = new RowCheck();
-		Calendar cal = Calendar.getInstance();
-		String logStartStr = logDateFormat.format(new Date());
-		
-		String logFileName = LOGFILE_DIR + "/" + LOGFILE_PREFIX +
-						logStartStr.replaceAll("\\s", "_").replaceAll(":", "-") + ".txt";
-		
-		File logDir = new File(LOGFILE_DIR);
-		
-		if(!logDir.exists()) {
-			logDir.mkdir();
-		}
-		
-		File file = new File(logFileName);
-		if(!file.exists()) {
-			file.createNewFile();
-		}
-		
-		FileWriter f0 = null;
+		File file = new File("C:\\Users\\AG250497\\Desktop\\output.txt");
+		FileWriter f0;
 		FileWriter fw;
 		
 	    int last_row_valid = 0;
@@ -1985,57 +1951,65 @@ public class EmployeeServiceImpl {
 	    Sheet sheet = null;
 	    
 		boolean success = true;
-		boolean allSuccess = true;
 		boolean empAlreadyExists = false;
+		
+		DateFormat formatter = new SimpleDateFormat("E MMM dd HH:mm:ss Z yyyy");
 		
 		
 		try {
-			f0 = new FileWriter(file);
-			f0.write("iNCRediCabs EMPLOYEE MASS UPLOAD LOG");
-			f0.write("\n---------------------------------------------------");
-			f0.write("\nLog recorded on: " + logDateFormat.format(new Date()));
-			f0.write("\nAdmin QLID: " + qlid.toUpperCase());
+			f0 = new FileWriter(file);	
 			
 			if (fileFormDataContentDisposition.getFileName().endsWith("xlsx")) {
+//				System.out.println("Yes check succeed");
 				workbook = new XSSFWorkbook(fileInputStream);
 			} else {
 				workbook = new XSSFWorkbook(fileInputStream);
 				System.out.println("Yes check succeed for other file type");
 			}
-			
 			sheet = workbook.getSheetAt(0);
+			//Sheet sheet = workbook.getSheetAt(0);
+	
+			//System.out.println(sheet.getLastRowNum());
+			// Generating right LastRowNum
+			
+//			System.out.println("checkpoint 1");
+//			System.out.println(sheet.getLastRowNum());
 	
 			for (int i = sheet.getLastRowNum(); i >= 0; i--) {
 				Row row_check_test = (Row) sheet.getRow(i);
 				boolean flag = RowCheck.isRowEmpty(row_check_test);
 				if (flag == true) {
+//					System.out.println("Empty row!, Iterating Backwards");
 					continue;
 				} else {
+//					System.out.println("The Index is " + i);
 					last_row_valid = i;
 					break;
 				}
 			}
+		//	System.out.println(last_row_valid);
 			qlid_arr = new String[last_row_valid];
+		//	cab_arr = new String[last_row_valid];
+//			System.out.println("checkpoint 2");
 			
 			String newLine = System.getProperty("line.separator");
 		}catch(FileNotFoundException c){			//// for new FileWriter(file) statement
 			System.out.println("File not found!");
-			return (new JSONObject())
-						.put("success", false)
-						.put("message", "Log file could not be created, aborting...");
 		}catch(Exception e) {
 			e.printStackTrace();
 		}
 		
-
-		f0.write("\nFile Name: " + fileFormDataContentDisposition.getFileName());
-		f0.write("\nTotal number of rows in file: "+(last_row_valid+1));
-		f0.write("\n---------------------------------------------------\n");
-		
 		Row row;
 		for (int i = 0; i <= last_row_valid; i++) {
 			success = true;
-			f0.write("\nROW " + (i+1)+ ":["+logDateFormat.format(new Date())+"] >>>> ");
+			
+			 //// Clearing out the validateJSON object....
+//			jsonKeys = validateJSON.keys();
+//			
+//			validateJSON.removeAk
+//			while(jsonKeys.hasNext()) {
+//				validateJSON.remove(jsonKeys.next().toString());
+//			}
 			validateJSON = null;			
 			
 			try {
@@ -2103,14 +2077,104 @@ public class EmployeeServiceImpl {
 						js2 = validateJSON.getJSONObject(key);
 						if(Boolean.parseBoolean(js2.getString("error"))) {
 							success = false;
-							f0.write("\n\tERROR: \"" + js2.getString("message") +"\" \n\t\tVALUE: "
-									+js2.getString("value"));
 						}
 					}
 				}
 				
+				
+//				String qlid = row.getCell(0, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+			//	qlid_arr[i - 1] = qlid;
+//				System.out.println("id: " + qlid);
+	
+//				String m1_qlid = row.getCell(1, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+	//			m1_qlid_arr[i - 1] = m1_qlid;
+//	        	System.out.println("id: " + m1_qlid);
+	
+//				String m2_qlid = row.getCell(2, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+	//			m2_qlid_arr[i - 1] = m2_qlid;
+//				System.out.println("id: " + m2_qlid);
+				
 				String its = row.getCell(3, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
 				System.out.println("ITS: " + its);
+				
+				
+//				String fname = row.getCell(4, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+//				System.out.println("Full name: " + fname);
+							
+//				String mname = row.getCell(5, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+//				System.out.println("Middle name : " + mname);
+							
+//				String lname = row.getCell(6, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+//				System.out.println("Last name: " + lname);
+							
+//				String gen = row.getCell(7,Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+	//			if(gen != "m" ||gen != "f" ||gen != "M" ||gen != "F")
+	//			{
+	//				System.out.println("Error");
+	//			}
+//				System.out.println("Gender: " + gen);
+					
+	//			String date = "" + row.getCell(8, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getDateCellValue();
+	//			DateFormat formatter = new SimpleDateFormat("E MMM dd HH:mm:ss Z yyyy");
+	//			Date date1 = (Date)formatter.parse(date);			 
+	//			//System.out.println("DOB: " + date1);
+	//			
+	//			Calendar cal = Calendar.getInstance();
+	//			cal.setTime(date1);
+	//			String formatedDate = cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH) + 1) + "-" + cal.get(Calendar.DATE);
+	//			System.out.println("formatedDate : " + formatedDate);  
+						
+//				long m_nbr = (long)row.getCell(8, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getNumericCellValue();
+//				System.out.println("Mobile number: " + m_nbr);
+				
+//				long h_nbr = (long)row.getCell(9, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getNumericCellValue();
+//				System.out.println("Home number: " + h_nbr);
+				
+//				long e_nbr = (long)row.getCell(10,Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getNumericCellValue();
+//				System.out.println("Emergency Number: " + e_nbr);
+				
+//				String add1 = row.getCell(11, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+//				System.out.println("Address Line 1: " + add1);
+				
+//				String add2 = row.getCell(12, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+//				System.out.println("Address Line 2: " + add2);
+				
+//				int pin = (int)row.getCell(13, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getNumericCellValue();
+//				System.out.println("Pin Code: " + pin);
+				
+//				String pickup = row.getCell(14, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+//				System.out.println("Pickup Location: " + pickup);
+				
+//				String status = row.getCell(15, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+	//			if(status != "i" ||status != "a" ||status != "A" ||status != "I")
+	//			{
+	//				System.out.println("Error");
+	//			}
+//				System.out.println("Cab Status: " + status);
+				
+//				String bgrp = row.getCell(16, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+//				System.out.println("Blood Group: " + bgrp);
+				
+//				String created_by = row.getCell(17, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+//				System.out.println("Record Created by: " + created_by);
+				
+				  
+//				System.out.println("Record Creation date: " + formatedDate1);
+				
+//				String last_updated_by = row.getCell(19, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();	
+//				System.out.println("Record last Updated By: " + last_updated_by);
+				
+				
+//				System.out.println("Record last updated date: " + formatedDate2);
+				
+//				int roles_id = (int)row.getCell(21,Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getNumericCellValue();
+//				System.out.println("Roles id: " + roles_id);
+				
+//				String zone = row.getCell(22, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+//				System.out.println("Zone: " + zone);
+				
+//				int j = i+1;
+//				System.out.println("Import rows " + j);
 				
 				PreparedStatement psCheck = connection.prepareStatement(
 						"SELECT emp_qlid FROM "+DBTables.EMPLOYEE+
@@ -2168,7 +2232,11 @@ public class EmployeeServiceImpl {
 						connection.commit();
 					
 						System.out.println("Success import excel to mysql table");
-						jsArr.put(createJSON(empBean));
+						jsArr.put(
+							(new JSONObject())
+								.put("qlid", empBean.getEmpQlid())
+								.put("name", empBean.getEmpFName()+" "+empBean.getEmpMName()+" "+empBean.getEmpLName())
+						);
 						++totalSuccessful;						
 					}else {
 						ps = connection.prepareStatement(
@@ -2210,25 +2278,33 @@ public class EmployeeServiceImpl {
 						connection.commit();
 					
 						System.out.println("Success import excel to mysql table");
-						jsArr.put(createJSON(empBean));
+						jsArr.put(
+							(new JSONObject())
+								.put("qlid", empBean.getEmpQlid())
+								.put("name", empBean.getEmpFName()+" "+empBean.getEmpMName()+" "+empBean.getEmpLName())
+						);
 						++totalSuccessful;
 					}
 				}else {
 					System.out.println("***** Validation Error!");
+//					jsonKeys = validateJSON.keys();
+//					String key;
+					
+//					while(jsonKeys.hasNext()) {
+//						key = jsonKeys.next().toString();
+//						js2 = validateJSON.getJSONObject(key);
+//						
+//						if(Boolean.parseBoolean(js2.getString("error")) == false) {
+//							validateJSON.remove(key);							
+//						}
+//					}					
+//					jsValidateArr.put(validateJSON);
 				}
+
 			}catch (Exception e) {		
 				System.out.println(e.toString());
 			    e.printStackTrace();
-			    success = false;
 		    }
-			
-			if(success) {				
-				f0.write("\n\tROW ADD SUCCEEDED");				
-			}else {
-				allSuccess = false;
-				f0.write("\n\tROW ADD FAILED");
-				
-			}
 		}
 
 		workbook.close();
@@ -2240,70 +2316,17 @@ public class EmployeeServiceImpl {
 			e.printStackTrace();
 		}
 		
-		f0.close();
-		
 		System.out.println("totalRows: " + (last_row_valid+1));
 		System.out.println("totalSuccessful: " + totalSuccessful);
 		System.out.println("totalFailed: " + (last_row_valid - totalSuccessful));
-		
-//		System.out.println("Sending log to " + qlid + "@ncr.com");
-//		if(!qlid.equals(DEFAULT_QLID)) {
-		sendAttachment("ag250497@ncr.com", logFileName);
-//		}else {
-//			System.out.println("could not send email to: " + qlid);
-//		}
-		
+	
 		return (new JSONObject())
-					.put("success", allSuccess)
+					.put("success", success)
 					.put("totalRows", (last_row_valid+1))
 					.put("totalSuccessful", totalSuccessful)
 					.put("totalFailed", (last_row_valid + 1 - totalSuccessful))
 					.put("successfulUpload", jsArr);
-	}
-	
-	public boolean sendAttachment(String toAddress, String filePath) {
-		String host = "localhost";
-		Properties props = new Properties();
-    	props.put("mail.smtp.host", "smtp.gmail.com");
-		props.put("mail.smtp.socketFactory.port", "465");
-		props.put("mail.smtp.socketFactory.class","javax.net.ssl.SSLSocketFactory");
-		props.put("mail.smtp.auth", "true");
-		props.put("mail.smtp.port", "465");
-		    
-		Session mySession = Session.getInstance(props, new Authenticator(){
-			protected PasswordAuthentication getPasswordAuthentication(){
-				return new PasswordAuthentication("javamailsystem1@gmail.com","javamail1");
-		}});		    
-	    try{
-	    	String from="iNCRediCabs-Admin@ncr.com";
-	    	MimeMessage message = new MimeMessage(mySession);
-	    	message.setFrom(new InternetAddress(from));
-	    	message.addRecipients(Message.RecipientType.TO, InternetAddress.parse(toAddress));	  
-	    	message.setSubject("iNCRediCabs Employee Mass Upload LOG");
-	    	
-	    	BodyPart bp = new MimeBodyPart();
-	    	bp.setText("Please find attached the log file to the mass upload action performed by you!");
-	    	
-	    	Multipart mp = new MimeMultipart();
-	    	mp.addBodyPart(bp);
-	    	
-	    	bp = new MimeBodyPart();
-	    	DataSource ds = new FileDataSource(filePath);
-	    	bp.setDataHandler(new DataHandler(ds));
-	    	bp.setFileName(filePath);
-	    	mp.addBodyPart(bp);  	
-	    	
-	    	
-	    	message.setContent(mp);
-	    	
-	    	Transport.send(message);
-	    	System.out.println("SendMailService: Message Sent!");
-	    	return true;
-	    }catch( HeadlessException | MessagingException e){
-	    	e.printStackTrace();
-	    	return false;
-	    }
-		
+//					.put("errors", jsValidateArr);
 	}
 
 	/**
@@ -2469,6 +2492,56 @@ public class EmployeeServiceImpl {
 				.put("contacts", getContactJSONArray())
 				.put("shiftInfo", getShiftJSONArray());
 		
+		
+//		try{
+			
+//			PreparedStatement ps = con.prepareStatement(
+//				"select Emp_Qlid,Emp_FName,Emp_MName,Emp_LName,Emp_Mob_Nbr,Emp_Add_Line1,Emp_Add_Line2,Emp_PIN,Emp_Pickup_Area,Emp_Status,Emp_Mgr_Qlid1, Emp_Mgr_Qlid2,Emp_Zone from "+DBTables.EMPLOYEE+" where Emp_Qlid =?");
+//			ps.setString(1, qlid);
+//			ResultSet rs = ps.executeQuery();
+			
+			
+//			PreparedStatement ps1 = con.prepareStatement("SELECT CONCAT(Emp_FName,' ', Emp_LName,' (',Emp_Qlid,')') AS manager_Level1 FROM "+DBTables.EMPLOYEE+" WHERE Emp_Qlid = (SELECT Emp_Mgr_Qlid1 FROM ncab_master_employee_tbl WHERE Emp_Qlid = ?)");
+//		ps1.setString(1, rs.getString("Emp_Mgr_Qlid1"));
+//		ResultSet rs1 = ps1.executeQuery();	
+//			PreparedStatement ps2 = con.prepareStatement("SELECT CONCAT(Emp_FName,' ', Emp_LName,' (',Emp_Qlid,')') AS manager_Level2 FROM "+DBTables.EMPLOYEE+" WHERE Emp_Qlid = (SELECT Emp_Mgr_Qlid1 FROM ncab_master_employee_tbl WHERE Emp_Qlid = ?)");
+//			ps2.setString(1, rs.getString("Emp_Mgr_Qlid1"));
+//			ResultSet rs2 = ps2.executeQuery();
+			
+//			if(rs.next() ){
+//				jsObj.put("empQlid",rs.getString("Emp_Qlid"))
+//				     .put("empFName",rs.getString("Emp_FName"))
+//				     .put("Emp_MName",rs.getString("Emp_MName"))
+//				     .put("empLName",rs.getString("Emp_LName"))
+//					 .put("empMobNbr",rs.getString("Emp_Mob_Nbr"))
+//					 .put("empAddLine1",rs.getString("Emp_Add_Line1"))
+//				     .put("empAddLine2",rs.getString("Emp_Add_Line2"))
+//				     .put("empPin",rs.getString("Emp_PIN"))
+//				     .put("empPickupArea",rs.getString("Emp_Pickup_Area"))
+//				     .put("empStatus",rs.getString("Emp_Status"))
+//					 
+//					 .put("empZone",rs.getString("Emp_Zone"))
+//					 .put("rosterInfo", rstrImpl.showRosterInfo(
+//						(new JSONObject())
+//							.put("qlid", qlid)
+//							.put("c_n", "")
+//							.put("s_i", "")
+//							.put("e_n", "")));
+//			}	
+//
+////			if(rs1.next() ){
+////				jsObj.put("empMgrLevel1",rs1.getString("manager_Level1"));
+////			}
+////			if(rs1.next() ){
+////				jsObj.put("empMgrLevel2",rs2.getString("manager_Level2"));
+////			}
+//			
+//		} catch (SQLException e) {
+//			System.out.println("SQL ERROR!");
+//			e.printStackTrace();
+//						
+//		}	return jsObj;
+		
 		return jsObj;
 	}
 
@@ -2513,8 +2586,19 @@ public class EmployeeServiceImpl {
 		
 		DBConnectionUpd dbCon = new DBConnectionUpd();
 		Connection con = dbCon.getConnection();
+//		PreparedStatement psCabno;
+//		ResultSet rs;
+//		String cabLicensePlateNo = "";
 		
 		try {
+//			psCabno = con.prepareStatement(
+//					"SELECT cab_no FROM ncab_roster_tbl WHERE emp_qlid = ?"
+//					);
+//			rs = psCabno.executeQuery();
+//			while(rs.next()) {
+//				cabLicensePlateNo = rs.getString("cab_no");
+//				break;
+//			}
 			
 			PreparedStatement ps = con.prepareStatement(
 					"INSERT INTO "+DBTables.SOS+" SET emp_qlid = ?, sos_date_time = CURDATE(),"

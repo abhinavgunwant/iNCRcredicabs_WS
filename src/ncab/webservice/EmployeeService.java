@@ -12,7 +12,6 @@ import javax.ws.rs.Produces;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -53,13 +52,7 @@ public class EmployeeService {
 	private static final String NEW_ACC_SETUP_SET_PASSWORD_URL = BASE_URL+"/new-acc-setup/set-password";
 	private static final String URL_ALLOWED_ON_NO_SESSION_PATTERN = "login|logout|forgot-password|new-acc-setup|ndroid";
 	
-	private String _qlid;
-	private String _token;
-	
-	public EmployeeService() {
-		_qlid = EmployeeServiceImpl.DEFAULT_QLID;
-		_token = EmployeeServiceImpl.DEFAULT_TOKEN;		
-	}
+	public EmployeeService() {}
 	
 	/**
 	 * checksBeforePath()
@@ -77,17 +70,13 @@ public class EmployeeService {
 		if(qlid != null && !qlid.equals(EmployeeServiceImpl.DEFAULT_QLID)
 				&& token != null && !token.equals(EmployeeServiceImpl.DEFAULT_TOKEN)
 				&& EmployeeServiceImpl.isLoginValid(req)){
-			
 			//// TODO things to do when user is logged in...
 		}else {
-			System.out.println("qlid: " + qlid + " token: "+ token);
 			String url = req.getRequestURL().toString();
-			if(!url.matches("upload-file")) {
 //			if(url.matches(URL_ALLOWED_ON_NO_SESSION_PATTERN)) {
 				sess.setAttribute("qlid", EmployeeServiceImpl.DEFAULT_QLID);
 				sess.setAttribute("token", EmployeeServiceImpl.DEFAULT_TOKEN);
 				System.out.println("No session found, assigning a dummy session....");
-			}
 //			}else {
 //				System.out.println("No session for you!");
 //			}
@@ -149,10 +138,10 @@ public class EmployeeService {
 		String qlid = (String)sess.getAttribute("qlid");
 		String sessRole = (String)sess.getAttribute("role");
 		
-//		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID ||
-//				sessRole.toUpperCase() != "ADMIN") {
-//			return EmployeeServiceImpl.noLoginMessage();
-//		}		
+		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID ||
+				sessRole.toUpperCase() != "ADMIN") {
+			return EmployeeServiceImpl.noLoginMessage();
+		}		
 		
 		EmployeeServiceImpl empSrvImpl = new EmployeeServiceImpl();
 		JSONObject jsObj = new JSONObject();
@@ -163,8 +152,7 @@ public class EmployeeService {
 		// TODO: add more options to check the errors and report it to user
 		if(addSuccess) {
 			jsObj.put("success", true)
-				.put("message", "Employee has been added to the Database!")
-				.put("errorlog", jsAddResp);
+				.put("message", "Employee has been added to the Database!");
 		}else {
 			jsObj.put("success", false)
 				.put(
@@ -198,11 +186,9 @@ public class EmployeeService {
 					).build();
 		}
 		System.out.println("--------------checkLoginStatus---------------------"
-			+ "\n\tSession:"
-			+ "\n\t\tQLID: " + sess.getAttribute("qlid")
+			+ "\n\tSession---------"
 			+ "\n\t\tToken: " + sess.getAttribute("token")
-			+ "\n\tCookie:"
-			+ "\n\t\tQLID: " + cookie.getValue()
+			+ "\n\tCookie----------"
 			+ "\n\t\tToken: " + tokenCookie.getValue());
 //		System.out.println("\tSession Context: " + sess.getServletContext().getContextPath());
 		if(sess.getAttribute("qlid") == null || cookie.getValue() == null || tokenCookie.getValue() == null) {
@@ -217,7 +203,6 @@ public class EmployeeService {
 		if(sess.getAttribute("token").equals(tokenCookie.getValue())
 				&& sess.getAttribute("qlid").equals(cookie.getValue())
 				&& !sess.getAttribute("token").equals(EmployeeServiceImpl.DEFAULT_TOKEN)) {
-			System.out.println("Status: Logged-In!");
 			return Response.ok(
 					(new JSONObject())
 						.put("login", true)
@@ -248,10 +233,10 @@ public class EmployeeService {
 		String qlid = (String)sess.getAttribute("qlid");
 		String sessRole = (String)sess.getAttribute("role");
 		
-//		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID ||
-//				sessRole.toUpperCase() != "ADMIN") {
-//			return EmployeeServiceImpl.noLoginMessage();
-//		}		
+		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID ||
+				sessRole.toUpperCase() != "ADMIN") {
+			return EmployeeServiceImpl.noLoginMessage();
+		}		
 		
 		EmployeeServiceImpl empSrvImpl = new EmployeeServiceImpl();
 		if(empSrvImpl.deactivateEmployee(employeeBean)) {
@@ -275,11 +260,11 @@ public class EmployeeService {
 		HttpSession sess = req.getSession();
 		String qlid = (String)sess.getAttribute("qlid");
 		String sessRole = (String)sess.getAttribute("role");
-//		
-//		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID ||
-//				sessRole.toUpperCase() != "ADMIN") {
-//			return EmployeeServiceImpl.noLoginMessage();
-//		}		
+		
+		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID ||
+				sessRole.toUpperCase() != "ADMIN") {
+			return EmployeeServiceImpl.noLoginMessage();
+		}		
 		
 		EmployeeServiceImpl empSrvImpl = new EmployeeServiceImpl();
 		
@@ -391,11 +376,11 @@ public class EmployeeService {
 		HttpSession sess = req.getSession();
 		String qlid = (String)sess.getAttribute("qlid");
 		String sessRole = (String)sess.getAttribute("role");
-//		
-//		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID) {
-//			return EmployeeServiceImpl.noLoginMessage();
-//		}		
-//		
+		
+		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID) {
+			return EmployeeServiceImpl.noLoginMessage();
+		}		
+		
 		JSONObject jsObj = new JSONObject();
 		EmployeeServiceImpl	empSrvImpl = new EmployeeServiceImpl();
 
@@ -494,11 +479,8 @@ public class EmployeeService {
 			
 			//// When login is successful
 			if((boolean)jsObj.get("login") == true) {
-				_qlid = qlid;
-				_token = token;
-				System.out.println("_qlid: " + _qlid);
 				System.out.println("Login Successful!\nsetting session....");
-				session.setAttribute("qlid", qlid);
+				session.setAttribute("qlid", loginFormInputBean.getQlid());
 				session.setAttribute("token", token);
 				session.setAttribute("role", jsObj.get("role"));
 				
@@ -724,9 +706,9 @@ public class EmployeeService {
 					EmployeeFilterBean	employeeFilterBean,
 		@Context	HttpServletRequest	req
 	) {
-		HttpSession sess = req.getSession();
-		String qlid = (String)sess.getAttribute("qlid");
-		String sessRole = (String)sess.getAttribute("role");
+//		HttpSession sess = req.getSession();
+//		String qlid = (String)sess.getAttribute("qlid");
+//		String sessRole = (String)sess.getAttribute("role");
 //		
 //		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID ||
 //				sessRole.toUpperCase() != "ADMIN") {
@@ -790,11 +772,11 @@ public class EmployeeService {
 		HttpSession sess = req.getSession();
 		String qlid = (String)sess.getAttribute("qlid");
 		String sessRole = (String)sess.getAttribute("role");
-//		
-//		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID ||
-//				sessRole.toUpperCase() != "ADMIN") {
-//			return EmployeeServiceImpl.noLoginMessage();
-//		}		
+		
+		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID ||
+				sessRole.toUpperCase() != "ADMIN") {
+			return EmployeeServiceImpl.noLoginMessage();
+		}		
 		EmployeeServiceImpl	empSrvImpl = new EmployeeServiceImpl();
 		JSONArray jsArr = new JSONArray();
 		EmployeeBean employeeBean[] = empSrvImpl.getEmployeeArray(
@@ -857,9 +839,9 @@ public class EmployeeService {
 		String qlid = (String)sess.getAttribute("qlid");
 		String sessRole = (String)sess.getAttribute("role");
 		
-//		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID) {
-//			return EmployeeServiceImpl.noLoginMessage();
-//		}		
+		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID) {
+			return EmployeeServiceImpl.noLoginMessage();
+		}		
 		
 //		System.out.println(employeeBean.getEmpQlid());
 //		HttpSession sess = req.getSession();
@@ -988,12 +970,7 @@ public class EmployeeService {
 	}
 
 
-	/**
-	 * An important issue in this method is that while uploading,
-	 * jersey finds no session... 
-	 */
-	
-	@Path("/upload-file-data")
+	@Path("/UploadFileData")
 	@POST
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_JSON)
@@ -1001,32 +978,19 @@ public class EmployeeService {
 			@Context						HttpServletRequest			req,
 			@FormDataParam("uploadFile") 	InputStream					fileInputStream,
 			@FormDataParam("uploadFile") 	FormDataContentDisposition	fileFormDataContentDisposition
-		) {
-		HttpSession sess = req.getSession();
-		String qlid = (String)sess.getAttribute("qlid");
-		String sessRole = (String)sess.getAttribute("role");
-		
-//		if(qlid == null || qlid.equals(EmployeeServiceImpl.DEFAULT_QLID) ||
-//				!sessRole.toUpperCase().equals("ADMIN")) {
-//			System.out.println("!! " + qlid);
+		) throws Exception {
+//		HttpSession sess = req.getSession();
+//		String qlid = (String)sess.getAttribute("qlid");
+//		String sessRole = (String)sess.getAttribute("role");
+//		
+//		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID ||
+//				sessRole.toUpperCase() != "ADMIN") {
 //			return EmployeeServiceImpl.noLoginMessage();
 //		}
 		System.out.println("TestCheck");
 		EmployeeServiceImpl frd = new EmployeeServiceImpl();
-		JSONObject sUpl = null;
-		try {
-			sUpl = frd.insertIntoDatabase(fileInputStream, fileFormDataContentDisposition, _qlid);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		if(sUpl == null) {
-			return (new JSONObject())
-						.put("success", false)
-						.put("message", "An error occured, please try again later!")
-						.toString();
-		}
+		JSONObject sUpl = frd.insertIntoDatabase(fileInputStream, fileFormDataContentDisposition);
+//		System.out.println("Success import excel to mysql table");
 		return (new JSONObject())
 					.put("success", Boolean.parseBoolean(sUpl.getString("success")))
 					.put("totalRows", sUpl.getString("totalRows"))
@@ -1078,10 +1042,10 @@ public class EmployeeService {
 		String qlid = (String)sess.getAttribute("qlid");
 		String sessRole = (String)sess.getAttribute("role");
 		
-//		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID ||
-//				sessRole.toUpperCase() != "ADMIN") {
-//			return EmployeeServiceImpl.noLoginMessage();
-//		}		
+		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID ||
+				sessRole.toUpperCase() != "ADMIN") {
+			return EmployeeServiceImpl.noLoginMessage();
+		}		
 		
 		
 		JSONObject			jsObj			= new JSONObject();
@@ -1114,10 +1078,10 @@ public class EmployeeService {
 		String qlid = (String)sess.getAttribute("qlid");
 		String sessRole = (String)sess.getAttribute("role");
 		
-//		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID ||
-//				sessRole.toUpperCase() != "ADMIN") {
-//			return EmployeeServiceImpl.noLoginMessage();
-//		}		
+		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID ||
+				sessRole.toUpperCase() != "ADMIN") {
+			return EmployeeServiceImpl.noLoginMessage();
+		}		
 		EmployeeServiceImpl	empSrvImpl = new EmployeeServiceImpl();
 		JSONArray jsArr = new JSONArray();
 		
