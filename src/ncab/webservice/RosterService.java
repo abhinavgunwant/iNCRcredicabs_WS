@@ -1,19 +1,26 @@
 package ncab.webservice;
 
+import java.io.File;
 import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.websocket.server.PathParam;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+
 
 import ncab.dao.impl.RosterServiceImpl;
 
@@ -440,19 +447,20 @@ public class RosterService {
 	
 	
 	
-	@POST
-	@Path("/downloadexcel")
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response write_excel(String s){
-		Response response=null;
-		System.out.println("implementation class starts");
-		RosterServiceImpl frd=new RosterServiceImpl();
-	    JSONObject status=frd.download_data(s);		
-	response = Response.status(200).type("application/json").entity(status.toString()).build(); 		
-		return response;
-	}
-	
+    @POST
+    @Path("/downloadexcel")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response write_excel(@Context HttpServletRequest req,String s){
+          Response response=null;
+          System.out.println("implementation class starts");
+          RosterServiceImpl frd=new RosterServiceImpl();
+        JSONObject status=frd.download_data(req,s);            
+    response = Response.status(200).type("application/json").entity(status.toString()).build();              
+          return response;
+    }
+    
+
 
 @POST
 @Path("/getRouteDetails")

@@ -109,7 +109,7 @@ public class RequestService {
 
 
 
-	private File createTempFileWithDir(@Context HttpServletRequest req) throws IOException {
+	public File createTempFileWithDir(@Context HttpServletRequest req) throws IOException {
 
 		String webappPath = req.getServletContext().getRealPath("/");
 
