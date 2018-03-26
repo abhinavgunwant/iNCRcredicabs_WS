@@ -2427,6 +2427,7 @@ public class EmployeeServiceImpl {
 						(new JSONObject())
 							.put("shiftId", rs.getString("shift_id"))
 							.put("startTime", rs.getString("start_time"))
+							.put("endTime", rs.getString("end_time"))
 							.put("shiftName", rs.getString("shift_name"))
 				);	
 			}
