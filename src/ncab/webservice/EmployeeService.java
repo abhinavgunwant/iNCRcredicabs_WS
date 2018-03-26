@@ -115,14 +115,14 @@ public class EmployeeService {
 						EmployeeBean		employeeBean,
 			@Context	HttpServletRequest	req		
 			){
-		HttpSession sess = req.getSession();
-		String qlid = (String)sess.getAttribute("qlid");
-		String sessRole = (String)sess.getAttribute("role");
+//		HttpSession sess = req.getSession();
+//		String qlid = (String)sess.getAttribute("qlid");
+//		String sessRole = (String)sess.getAttribute("role");
 		
-		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID ||
-				sessRole.toUpperCase() != "ADMIN") {
-			return EmployeeServiceImpl.noLoginMessage();
-		}		
+//		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID ||
+//				sessRole.toUpperCase() != "ADMIN") {
+//			return EmployeeServiceImpl.noLoginMessage();
+//		}		
 		
 		
 		EmployeeServiceImpl empSrvImpl = new EmployeeServiceImpl();
@@ -132,6 +132,8 @@ public class EmployeeService {
 			System.out.println("Activate Failed!!");
 			return (new JSONObject()).put("success", false).toString();
 		}
+		
+		System.out.println("\nSuccess?\n");
 		
 		return (new JSONObject()).put("success", true).toString();
 	}
@@ -279,7 +281,7 @@ public class EmployeeService {
 //		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID ||
 //				sessRole.toUpperCase() != "ADMIN") {
 //			return EmployeeServiceImpl.noLoginMessage();
-//		}		
+//		}
 		
 		EmployeeServiceImpl empSrvImpl = new EmployeeServiceImpl();
 		

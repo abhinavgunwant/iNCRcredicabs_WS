@@ -301,6 +301,7 @@ public class EmployeeServiceImpl {
 	 * 	to 'I' (i.e. 'Inactive')
 	 */
 	public boolean deactivateEmployee(EmployeeBean employeeBean) {
+		System.out.println("Deactivating");
 		try {
 			Connection connection = (new DBConnectionUpd()).getConnection();
 			PreparedStatement ps = connection.prepareStatement(
@@ -310,6 +311,7 @@ public class EmployeeServiceImpl {
 			ps.executeUpdate();
 			System.out.println("SQL update executed succesfully!");
 		} catch(SQLException e) {
+			System.out.println("!!!!!!!!");
 			e.printStackTrace();
 			return false;
 		}		
@@ -325,6 +327,7 @@ public class EmployeeServiceImpl {
 	 * 	to 'A' (i.e. 'Active')
 	 */
 	public boolean activateEmployee(EmployeeBean employeeBean) {
+		System.out.println("Activating Employee!!");
 		try {
 			Connection connection = (new DBConnectionUpd()).getConnection();
 			PreparedStatement ps = connection.prepareStatement(
@@ -621,7 +624,7 @@ public class EmployeeServiceImpl {
 						ps = connection.prepareStatement(
 							"SELECT * FROM "+DBTables.EMPLOYEE+" WHERE emp_pickup LIKE ?"
 						);
-						ps.setString(1, employeeFilterBean.getFilterValue()+"%");
+						ps.setString(1, "%"+employeeFilterBean.getFilterValue()+"%");
 						
 						break;
 						
@@ -2516,12 +2519,16 @@ public class EmployeeServiceImpl {
 				
 			}
 			if(!tmp.has("Route_number")) {
-				tmp.put("Route_number", "");
-				
+				tmp.put("Route_number", "");				
 			}
 			if(!tmp.has("occu_left")) {
 				tmp.put("occu_left", "");				
 			}
+			
+			if(!tmp.has("roster_id")) {
+				tmp.put("roster_id", "");				
+			}
+			 
 			
 			rosterInfo.put(tmp);
 		}
