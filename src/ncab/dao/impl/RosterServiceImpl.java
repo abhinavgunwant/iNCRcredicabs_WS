@@ -2064,4 +2064,204 @@ public JSONArray getStartandEndDate(String strdiv) {
 	}
 		
 
+public JSONArray getCabShift(JSONArray jsonarray) {
+	JSONArray jsonarr = new JSONArray();
+	DBConnectionUpd db = new DBConnectionUpd();
+	Connection connection = db.getConnection();
+	JSONObject json=jsonarray.getJSONObject(0);
+	String qlid = json.optString("qlid");
+	String date = json.optString("date");
+	String cab = "", shifttime = "";
+	int shift = 0;
+	try {
+		System.out.println("---Entering query---");
+		PreparedStatement ps = connection.prepareStatement(
+				"select Cab_No,shift_id from ncab_roster_tbl where Emp_Qlid = ? and ? BETWEEN start_date AND End_date");
+		ps.setString(1, qlid);
+		ps.setString(2, date);
+		System.out.println("---Entering result set---");
+		ResultSet rs = ps.executeQuery();
+		while (rs.next()) {
+			JSONObject jobj = new JSONObject();
+			cab = rs.getString(1);
+			shift = rs.getInt(2);
+			if (shift == 1) {
+				shifttime = "Shift--7am-4pm";
+
+			}
+			if (shift == 2) {
+				shifttime = "Regular--10am-7pm";
+
+			}
+
+			if (shift == 3) {
+				shifttime = "Shift--12pm-9pm";
+
+			}
+			if (shift == 4) {
+				shifttime = "UnScheduled";
+
+			}
+			if (shift == 5) {
+				shifttime = "Shift--2pm-11pm";
+
+			}
+			System.out.println("////" + cab + ":" + shift + "////");
+			jobj.put("cabno", cab);
+			jobj.put("shift", shifttime);
+			System.out.println("---" + cab + ":" + shifttime + "---");
+			jsonarr.put(jobj);
+		}
+		
+	} catch (Exception e) {
+		System.out.print("Error: getcab(): ---" + e.getMessage());
+	}
+	return jsonarr;
+
+}
+
+public int feedback(JSONObject json) {
+	int flag = 0;
+	
+	DBConnectionUpd db = new DBConnectionUpd();
+	Connection connection = db.getConnection();
+	String qlid = json.getString("qlid");
+	String date = json.getString("date");
+	String type = json.getString("type");
+	String pd = json.getString("pd");
+	String complaint = json.getString("comp");
+	String comment = json.getString("comments");
+	try {
+		PreparedStatement ps = connection.prepareStatement(
+				"insert into ncab_complaint_tbl (date,shift_type,pd_type,emp_qlid,complaint,comments) values (?,?,?,?,?,?)");
+		ps.setString(1, date);
+		ps.setString(2, type);
+		ps.setString(3, pd);
+		ps.setString(4, qlid);
+		ps.setString(5, complaint);
+		ps.setString(6, comment);
+		flag = ps.executeUpdate();
+	} catch (Exception e) {
+		System.out.println("Error in submission: --" + e.getMessage());
+	}
+	return flag;
+}
+
+public String sendMail(JSONObject jsonreq){	
+	String resp="";
+	String Emp_Qlid = jsonreq.getString("qlid");
+	String Emp_Name = "";
+	String Emp_FName = "";
+	String Emp_MName = "";
+	String Emp_LName = "";
+	
+	DBConnectionUpd dbconnection = new DBConnectionUpd();
+	Connection connection = dbconnection.getConnection();
+	
+	PreparedStatement ps;
+	try {
+		ps = connection.prepareStatement("SELECT  Emp_FName, Emp_MName, Emp_LName FROM ncab_master_employee_tbl WHERE Emp_Qlid =? ");
+		ps.setString(1, Emp_Qlid);
+		ResultSet rs = ps.executeQuery();
+		while(rs.next()){
+			Emp_FName=rs.getString(1);
+			Emp_MName = rs.getString(2);
+			Emp_LName=rs.getString(3);
+		}
+		Emp_Name = Emp_LName + ", " + Emp_FName + " " + Emp_MName ;
+	} catch (SQLException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+	System.out.println(Emp_Name);
+	String date = jsonreq.getString("date");
+	String type = jsonreq.getString("type");
+	String pd = jsonreq.getString("pd");
+	String complaint = jsonreq.getString("comp");
+	String comments = jsonreq.getString("comments");
+	String cabno = jsonreq.getString("cab");	
+	System.out.println("test");
+	CompServiceImpl sendMailService = new CompServiceImpl();
+	if(sendMailService.sendEmailMessage(
+			"donotreply@ncr.com",                        //from
+            "js250859@ncr.com",                   //to  Transport Manager ID
+            "harry.jaspreet@hotmail.com","",                                       //cc
+            "NCR cabs | Complaint about "+complaint+" in " +type, //subject
+            "<center>" +                              //body
+            "<table class='MsoNormalTable' border='0' cellspacing='0' cellpadding='0' width='40%' style='width:40.0%;mso-cellspacing:0in;background:white;mso-yfti-tbllook:1184;" +
+            "mso-padding-alt:0in 0in 0in 0in'>" +
+            "<tbody><tr style='mso-yfti-irow:0;mso-yfti-firstrow:yes;height:44.4pt'>" +
+            " <td colspan='2' valign='top' style='padding:1.8pt 1.8pt 1.8pt 1.8pt;height:44.4pt'>" +
+            " <p class='MsoNormal'><!--[if gte vml 1]><v:shape id='_x0000_i1025' type='#_x0000_t75'" +
+            " alt='Are you ready to experience a new world of interaction?' style='width:450pt;" +
+            "height:55.5pt'>" +
+            "<img src='http://pulkit604.esy.es/image003.jpg'" +
+            " o:href='cid:image005.jpg@01D3AB32.E8728490'/>" +
+            " </v:shape><![endif]--><!--[if !vml]--><img border='0' width='600' height='74' src='http://pulkit604.esy.es/image003.jpg' style='height:.766in;width:6.25in' alt='Are you ready to experience a new world of interaction?' v:shapes='_x0000_i1025'><!--[endif]--></p>" +
+            " </td>" +
+            " </tr>" +
+            " <tr style='mso-yfti-irow:1;height:26.4pt'>" +
+            "  <td colspan='2' style='padding:1.8pt 1.8pt 1.8pt 1.8pt;height:26.4pt'>" +
+            " <table class='MsoNormalTable' border='0' cellspacing='0' cellpadding='0' width='100%' style='width:100.0%;mso-cellspacing:0in;mso-yfti-tbllook:1184;mso-padding-alt:" +
+            " 0in 0in 0in 0in'>" +
+            "<tbody><tr style='mso-yfti-irow:0;mso-yfti-firstrow:yes;mso-yfti-lastrow:yes'>" +
+            "<td style='background:#E3E3E3;padding:3.0pt 3.0pt 3.0pt 3.0pt'>" +
+            "<table class='MsoNormalTable' border='0' cellspacing='0' cellpadding='0' width='100%' style='width:100.0%;mso-cellspacing:0in;mso-yfti-tbllook:" +
+            " 1184;mso-padding-alt:0in 0in 0in 0in'>" +
+            " <tbody><tr style='mso-yfti-irow:0;mso-yfti-firstrow:yes;mso-yfti-lastrow:yes'>" +
+            "  <td style='padding:0in 0in 0in 0in'></td>" +
+            " </tr>" +
+            "</tbody></table>" +
+            "</td>" +
+            "</tr>" +
+            "</tbody></table>" +
+            " </td>" +
+            " </tr>" +
+            " <tr style='mso-yfti-irow:2'>" +
+            "  <td style='padding:1.8pt 1.8pt 1.8pt 1.8pt'></td>" +
+            "  <td style='padding:1.8pt 1.8pt 1.8pt 1.8pt'></td>" +
+            "  </tr>" +
+            " <tr style='mso-yfti-irow:3'>" +
+            "   <td width='1%' valign='top' style='width:1.0%;padding:1.8pt 1.8pt 1.8pt 1.8pt'></td>" +
+            "   <td width='67%' valign='top' style='width:67.0%;padding:1.8pt 1.8pt 1.8pt 1.8pt'>" +
+            "   <p><span class='bodytext1'><span style='font-size:8.5pt'> The complaint about cab by <b>"+Emp_Qlid+", " +Emp_Name +
+            "   </span></span><span style='font-size:8.5pt;font-family:&quot;Verdana&quot;,sans-serif;" +
+            "   color:black'><br>" +
+            "   <span class='bodytext1'>Details about complaint are below:</span><br>" +
+            "   <span class='bodytext1'>Date of Ride: <b>"+date+"</b></span><br>" +
+            "   <span class='bodytext1'>Pickup/Drop: <b>"+pd+"</b></span><br>" +
+            "   <span class='bodytext1'>Shift time: <b>"+type+"</b></span><br>" +
+            "   <span class='bodytext1'>Cab Number: <b>"+cabno+"</b></span><br>" +
+            "   <span class='bodytext1'>Comments: <b>"+comments+"</b></span><br>" +
+            //"   <br>  <span class='bodytext1'><a href='http://idcportal.ncr.com/myidc/index.php/unscheduled-cab?view=unschedulecab&amp;id=16378&amp;mail=1'>" +
+            " </a><o:p></o:p></span></span></p>" +
+            "  </td>" +
+            " </tr>" +
+            " <tr style='mso-yfti-irow:4;mso-yfti-lastrow:yes;height:.25in'>" +
+            "  <td colspan='2' style='background:#E3E3E3;padding:1.8pt 1.8pt 1.8pt 1.8pt;" +
+            "  height:.25in'>" +
+            "  <p class='MsoNormal' align='center' style='text-align:center'><span class='mousetype1'><span style='font-size:7.5pt'>NCR Confidential: FOR INTERNAL" +
+            "  USE ONLY</span></span><span style='font-size:7.5pt;font-family:&quot;Verdana&quot;,sans-serif;" +
+            "  color:black'><br>" +
+            "   <span class='mousetype1'>© 2010 NCR Corporation. All rights reserved.</span></span></p>" +
+            "   </td>" +
+            "  </tr>" +
+            " </tbody></table></center>"))
+	{		
+		System.out.println("success");
+		resp= "success";
+	}
+	else
+	{
+		System.out.println("sending failed");
+		resp="failed";
+	}
+	System.out.println("test2");
+	
+	return resp;
+	
+}
+
+
+
 }

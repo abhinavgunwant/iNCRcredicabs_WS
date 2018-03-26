@@ -160,7 +160,7 @@ public class AndroidServiceImpl {
                   
             }
       
-              public JSONObject postCheckInDetails(String Emp_Qlid,String Route_No,String date,String Check_in_Time,String Trip_Type,String Cab_Type) {
+/*              public JSONObject postCheckInDetails(String Emp_Qlid,String Route_No,String date,String Check_in_Time,String Trip_Type,String Cab_Type) {
                   // TODO Auto-generated method stub
                   int x=0;
                   DBConnectionUpd database= new DBConnectionUpd();
@@ -173,7 +173,7 @@ public class AndroidServiceImpl {
                          ps_check.setString(2,date);
                          ps_check.setString(3,Trip_Type );
                          ResultSet rs=ps_check.executeQuery();
-                         if(rs!=null)
+                         if(rs.next())
                          { 
 
                                ob.put("Check_In","ALREADY");
@@ -210,6 +210,62 @@ public class AndroidServiceImpl {
 
                   return null;
            }
+*/              
+              
+              public JSONObject postCheckInDetails(String Emp_Qlid,String Route_No,String date,String Check_in_Time,String Trip_Type,String Cab_Type) {
+                  // TODO Auto-generated method stub
+                  int x=0;
+                  DBConnectionUpd database= new DBConnectionUpd();
+                  JSONObject ob=new JSONObject();
+                  System.out.println("Check1");
+                  Connection connection = (Connection) database.getConnection();        
+                  try {
+                     System.out.println("Check2");
+                       String query_check="Select * from ncab_emp_checkin_tbl where Emp_Qlid=? AND Trip_Date=? AND Trip_Type=?";
+                       PreparedStatement ps_check = connection.prepareStatement(query_check);
+                         ps_check.setString(1,Emp_Qlid);
+                         ps_check.setString(2,date);
+                         ps_check.setString(3,Trip_Type );
+                         ResultSet rs=ps_check.executeQuery();
+                         System.out.println(rs);
+                         if(rs.next() )
+                         {
+                                  System.out.println("Check3");
+                             ob.put("Check_In","ALREADY");
+                             return new JSONObject().put("result",ob);
+                          }
+                         else
+                         {
+                           String query = "INSERT INTO ncab_emp_checkin_tbl(Emp_Qlid,Route_No,Trip_Date,Check_in_Time,Trip_Type,Cab_Type) VALUES(?,?,?,?,?,?);";
+                             PreparedStatement ps = connection.prepareStatement(query);
+                             ps.setString(1,Emp_Qlid);
+                             ps.setString(2,Route_No);
+                             ps.setString(3,date);
+                             ps.setString(4,Check_in_Time);
+                             ps.setString(5,Trip_Type);
+                             ps.setString(6,Cab_Type);
+                             //     ps.setString(5, Pickup_Time );
+                             x = ps.executeUpdate();
+                             if(x==1){
+                                    ob.put("Check_In","Done");
+                                    return new JSONObject().put("result",ob);
+                             }
+                             
+                         }                         connection.close();
+
+                  } catch (Exception e) {
+                         try {
+                               throw e;
+                         } catch (Exception e1) {
+                               // TODO Auto-generated catch block
+                               e1.printStackTrace();
+                         }
+                  }
+
+                  return null;
+           }
+              
+              
               public JSONObject postCheckOutDetails(String Emp_Qlid,String date,String Check_out_Time,String Trip_Type) {
                   // TODO Auto-generated method stub
                   int x=0;

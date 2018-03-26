@@ -294,7 +294,7 @@ public class ReportServiceImpl {
 		return jsonarray;
 	}
 
-	// working
+/*	// working
 	public JSONArray vendorDetailed(JSONObject jsonrequest) throws SQLException
 	{
 		JSONArray jsonarray=new JSONArray();
@@ -328,7 +328,41 @@ public class ReportServiceImpl {
 		}
 		return jsonarray;
 	}
+*/
 
+	public JSONArray vendorDetailed(JSONObject jsonrequest) throws SQLException
+    {
+           JSONArray jsonarray=new JSONArray();
+           Connection connection=new DBConnectionRo().getConnection();
+           String toDate=jsonrequest.getString("toDate");
+           String fromDate=jsonrequest.getString("fromDate");
+           PreparedStatement ps=null;
+           ps=(PreparedStatement)connection.prepareStatement("SELECT R.vendor_name AS Vendor_Name,N.Emp_Qlid AS Emp_Qlid,S.Emp_FName AS Emp_FName,R.Cab_Cost AS Cab_Cost,R.Start_Date AS Date,\n" + 
+                        "R.Cab_No AS Cab_No,N.Source AS Source,N.Destination AS Destination,N.Other_Addr AS Other_Addr,S.Emp_Zone AS Emp_Zone \n" + 
+                        "FROM  NCAB_UNSCHEDULE_RQST_TBL N INNER JOIN ncab_roster_tbl R,ncab_master_employee_tbl AS S \n" + 
+                        "WHERE N.Emp_Qlid=R.Emp_Qlid  AND N.Emp_Qlid=S.Emp_Qlid\n" + 
+                        "AND R.Start_Date BETWEEN ? AND ?;");  
+           ps.setString(1, fromDate);
+           ps.setString(2, toDate);
+           ResultSet rs=ps.executeQuery();
+           while(rs.next())
+           {
+                 JSONObject jsonresponse=new JSONObject();
+                 jsonresponse.put("Vendor_Name", rs.getString(1));
+                 jsonresponse.put("Emp_Qlid", rs.getString(2));
+                 jsonresponse.put("Emp_FName", rs.getString(3));
+                 jsonresponse.put("Cab_Cost", rs.getString(4));
+                 jsonresponse.put("Date", rs.getString(5));
+                 jsonresponse.put("Cab_No", rs.getString(6));
+                 jsonresponse.put("Source", rs.getString(7));
+                 jsonresponse.put("Destination", rs.getString(8));
+                 jsonresponse.put("Other_Addr", rs.getString(9));
+                 jsonresponse.put("Emp_Zone", rs.getString(10));
+                 
+                 jsonarray.put(jsonresponse);
+           }
+           return jsonarray;
+    }
 
 	// working
 	public JSONArray vendorSummary() throws SQLException
@@ -352,7 +386,7 @@ public class ReportServiceImpl {
 		return jsonarray;
 	}
 
-	//working
+/*	//working
 	public JSONArray vendorSummary(JSONObject jsonrequest) throws SQLException
 	{
 		JSONArray jsonarray=new JSONArray();
@@ -381,8 +415,38 @@ public class ReportServiceImpl {
 		}
 		return jsonarray;
 	}
+*/
 
+	public JSONArray vendorSummary(JSONObject jsonrequest) throws SQLException
+    {
+           JSONArray jsonarray=new JSONArray();
+           Connection connection=new DBConnectionRo().getConnection();
+           String fromDate=jsonrequest.getString("fromDate");
+           String toDate=jsonrequest.getString("toDate");
+           PreparedStatement ps=null;
+           
+                 ps=(PreparedStatement)connection.prepareStatement("Select a.vendor_name As Vendor_Name,Sum(a.Cab_Cost) As Cab_Cost,Count(distinct(a.Cab_No)) As Cabs_Count \n" + 
+                               "from ncab_roster_tbl AS a\n" + 
+                               "Where a.Shift_Id=4 AND a.Start_Date BETWEEN ? AND ?\n" + 
+                               "GROUP BY a.Vendor_name\n" + 
+                               ";");  
+                 ps.setString(1, fromDate);
+                 ps.setString(2, toDate);
+           ResultSet rs=ps.executeQuery();
+           
+           while(rs.next())
+           {
+                 JSONObject jsonresponse=new JSONObject();
+                 jsonresponse.put("Vendor_Name", rs.getString(1));
+                 jsonresponse.put("Cab_Cost", rs.getString(2));
+                 jsonresponse.put("Cabs_Count", rs.getString(3));
+                 
+                 jsonarray.put(jsonresponse);
+           }
+           return jsonarray;
+    }
 
+	
 	// EMPLOYEE IMPL'S  
 	// working
 	public JSONArray employeeSummary() throws SQLException
@@ -407,7 +471,7 @@ public class ReportServiceImpl {
 		return jsonarray;
 	}
 
-	// working
+/*	// working
 	public JSONArray employeeDetailed() throws SQLException
 	{
 		JSONArray jsonarray=new JSONArray();
@@ -441,8 +505,42 @@ public class ReportServiceImpl {
 		}
 		return jsonarray;
 	}
+*/
+	public JSONArray employeeDetailed() throws SQLException
+    {
+           JSONArray jsonarray=new JSONArray();
+           DBConnectionRo dbconnection=new DBConnectionRo();
+           Connection connection=dbconnection.getConnection();
+           PreparedStatement ps=(PreparedStatement) connection.prepareStatement("SELECT b.Emp_Qlid AS Emp_Qlid,a.vendor_name AS Vendor_Name,c.Emp_FName AS Emp_FName,c.Emp_Mgr_Qlid1 AS Emp_Mgr_Qlid1 ,\n" + 
+                        "a.Start_Date AS Start_Date_Time,a.Cab_Cost AS Cab_Cost,a.Cab_No AS Cab_No,d.model AS Cab_Type,\n" + 
+                        "b.Source AS Source,b.Destination AS Destination,b.Other_addr AS Trip_Type,c.Emp_Zone AS Zone\n" + 
+                        "FROM ncab_roster_tbl  a,NCAB_UNSCHEDULE_RQST_TBL  b ,ncab_master_employee_tbl c ,ncab_cab_master_tbl d\n" + 
+                        "WHERE b.Shift_ID=4 AND b.Emp_Qlid=c.Emp_Qlid AND a.Emp_Qlid=b.Emp_Qlid AND d.cab_license_plate_no=a.Cab_No;");
+           ResultSet rs=ps.executeQuery();
+           while(rs.next())
+           {
+                  JSONObject jsonresponse=new JSONObject();
+                  jsonresponse.put("Emp_Qlid", rs.getString(1));
+                  jsonresponse.put("Vendor_Name", rs.getString(2));
+                  jsonresponse.put("Emp_FName", rs.getString(3));
+                  jsonresponse.put("Emp_Mgr_Qlid1", rs.getString(4));
+                  jsonresponse.put("Start_Date_Time", rs.getString(5));
+                  jsonresponse.put("Cab_Cost", rs.getString(6));
+                  //jsonresponse.put("Shift_ID", rs.getString(7));
+                  jsonresponse.put("Cab_No", rs.getString(7));
+                  jsonresponse.put("Cab_Type", rs.getString(8));
+                  jsonresponse.put("Source", rs.getString(9));
+                  jsonresponse.put("Destination", rs.getString(10));
+                  jsonresponse.put("Trip_Type", rs.getString(11));
+                  jsonresponse.put("Zone", rs.getString(12));
+                  
+                  jsonarray.put(jsonresponse);
+           }
+           return jsonarray;
+    }
 
-	// working
+	
+/*	// working
 	public JSONArray employeeDetailed(JSONObject jsonrequest) throws SQLException, ParseException
 	{
 		JSONArray jsonarray=new JSONArray();
@@ -479,7 +577,46 @@ public class ReportServiceImpl {
 		}
 		return jsonarray;
 	}
+*/
 
+	public JSONArray employeeDetailed(JSONObject jsonrequest) throws SQLException, ParseException
+    {
+           JSONArray jsonarray=new JSONArray();
+           Connection connection=new DBConnectionRo().getConnection();
+           String toDate=jsonrequest.getString("toDate");
+           String fromDate=jsonrequest.getString("fromDate");
+           PreparedStatement ps=null;
+           ps=(PreparedStatement)connection.prepareStatement("SELECT b.Emp_Qlid AS Emp_Qlid,a.vendor_name AS Vendor_Name,c.Emp_FName AS Emp_FName,c.Emp_Mgr_Qlid1 AS Emp_Mgr_Qlid1 ,a.Start_Date AS Start_Date_Time,\n" + 
+                        "a.Cab_Cost AS Cab_Cost,a.Cab_No AS Cab_No,d.model AS Cab_Type,\n" + 
+                        "b.Source AS Source,b.Destination AS Destination,b.Other_addr AS TripType,c.Emp_Zone AS Zone\n" + 
+                        "FROM ncab_roster_tbl a,NCAB_UNSCHEDULE_RQST_TBL  b ,ncab_master_employee_tbl c ,ncab_cab_master_tbl d\n" + 
+                        "WHERE b.Shift_ID=4 AND b.Emp_Qlid=c.Emp_Qlid AND a.Emp_Qlid=b.Emp_Qlid AND d.cab_license_plate_no=a.Cab_No \n" + 
+                        "AND a.Start_Date BETWEEN ? AND ?;");
+           ps.setString(1, fromDate);
+           ps.setString(2, toDate);
+           ResultSet rs=ps.executeQuery();
+           while(rs.next())
+           {
+                  JSONObject jsonresponse=new JSONObject();
+                  jsonresponse.put("Emp_Qlid", rs.getString(1));
+                  jsonresponse.put("Vendor_Name", rs.getString(2));
+                  jsonresponse.put("Emp_FName", rs.getString(3));
+                  jsonresponse.put("Emp_Mgr_Qlid1", rs.getString(4));
+                  jsonresponse.put("Start_Date_Time", rs.getString(5));
+                  jsonresponse.put("Cab_Cost", rs.getString(6));
+                  jsonresponse.put("Cab_No", rs.getString(7));
+                  jsonresponse.put("Cab_Type", rs.getString(8));
+                  jsonresponse.put("Source", rs.getString(9));
+                  jsonresponse.put("Destination", rs.getString(10));
+                  jsonresponse.put("TripType", rs.getString(11));
+                  jsonresponse.put("Zone", rs.getString(12));
+           
+                  jsonarray.put(jsonresponse);
+           }
+           return jsonarray;
+    }
+	
+	
 	// working
 	public JSONArray employeeSummary(JSONObject jsonrequest) throws SQLException
 	{

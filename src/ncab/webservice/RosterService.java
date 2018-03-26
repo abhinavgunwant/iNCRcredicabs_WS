@@ -471,7 +471,6 @@ public class RosterService {
 			e.printStackTrace();
 		}
 		 
-
 	return response;
 }
 
@@ -517,6 +516,58 @@ public class RosterService {
 
 	return response;
 }
+
+@POST
+@Path("/getCabShift")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+public Response getShiftCab(String data){
+	JSONArray jsonarr=new JSONArray();
+	RosterServiceImpl frd=new RosterServiceImpl();
+	Response resp=null;
+	try{
+	JSONArray json=new JSONArray(data);
+	System.out.println("---Entering getcabshift---");
+	jsonarr=frd.getCabShift(json);
+	System.out.println("---Exiting getcabshift---");
+	resp = Response.status(200).type("application/json").entity(jsonarr.toString()).build();
+	}
+	catch(ParseException e){
+		System.out.println("Error in data:---"+e.getMessage());
+	}
+	return resp;
+}
+
+@POST
+@Path("/complaint")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+public Response complaint(String data){
+	int flag=0;
+	String mailresp="";
+	
+	RosterServiceImpl frd=new RosterServiceImpl();
+	Response resp=null;
+	try{
+	JSONObject json=new JSONObject(data);
+	System.out.println("--Entering feedback--");
+	flag=frd.feedback(json);
+	System.out.println("--Exiting feedback--");
+	System.out.println("--Entering sendmail--");
+	mailresp=frd.sendMail(json);
+	System.out.println("--Exiting sendmail--");
+	JSONObject json1 = new JSONObject();
+	json1.put("response from DB:", flag);
+	json1.put("response from Mail:", mailresp);
+	resp = Response.status(200).type("application/json").entity(json1.toString()).build();
+	}
+	catch(ParseException e){
+		System.out.println("Error in data:---"+e.getMessage());
+	}
+	return resp;
+}
+
+
 
 	}
 
