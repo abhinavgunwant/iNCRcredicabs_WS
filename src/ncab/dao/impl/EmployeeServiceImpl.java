@@ -75,8 +75,8 @@ public class EmployeeServiceImpl {
 	private final String USER_AGENT = "Mozilla/5.0";
 	private final String GRECAPTCHA_API_URL = "https://www.google.com/recaptcha/api/siteverify";
 	private final String GRECAPTCHA_SECRET = "6LfobEoUAAAAAMzl6qoNPTKv561siLjKlvFVAMIO";
-	private final String LOGFILE_DIR = "C:\\Users\\AG250497\\Desktop\\ncab_logs";
-//	private final String LOGFILE_DIR = "/tmp/ncab_logs";
+//	private final String LOGFILE_DIR = "C:\\Users\\AG250497\\Desktop\\ncab_logs";
+	private final String LOGFILE_DIR = "/tmp/ncab_logs";
 	private final String LOGFILE_PREFIX = "iNCRediCabs_EMP_MASS_UPLOAD_LOG_";
 	
 	public static final String DEFAULT_QLID = "NO_QLID";
@@ -2337,7 +2337,8 @@ public class EmployeeServiceImpl {
 		try {
 			ps = con.prepareStatement(
 				"select driver_name, d_contact_num from ncab_driver_master_tbl where driver_id = "
-				+ "(select driver_id from ncab_roster_tbl where emp_qlid = ?)"
+				+ "(select driver_id from ncab_roster_tbl where "
+				+ "emp_qlid = ? and emp_status = 'active')"
 			);
 			
 			ps.setString(1, qlid);
@@ -2376,13 +2377,13 @@ public class EmployeeServiceImpl {
 			setPassPs.setString(2, qlid);
 			setPassPs.setString(3, qlid);
 
-			ps.setString(1, qlid);
+		ps.setString(1, qlid);
 			rs = ps.executeQuery();
 			
 			while(rs.next()) {
 				if(BCrypt.checkpw(spb.getCurrentPassword(), rs.getString("login_password"))){
 					if(spb.getPassword1().equals(spb.getPassword2())) {
-						setPassPs.setString(1, spb.getPassword1());
+						setPassPs.setString(1, BCrypt.hashpw(spb.getPassword1(), BCrypt.gensalt()));
 						setPassPs.executeUpdate();
 						return (new JSONObject())
 									.put("success", true)
@@ -2451,28 +2452,116 @@ public class EmployeeServiceImpl {
 		EmployeeBean mgr1;
 		EmployeeBean mgr2;
 		
+		JSONArray rosterInfoTemp = rstrImpl.showRosterInfo(
+				(new JSONObject())
+				.put("qlid", qlid)
+				.put("c_n", "")
+				.put("s_i", "")
+				.put("e_n", "")
+				.put("vname", "")
+			);
+		JSONArray shiftTemp = getShiftJSONArray();
+		
+		JSONArray rosterInfo = new JSONArray();
+		JSONArray shiftArr = new JSONArray();		
+		
+//		if(rosterInfo.length() == 0) {
+//			rosterInfo.put(
+//					(new JSONObject())
+//						.put("", value))
+//		}
+		
+		JSONObject tmp;
+		
+		for(int i=0; i<rosterInfoTemp.length(); ++i) {
+			tmp = (JSONObject) rosterInfoTemp.get(i);
+			if(tmp == null) {
+				tmp = new JSONObject();
+			}
+			if(!tmp.has("Qlid")) {
+				tmp.put("Qlid", "");
+			}
+			if(!tmp.has("m_name")) {
+				tmp.put("m_name", "");
+								
+			}
+			if(!tmp.has("p_a")) {
+				tmp.put("p_a", "");				
+			}
+			if(!tmp.has("Cab_number")) {
+				tmp.put("Cab_number", "");				
+			}
+			if(!tmp.has("shift_id")) {
+				tmp.put("shift_id", "");
+				
+			}
+			if(!tmp.has("l_name")) {
+				tmp.put("l_name", "");
+				
+			}
+			if(!tmp.has("f_name")) {
+				tmp.put("f_name", "");
+				
+			}
+			if(!tmp.has("vendor_name")) {
+				tmp.put("vendor_name", "");
+				
+			}
+			if(!tmp.has("e_mob")) {
+				tmp.put("e_mob", "");
+				
+			}
+			if(!tmp.has("pickup_time")) {
+				tmp.put("pickup_time", "");
+				
+			}
+			if(!tmp.has("Route_number")) {
+				tmp.put("Route_number", "");
+				
+			}
+			if(!tmp.has("occu_left")) {
+				tmp.put("occu_left", "");				
+			}
+			
+			rosterInfo.put(tmp);
+		}
+		
+		for(int i=0; i<shiftTemp.length(); ++i) {
+			tmp = shiftTemp.getJSONObject(i);
+			if(tmp == null) {
+				tmp = new JSONObject();
+			}
+			if(!tmp.has("shiftId")) {
+				tmp.put("shiftId", "");				
+			}
+			if(!tmp.has("shiftName")) {
+				tmp.put("shiftName", "");				
+			}
+			if(!tmp.has("startTime")) {
+				tmp.put("startTime", "");				
+			}
+			if(!tmp.has("endTime")) {
+				tmp.put("endTime", "");				
+			} 
+			
+			shiftArr.put(tmp);
+		}
+				
+		
 		empBean = getEmployeeFromQLID(qlid);
 		mgr1 = getEmployeeFromQLID(empBean.getEmpMgrQlid1());
 		mgr2 = getEmployeeFromQLID(empBean.getEmpMgrQlid2());
+		
 		
 		jsObj = createJSON(empBean);
 		jsObj.put("mgr1Name", mgr1.getEmpFName() + " " + mgr1.getEmpMName() + " " + mgr1.getEmpLName())
 				.put("mgr1Contact", mgr1.getEmpMobNbr())
 				.put("mgr2Contact", mgr2.getEmpMobNbr())
 				.put("mgr2Name", mgr2.getEmpFName() + " " + mgr2.getEmpMName() + " " + mgr2.getEmpLName())
-				.put("rosterInfo", 
-					rstrImpl.showRosterInfo(
-						(new JSONObject())
-							.put("qlid", qlid)
-							.put("c_n", "")
-							.put("s_i", "")
-							.put("e_n", "")
-							.put("vname", "")
-						)
-				)
+				.put("rosterInfo", rosterInfo)
 				.put("driverDetails", getDriverInfoForEmployee(qlid))
 				.put("contacts", getContactJSONArray())
-				.put("shiftInfo", getShiftJSONArray());
+				.put("shiftInfo", shiftArr);
 		
 		return jsObj;
 	}
