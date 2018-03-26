@@ -111,7 +111,7 @@ public class RosterServiceImpl {
 			int qsize = 0;
 			while (rs.next()) {
 				qsize++;
-
+				String ros_id="";
 				pick_qlid = rs.getString(1);
 				pick_shift = rs.getString(2);
 				pick_cab_number = rs.getString(3);
@@ -135,6 +135,7 @@ public class RosterServiceImpl {
 				rs1 = ps1.executeQuery();
 				rs2 = ps2.executeQuery();
 				while (rs1.next()) {
+					ros_id=rs1.getString(5);
 					rm.setQlid(rs1.getString(2));
 					rm.setCab_number(rs1.getString(6));
 					rm.setRoot_number(rs1.getString(1));
@@ -146,6 +147,8 @@ public class RosterServiceImpl {
 					jsonObj.put("Route_number", rm.getRoot_number());
 					jsonObj.put("shift_id", rm.getShift_id());
 					jsonObj.put("pickup_time", rm.getPickup_time());
+					jsonObj.put("roster_id",ros_id);
+					
 					System.out.println("vendor :- " + rm.getVendor_name());
 					String setVendor = "";
 					if(rm.getVendor_name().equals(" ")){
