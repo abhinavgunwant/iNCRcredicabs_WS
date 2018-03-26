@@ -1928,7 +1928,11 @@ public class RosterServiceImpl {
 			HSSFSheet hssfSheet = null;
 			FileOutputStream fileOutputStream = null;
 			Properties properties = null;
-			String filename = new String(System.getProperty("user.home") + "/Desktop/roster.xls");
+			String LOGFILE_DIR = "/tmp/ncab_logs";
+			String LOGFILE_PREFIX = "Roster_Excel";
+	//		String path = new String(System.getProperty("user.home") + "/Desktop/output.txt");
+			String filename = LOGFILE_DIR + "/" + LOGFILE_PREFIX+ ".xls";
+	//		String filename = new String(System.getProperty("user.home") + "/Desktop/roster.xls");
 
 			hssfWorkbook = new HSSFWorkbook();
 			hssfSheet = hssfWorkbook.createSheet("new sheet");
