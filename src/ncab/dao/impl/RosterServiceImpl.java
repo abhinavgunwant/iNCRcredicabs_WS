@@ -427,7 +427,7 @@ public class RosterServiceImpl {
 		DBConnectionUpd dbconnection = new DBConnectionUpd();
 		Connection connection = dbconnection.getConnection();
 		RowCheck rowcheck = new RowCheck();
-		String path = new String(System.getProperty("user.home") + "/Desktop/output.txt");
+		String path = new String("/tmp/ncab_log/RosterUploadError_log.txt");
 		FileWriter f0 = new FileWriter(path);
 		String[] route_no_arr = null;
 		String[] empid_arr = null;
@@ -1889,7 +1889,7 @@ public class RosterServiceImpl {
 			HSSFSheet hssfSheet = null;
 			FileOutputStream fileOutputStream = null;
 			Properties properties = null;
-			String filename = new String(System.getProperty("user.home") + "/Desktop/roster.xls");
+			String filename = new String("/tmp/ncab_log/RosterUploadError_excel.xls");
 
 			hssfWorkbook = new HSSFWorkbook();
 			hssfSheet = hssfWorkbook.createSheet("new sheet");
