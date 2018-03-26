@@ -15,7 +15,9 @@ import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart; 
+import javax.mail.internet.MimeMultipart;
+import javax.servlet.http.HttpServletRequest;
+
 import java.util.*;
 import java.io.InputStream;
 import java.sql.PreparedStatement;
@@ -52,6 +54,7 @@ import org.json.JSONObject;
 
 import ncab.beans.RosterModel;
 import ncab.dao.DBConnectionUpd;
+import ncab.webservice.RequestService;
 
 public class RosterServiceImpl {
 
@@ -535,10 +538,10 @@ public class RosterServiceImpl {
 			for (i = 1; i <= last_row_valid; i++) {
 				row = sheet.getRow(i);
 				String shift_id = null;
-				String empid = row.getCell(2, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+				String empid = row.getCell(2, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue().trim();
 				empid_arr[i - 1] = empid;
 				System.out.println("id: " + empid);
-				String shift_time = row.getCell(4).getStringCellValue(); // get
+				String shift_time = row.getCell(4).getStringCellValue().trim(); // get
 																			// from
 																			// table
 				if (shift_time.equals("07:00 - 04:00")) {
@@ -562,33 +565,33 @@ public class RosterServiceImpl {
 				 * (pickmin.compareTo("0") == 0) pickmin = "00"; String picktime
 				 * = pickhrs + ":" + pickmin;
 				 */
-				String picktime = row.getCell(6, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+				String picktime = row.getCell(6, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue().trim();
 				System.out.println("pick time: " + picktime);
 
 				String cab_from_excel = row.getCell(11, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK)
-						.getStringCellValue();
+						.getStringCellValue().trim();
 				cab_arr[i - 1] = cab_from_excel;
 				System.out.println("Cab: " + cab_from_excel);
 
 				// instead of roster month and year, accept dates
 
-				String start_date = row.getCell(9).getStringCellValue();
+				String start_date = row.getCell(9).getStringCellValue().trim();
 				System.out.println("Start Date: " + start_date);
 
-				String end_date = row.getCell(10).getStringCellValue();
+				String end_date = row.getCell(10).getStringCellValue().trim();
 				System.out.println("Start Date: " + end_date);
 
-				String vname = row.getCell(8).getStringCellValue();
+				String vname = row.getCell(8).getStringCellValue().trim();
 				System.out.println("Vendor name:" + vname);
 
-				String dname = row.getCell(12).getStringCellValue();
+				String dname = row.getCell(12).getStringCellValue().trim();
 				System.out.println("Driver Name: " + dname);
 
 //				String dnumber = row.getCell(13).getStringCellValue();
 				 String dnumber = "1234567890";
 				System.out.println("Driver Phone Number: " + dnumber);
 
-				String remarks = row.getCell(15, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+				String remarks = row.getCell(15, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue().trim();
 				System.out.println("Remarks are " + remarks);
 
 				String Route_No = "";
@@ -1624,6 +1627,9 @@ public class RosterServiceImpl {
 		System.out.println("SD: "+s_date
 				);
 		int s1 = 0;
+		long millis = System.currentTimeMillis();
+		java.sql.Date date = new java.sql.Date(millis);
+		String current_date = date.toString();
 		System.out.println(routeno);
 		System.out.println(cabno);
 		System.out.println(shiftid);
@@ -1654,12 +1660,13 @@ public class RosterServiceImpl {
 				}
 			}
 			if (s_date.equals("")) {
-				PreparedStatement p = con.prepareStatement("select Start_Date from ncab_roster_tbl where Route_No='"
+				/*PreparedStatement p = con.prepareStatement("select Start_Date from ncab_roster_tbl where Route_No='"
 						+ routeno + "' and Route_Status='active'");
 				ResultSet rr = p.executeQuery();
 				while (rr.next()) {
 					s_date = rr.getString(1);
-				}
+				}*/
+				s_date = current_date;
 			}
 			if (e_date.equals("")) {
 				PreparedStatement p = con.prepareStatement("select End_Date from ncab_roster_tbl where Route_No='"
@@ -1670,14 +1677,14 @@ public class RosterServiceImpl {
 				}
 			}
 			
-			
-			long millis = System.currentTimeMillis();
+			System.out.println("after fetching");
+			System.out.println(routeno);
+			System.out.println(cabno);
+			System.out.println(shiftid);
+/*			long millis = System.currentTimeMillis();
 			java.sql.Date date = new java.sql.Date(millis);
 			String current_date = date.toString();
-			
-			System.out.println("Before If: cabno: "+cabno);
-			System.out.println("Before If: sid: "+shiftid);
-			
+*/
 			if(!cabno.equals("") && shiftid != 0)
 			{
 				PreparedStatement rfe1 = con.prepareStatement("select Route_No,count(Route_No) from ncab_roster_tbl where Cab_No = '"+cabno+"' and Shift_Id = '"+shiftid+"' and '"+current_date+"' between Start_Date and End_Date");
@@ -1703,7 +1710,7 @@ public class RosterServiceImpl {
 							+ routeno + "' and Cab_No = '"+cabnoupd+"' and Emp_Status = 'active' and '"+current_date+"' between Start_Date and End_Date");
 			ResultSet rs = pss.executeQuery();
 			PreparedStatement ps = con
-					.prepareStatement("UPDATE ncab_roster_tbl SET Emp_Status = 'inactive' , Route_Status='inactive' WHERE Route_No ='" + routeno
+					.prepareStatement("UPDATE ncab_roster_tbl SET Emp_Status = 'inactive' , Route_Status='inactive' , End_Date = '"+current_date+"' WHERE Route_No ='" + routeno
 							+ "' and Route_Status='active' and Cab_No = '"+cabnoupd+"'");
 			ps.executeUpdate();
 			while (rs.next()) {
@@ -1745,6 +1752,7 @@ public class RosterServiceImpl {
 		}
 		return jsobj;
 	}
+
 
 	public JSONArray getcablist(String s) {
 		DBConnectionUpd db = new DBConnectionUpd();
@@ -1906,169 +1914,192 @@ public class RosterServiceImpl {
 	// download data
 
 	@SuppressWarnings("unused")
-	public JSONObject download_data(String s) {
-		JSONObject msg=new JSONObject();
+	@SuppressWarnings("unused")
+    public JSONObject download_data(HttpServletRequest req,String s) {
+          File file;
+          JSONObject msg=new JSONObject();
+          System.out.println("inside download");
 
-		try {
-			
-			JSONObject jsn = new JSONObject(s);
-			DBConnectionUpd db = new DBConnectionUpd();
-			RosterModel rm = new RosterModel();
-			Connection con = db.getConnection();
-			String qlid = jsn.getString("qlid");
-			String cab_number = jsn.getString("c_n");
-			String shift_id = jsn.getString("s_i");
-			String emp_name = jsn.getString("e_n");
-			String vendor_name = jsn.getString("vname");
-			String query = selectFilterQuery(qlid, cab_number, shift_id, emp_name, vendor_name);
-			// Excel code
-			int counter = 1;
-			HSSFWorkbook hssfWorkbook = null;
-			HSSFRow row = null;
-			HSSFSheet hssfSheet = null;
-			FileOutputStream fileOutputStream = null;
-			Properties properties = null;
-			String LOGFILE_DIR = "/tmp/ncab_logs";
-			String LOGFILE_PREFIX = "Roster_Excel";
-	//		String path = new String(System.getProperty("user.home") + "/Desktop/output.txt");
-			String filename = LOGFILE_DIR + "/" + LOGFILE_PREFIX+ ".xls";
-	//		String filename = new String(System.getProperty("user.home") + "/Desktop/roster.xls");
+          try {
+                 
+                 JSONObject jsn = new JSONObject(s);
+                 DBConnectionUpd db = new DBConnectionUpd();
+                 RosterModel rm = new RosterModel();
+                 Connection con = db.getConnection();
+                 String qlid = jsn.getString("qlid");
+                 String cab_number = jsn.getString("c_n");
+                 String shift_id = jsn.getString("s_i");
+                 String emp_name = jsn.getString("e_n");
+                 String vendor_name = jsn.getString("vname");
+                 String query = selectFilterQuery(qlid, cab_number, shift_id, emp_name, vendor_name);
+                 // Excel code
+                 int counter = 1;
+                 HSSFWorkbook hssfWorkbook = null;
+                 HSSFRow row = null;
+                 HSSFSheet hssfSheet = null;
+                 FileOutputStream fileOutputStream = null;
+                 Properties properties = null;
+                 
+                 String webappPath = req.getServletContext().getRealPath("/");
+                 
+                 
+//
 
-			hssfWorkbook = new HSSFWorkbook();
-			hssfSheet = hssfWorkbook.createSheet("new sheet");
-			DataFormat fmt = hssfWorkbook.createDataFormat();
-			CellStyle textStyle = hssfWorkbook.createCellStyle();
-			textStyle.setDataFormat(fmt.getFormat("@"));
-			hssfSheet.setDefaultColumnStyle(6, textStyle); 
-			
-			
-			HSSFRow rowhead = hssfSheet.createRow(0); // Header
+                 hssfWorkbook = new HSSFWorkbook();
+                 hssfSheet = hssfWorkbook.createSheet("new sheet");
+                 DataFormat fmt = hssfWorkbook.createDataFormat();
+                 CellStyle textStyle = hssfWorkbook.createCellStyle();
+                 textStyle.setDataFormat(fmt.getFormat("@"));
+                 hssfSheet.setDefaultColumnStyle(6, textStyle); 
+                 
+                 
+                 HSSFRow rowhead = hssfSheet.createRow(0); // Header
 
-			rowhead.createCell(0).setCellValue("S.N");
-			rowhead.createCell(1).setCellValue("Route No");
-			rowhead.createCell(2).setCellValue("QLID");
-			rowhead.createCell(3).setCellValue("Employee Name");
-			rowhead.createCell(4).setCellValue("Shift Time");
-			rowhead.createCell(5).setCellValue("Pick-up Area");
-			rowhead.createCell(6).setCellValue("Pick Time");
-			rowhead.createCell(7).setCellValue("Drop at");
-			rowhead.createCell(8).setCellValue("Vendor Name");
-			rowhead.createCell(9).setCellValue("Start Date");
-			rowhead.createCell(10).setCellValue("End Date");
-			rowhead.createCell(11).setCellValue("Cab Number");
-			rowhead.createCell(12).setCellValue("Driver Name");
-			rowhead.createCell(13).setCellValue("Driver Number");
-			rowhead.createCell(14).setCellValue("Guard Needed");
-			rowhead.createCell(15).setCellValue("Remarks");
+                 rowhead.createCell(0).setCellValue("S.N");
+                 rowhead.createCell(1).setCellValue("Route No");
+                 rowhead.createCell(2).setCellValue("QLID");
+                 rowhead.createCell(3).setCellValue("Employee Name");
+                 rowhead.createCell(4).setCellValue("Shift Time");
+                 rowhead.createCell(5).setCellValue("Pick-up Area");
+                 rowhead.createCell(6).setCellValue("Pick Time");
+                 rowhead.createCell(7).setCellValue("Drop at");
+                 rowhead.createCell(8).setCellValue("Vendor Name");
+                 rowhead.createCell(9).setCellValue("Start Date");
+                 rowhead.createCell(10).setCellValue("End Date");
+                 rowhead.createCell(11).setCellValue("Cab Number");
+                 rowhead.createCell(12).setCellValue("Driver Name");
+                 rowhead.createCell(13).setCellValue("Driver Number");
+                 rowhead.createCell(14).setCellValue("Guard Needed");
+                 rowhead.createCell(15).setCellValue("Remarks");
 
-			// excel header created
-			JSONObject jsobj = new JSONObject();
-			PreparedStatement ps = con.prepareStatement(query);
-			PreparedStatement ps1 = con.prepareStatement(
-					"select Route_No,Emp_Qlid,Shift_Id,Pickup_Time,Cab_No,Guard_Needed,Start_Date,End_Date,Vendor_Name,Driver_Id from ncab_roster_tbl where Emp_Qlid=? and Shift_Id=? and Cab_No=?");
-			PreparedStatement ps2 = con
-					.prepareStatement("select driver_name,d_contact_num from ncab_driver_master_tbl where driver_id=?");
-			PreparedStatement ps3 = con.prepareStatement(
-					"select Emp_FName,Emp_MName,Emp_LName,Emp_Pickup_Area from ncab_master_employee_tbl where Emp_Qlid=?");
-			ResultSet rs = ps.executeQuery();
-			while (rs.next()) {
-				ps1.setString(1, rs.getString(1));
-				ps1.setString(2, rs.getString(2));
-				ps1.setString(3, rs.getString(3));
-				ResultSet rs1 = ps1.executeQuery();
-				while (rs1.next()) {
-					rm.setRoute_no(rs1.getString(1));
-					rm.setQlid(rs1.getString(2));
-					rm.setShift_id(rs1.getString(3));
-					rm.setPickup_time(rs1.getString(4));
-					rm.setCab_number(rs1.getString(5));
-					rm.setGuard_required(rs1.getString(6));
-					rm.setStart_time(rs1.getString(7));
-					rm.setEnd_time(rs1.getString(8));
-					rm.setVendor_name(rs1.getString(9));
-					rm.setDriver_id(rs1.getString(10));
-				}
-				// fetching driver data
-				ps2.setInt(1, Integer.parseInt(rm.getDriver_id().toString()));
-				ResultSet rs2 = ps2.executeQuery();
-				while (rs2.next()) {
-					rm.setDriver_name(rs2.getString(1));
-					rm.setDriver_phone_number(rs2.getString(2));
-				}
-				ps3.setString(1, rs.getString(1));
+                 // excel header created
+                 JSONObject jsobj = new JSONObject();
+                 PreparedStatement ps = con.prepareStatement(query);
+                 PreparedStatement ps1 = con.prepareStatement(
+                              "select Route_No,Emp_Qlid,Shift_Id,Pickup_Time,Cab_No,Guard_Needed,Start_Date,End_Date,Vendor_Name,Driver_Id from ncab_roster_tbl where Emp_Qlid=? and Shift_Id=? and Cab_No=?");
+                 PreparedStatement ps2 = con
+                              .prepareStatement("select driver_name,d_contact_num from ncab_driver_master_tbl where driver_id=?");
+                 PreparedStatement ps3 = con.prepareStatement(
+                              "select Emp_FName,Emp_MName,Emp_LName,Emp_Pickup_Area from ncab_master_employee_tbl where Emp_Qlid=?");
+                 ResultSet rs = ps.executeQuery();
+                 while (rs.next()) {
+                        ps1.setString(1, rs.getString(1));
+                        ps1.setString(2, rs.getString(2));
+                        ps1.setString(3, rs.getString(3));
+                        ResultSet rs1 = ps1.executeQuery();
+                        while (rs1.next()) {
+                              rm.setRoute_no(rs1.getString(1));
+                              rm.setQlid(rs1.getString(2));
+                              rm.setShift_id(rs1.getString(3));
+                              rm.setPickup_time(rs1.getString(4));
+                              rm.setCab_number(rs1.getString(5));
+                              rm.setGuard_required(rs1.getString(6));
+                              rm.setStart_time(rs1.getString(7));
+                              rm.setEnd_time(rs1.getString(8));
+                              rm.setVendor_name(rs1.getString(9));
+                              rm.setDriver_id(rs1.getString(10));
+                        }
+                        // fetching driver data
+                        ps2.setInt(1, Integer.parseInt(rm.getDriver_id().toString()));
+                        ResultSet rs2 = ps2.executeQuery();
+                        while (rs2.next()) {
+                              rm.setDriver_name(rs2.getString(1));
+                              rm.setDriver_phone_number(rs2.getString(2));
+                        }
+                        ps3.setString(1, rs.getString(1));
 
-				// fetching emp data
-				ResultSet rs3 = ps3.executeQuery();
-				rs3.next();
-				rm.setFname(rs3.getString(1));
-				rm.setMname(rs3.getString(2));
-				rm.setLname(rs3.getString(3));
-				rm.setPickup_area(rs3.getString(4));
-				if (!(rm.getRoute_no().equals("000"))) {
-					row = hssfSheet.createRow( counter);
-					row.createCell( 0).setCellValue(counter);
-					int i = Integer.parseInt(rm.getRoute_no());
-					row.createCell( 1).setCellValue(String.format("%03d", i));
-					row.createCell( 2).setCellValue(rm.getQlid());
-					if ((rm.getMname()).equals("")) {
-						row.createCell( 3).setCellValue(rm.getFname() + " " + rm.getLname());
-					} else {
-						row.createCell( 3)
-								.setCellValue(rm.getFname() + " " + rm.getMname() + " " + rm.getLname());
+                        // fetching emp data
+                        ResultSet rs3 = ps3.executeQuery();
+                        rs3.next();
+                        rm.setFname(rs3.getString(1));
+                        rm.setMname(rs3.getString(2));
+                        rm.setLname(rs3.getString(3));
+                        rm.setPickup_area(rs3.getString(4));
+                        if (!(rm.getRoute_no().equals("000"))) {
+                              row = hssfSheet.createRow( counter);
+                              row.createCell( 0).setCellValue(counter);
+                              int i = Integer.parseInt(rm.getRoute_no());
+                               row.createCell( 1).setCellValue(String.format("%03d", i));
+                               row.createCell( 2).setCellValue(rm.getQlid());
+                              if ((rm.getMname()).equals("")) {
+                                     row.createCell( 3).setCellValue(rm.getFname() + " " + rm.getLname());
+                              } else {
+                                     row.createCell( 3)
+                                                   .setCellValue(rm.getFname() + " " + rm.getMname() + " " + rm.getLname());
 
-					}
-					int shift = Integer.parseInt(rm.getShift_id());
-					if (shift == 1) {
-						row.createCell( 4).setCellValue("07:00 - 04:00");
-					} else if (shift == 2) {
-						row.createCell( 4).setCellValue("10:00 - 07:00");
-					} else if (shift == 3) {
-						row.createCell( 4).setCellValue("12:00 - 09:00");
-					} else if (shift == 5) {
-						row.createCell( 4).setCellValue("02:00 - 11:00");
-					} else if (shift > 5) {
-						row.createCell( 4).setCellValue("00:00 - 00:00");
-					} else {
-						row.createCell( 4).setCellValue("00:00 - 00:00");
+                              }
+                              int shift = Integer.parseInt(rm.getShift_id());
+                              if (shift == 1) {
+                                     row.createCell( 4).setCellValue("07:00 - 04:00");
+                              } else if (shift == 2) {
+                                     row.createCell( 4).setCellValue("10:00 - 07:00");
+                              } else if (shift == 3) {
+                                     row.createCell( 4).setCellValue("12:00 - 09:00");
+                              } else if (shift == 5) {
+                                     row.createCell( 4).setCellValue("02:00 - 11:00");
+                              } else if (shift > 5) {
+                                     row.createCell( 4).setCellValue("00:00 - 00:00");
+                              } else {
+                                     row.createCell( 4).setCellValue("00:00 - 00:00");
 
-					}
-					row.createCell( 5).setCellValue(rm.getPickup_area());
-					Cell cell_pickup = row.createCell(6);
-					cell_pickup.setCellStyle(textStyle);
-					cell_pickup.setCellValue(rm.getPickup_time());
-					row.createCell( 7).setCellValue(rm.getDrop_time());
-					row.createCell( 8).setCellValue(rm.getVendor_name());
-					row.createCell( 9).setCellValue(rm.getStart_time());
-					row.createCell( 10).setCellValue(rm.getEnd_time());
-					row.createCell( 11).setCellValue(rm.getCab_number());
-					row.createCell( 12).setCellValue(rm.getDriver_name());
-					row.createCell( 13).setCellValue(rm.getDriver_phone_number());
-					row.createCell( 14).setCellValue(rm.getGuard_required());
-					row.createCell( 15).setCellValue(rm.getRemarks());
-					counter++;
-					System.out.println("row Added :- " + counter);
-				}
-			}
-			fileOutputStream = new FileOutputStream(filename);
-			hssfWorkbook.write(fileOutputStream);
-			fileOutputStream.close();
-//			msg.put("err_msg","success");
-//			msg.put("err_msg","success");
-//			System.out.println("Excel Sucessfully Downloaded.");
-//		} catch (Exception e) {
-//			// TODO Auto-generated catch block
-//			msg.put("err_msg", "error_exist");
-			msg.put("err_type","success");
-			System.out.println("Excel Sucessfully Downloaded.");
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			msg.put("err_type", "fail");
-			e.printStackTrace();
-		}
+                              }
+                               row.createCell( 5).setCellValue(rm.getPickup_area());
+                              Cell cell_pickup = row.createCell(6);
+                              cell_pickup.setCellStyle(textStyle);
+                               cell_pickup.setCellValue(rm.getPickup_time());
+                               row.createCell( 7).setCellValue(rm.getDrop_time());
+                               row.createCell( 8).setCellValue(rm.getVendor_name());
+                               row.createCell( 9).setCellValue(rm.getStart_time());
+                               row.createCell( 10).setCellValue(rm.getEnd_time());
+                               row.createCell( 11).setCellValue(rm.getCab_number());
+                               row.createCell( 12).setCellValue(rm.getDriver_name());
+                               row.createCell( 13).setCellValue(rm.getDriver_phone_number());
+                               row.createCell( 14).setCellValue(rm.getGuard_required());
+                               row.createCell( 15).setCellValue(rm.getRemarks());
+                              counter++;
+                              System.out.println("row Added :- " + counter);
+                        }
+                 }
+                 
+                 RequestService obj=new RequestService();
+                 
+                 file=obj.createTempFileWithDir(req);
+
+                 
+                 if(file.exists()){
+                        System.out.println("Excel Created");
+                 }
+                 
+                 
+                 
+                 fileOutputStream = new FileOutputStream(file);
+                 hssfWorkbook.write(fileOutputStream);
+                 fileOutputStream.close();
+                 System.out.println("this is the new testing");
+                 
+                 msg.put("status","success");
+                 
+                 msg.put("fileName",file.getName().toString());
+                 System.out.println(file.getName().toString());
+                 
+                 
+                 msg.put("err_msg","success");
+                 msg.put("err_msg","success");
+                 System.out.println("Excel Sucessfully Downloaded.");
+//        } catch (Exception e) {
+//               // TODO Auto-generated catch block
+//               msg.put("err_msg", "error_exist");
+                 msg.put("err_type","success");
+                 System.out.println("Excel Sucessfully Downloaded.");
+          } catch (Exception e) {
+                 // TODO Auto-generated catch block
+                 msg.put("err_type", "fail");
+                 e.printStackTrace();
+          }
 System.out.println("error msg download data:- "+msg);
-		return msg;
-	}
-	
+          return msg;
+    }
+
 public JSONArray getStartandEndDate(String strdiv) {
 		
 		long millis = System.currentTimeMillis();
@@ -2279,7 +2310,7 @@ public String sendMail(JSONObject jsonreq){
             "  <p class='MsoNormal' align='center' style='text-align:center'><span class='mousetype1'><span style='font-size:7.5pt'>NCR Confidential: FOR INTERNAL" +
             "  USE ONLY</span></span><span style='font-size:7.5pt;font-family:&quot;Verdana&quot;,sans-serif;" +
             "  color:black'><br>" +
-            "   <span class='mousetype1'>© 2010 NCR Corporation. All rights reserved.</span></span></p>" +
+            "   <span class='mousetype1'>ï¿½ 2010 NCR Corporation. All rights reserved.</span></span></p>" +
             "   </td>" +
             "  </tr>" +
             " </tbody></table></center>"))

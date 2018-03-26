@@ -566,7 +566,32 @@ public Response complaint(String data){
 	}
 	return resp;
 }
+//pull excel
+@GET  
+@Path("/pullExcel/{flp}")  
+@Produces("application/vnd.ms-excel")
+public Response pullExcelFile(@Context HttpServletRequest req,@PathParam("flp") String filename) {
+	Response response;
+	JSONObject jsonResponse =new JSONObject();
+	String webappPath = req.getServletContext().getRealPath("/");
+	
+	File file =new File(webappPath+"WebContent"+File.separator+"tempDir"+File.separator+filename);
 
+	if(file.exists())
+	{
+//		System.out.println("File found");
+		ResponseBuilder rb = Response.ok(file);  
+		rb.header("content-disposition", "attachment; filename=\"File.xls\"");  
+		return rb.build();  
+	}else {
+//		System.out.println("File not found");
+
+		jsonResponse.put("status", "fail" );
+		jsonResponse.put("message", "No file exists");
+		response = Response.status(200).type("application/json").entity(jsonResponse.toString()).build();       
+		return response;
+	}
+}
 
 
 	}
