@@ -193,7 +193,7 @@ public class VendorService {
 
 	//adding image
 
-    private static final String UPLOAD_FOLDER = System.getProperty("/usr/share/tomcat8/webapps/vendor-documents");
+    private static final String UPLOAD_FOLDER = System.getProperty("/tmp/vendor-documents");
 
 
     @POST
@@ -209,11 +209,11 @@ public class VendorService {
           //System.out.println("Check2");
 
           // create our destination folder, if it not exists
-          try {
-                 daoimpl.createFolderIfNotExists(UPLOAD_FOLDER);
-          } catch (SecurityException se) {
-                 return Response.status(500).entity("Can not create destination folder on server").build();
-          }
+//          try {
+//                 daoimpl.createFolderIfNotExists(UPLOAD_FOLDER);
+//          } catch (SecurityException se) {
+//                 return Response.status(500).entity("Can not create destination folder on server").build();
+//          }
 
           String uploadedFileLocation = UPLOAD_FOLDER + fileDetail.getFileName();;
           try {

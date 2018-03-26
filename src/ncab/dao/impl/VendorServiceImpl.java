@@ -1190,13 +1190,13 @@ public JSONObject getDriverDetails()
 		out.close();
 	}
 
-	public void createFolderIfNotExists(String dirName)
-			throws SecurityException {
-		File theDir = new File(dirName);
-		if (!theDir.exists()) {
-			theDir.mkdir();
-		}
-	}
+//	public void createFolderIfNotExists(String dirName)
+//			throws SecurityException {
+//		File theDir = new File(dirName);
+//		if (!theDir.exists()) {
+//			theDir.mkdir();
+//		}
+//	}
 
 	public Response updateCab(String onrshp, String cab_license_plate_number, String model,  String fuel_type,String type,int occupancy, int cab_rate , String Rcert,String Pcert,String Fcert,String icert,String entry_tax_haryana_certi,String entry_tax_delhi_certi,String entry_tax_up_certi, Date date1, Date date2, Date date3, Date date4, String entry_tax_haryana_exp_date, String entry_tax_delhi_exp_date, String entry_tax_up_exp_date )throws Exception 
 	{
@@ -1361,7 +1361,7 @@ public JSONObject getDriverDetails()
 
 
 
-               PreparedStatement ps = connection.prepareStatement("update ncab_driver_master_tbl set driver_status=0 where driver_id = ?");
+               PreparedStatement ps = connection.prepareStatement("update ncab_driver_master_tbl set driver_status=1 where driver_id = ?");
                ps.setString(1,  did);
                i=ps.executeUpdate();
                System.out.println(i);
@@ -1428,7 +1428,7 @@ public JSONObject getDriverDetails()
 
                else {
 
-                     PreparedStatement ps = connection.prepareStatement("update ncab_driver_master_tbl set driver_status=1 where driver_id = ?");
+                     PreparedStatement ps = connection.prepareStatement("update ncab_driver_master_tbl set driver_status=0 where driver_id = ?");
                      ps.setString(1,  did);
                      i=ps.executeUpdate();
                      System.out.println(i);
