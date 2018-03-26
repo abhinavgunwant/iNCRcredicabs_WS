@@ -1,6 +1,7 @@
 package ncab.dao.impl;
 
 import java.sql.Connection;
+import java.io.File;
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.activation.FileDataSource;
@@ -111,7 +112,7 @@ public class RosterServiceImpl {
 			int qsize = 0;
 			while (rs.next()) {
 				qsize++;
-				String ros_id="";
+
 				pick_qlid = rs.getString(1);
 				pick_shift = rs.getString(2);
 				pick_cab_number = rs.getString(3);
@@ -135,7 +136,6 @@ public class RosterServiceImpl {
 				rs1 = ps1.executeQuery();
 				rs2 = ps2.executeQuery();
 				while (rs1.next()) {
-					ros_id=rs1.getString(5);
 					rm.setQlid(rs1.getString(2));
 					rm.setCab_number(rs1.getString(6));
 					rm.setRoot_number(rs1.getString(1));
@@ -147,8 +147,6 @@ public class RosterServiceImpl {
 					jsonObj.put("Route_number", rm.getRoot_number());
 					jsonObj.put("shift_id", rm.getShift_id());
 					jsonObj.put("pickup_time", rm.getPickup_time());
-					jsonObj.put("roster_id",ros_id);
-					
 					System.out.println("vendor :- " + rm.getVendor_name());
 					String setVendor = "";
 					if(rm.getVendor_name().equals(" ")){
@@ -430,8 +428,23 @@ public class RosterServiceImpl {
 		DBConnectionUpd dbconnection = new DBConnectionUpd();
 		Connection connection = dbconnection.getConnection();
 		RowCheck rowcheck = new RowCheck();
-		String path = new String("/tmp/ncab_logs/RosterUploadError_log.txt");
-		FileWriter f0 = new FileWriter(path);
+	//	String LOGFILE_DIR = "C:\\Users\\DB250491\\Desktop\\ncab_logs";
+		String LOGFILE_DIR = "/tmp/ncab_logs";
+		String LOGFILE_PREFIX = "iNCRediCabs_Roster_MASS_UPLOAD_LOG_";
+//		String path = new String(System.getProperty("user.home") + "/Desktop/output.txt");
+		String logFileName = LOGFILE_DIR + "/" + LOGFILE_PREFIX+ ".txt";
+		File logDir = new File(LOGFILE_DIR);
+		if(!logDir.exists()) {
+			logDir.mkdir();
+		}
+		File file = new File(logFileName);
+		if(!file.exists()) {
+						file.createNewFile();
+		}
+
+		//String path = new String("/tmp/ncab_logs/RosterUploadError_log.txt");
+		FileWriter f0 = new FileWriter(file); 
+//		FileWriter f0 = new FileWriter(path);
 		String[] route_no_arr = null;
 		String[] empid_arr = null;
 		String[] cab_arr = null;
@@ -463,7 +476,7 @@ public class RosterServiceImpl {
 		try {
 			ps = connection
 					.prepareStatement("select Cab_No,Shift_Id,Route_No from ncab_roster_tbl where Shift_Id <> 4 and '"
-							+ current_date + "' between Start_Date and End_Date order by Route_No");
+							+ current_date + "' between Start_Date and End_Date and Route_Status='active' order by Route_No");
 			ResultSet rs = ps.executeQuery();
 			int ct1 = 0;
 			while (rs.next()) {
@@ -571,8 +584,8 @@ public class RosterServiceImpl {
 				String dname = row.getCell(12).getStringCellValue();
 				System.out.println("Driver Name: " + dname);
 
-				String dnumber = row.getCell(13).getStringCellValue();
-				// String dnumber = "1234567890";
+//				String dnumber = row.getCell(13).getStringCellValue();
+				 String dnumber = "1234567890";
 				System.out.println("Driver Phone Number: " + dnumber);
 
 				String remarks = row.getCell(15, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
@@ -621,14 +634,30 @@ public class RosterServiceImpl {
 				else if (hm.get(cabno) == null || (hm.get(cabno) != null && hm.get(cabno).get(shift_id) == null)) {
 					ct++;
 					Route_No = String.format("%03d", ct);
+					System.out.println("r no :- "+Route_No);
+					System.out.println("shift :- "+shift_id);
+					
+					
+					if (hm.get(cabno) == null) {
+						hm.put(cabno, new HashMap<String, String>());
+						hm.get(cabno).put(shift_id, Route_No);
+					} else if (hm.get(cabno).get(shift_id) == null)
+						hm.get(cabno).put(shift_id, Route_No);
+										
+					
+					
 					// change the code for this as per the above hashmap data
 					// filling
-					if (hm.get(cabno) == null)
+					/*if (hm.get(cabno) == null)
 						sr = new HashMap<String, String>();
 					sr.put(shift_id, Route_No);
 					hm.put(cabno, sr);
 				} else if (hm.get(cabno) != null && hm.get(cabno).get(shift_id) != null)
+					Route_No = hm.get(cabno).get(shift_id);*/
+				}
+				else if (hm.get(cabno) != null && hm.get(cabno).get(shift_id) != null)
 					Route_No = hm.get(cabno).get(shift_id);
+				
 
 				System.out.println("Big hm: " + hm);
 
@@ -833,7 +862,7 @@ public class RosterServiceImpl {
 			message.setFrom(new InternetAddress(from));
 
 			message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
-
+			
 			message.setSubject("Upload Error Log");
 
 			BodyPart messageBodyPart = new MimeBodyPart();
@@ -843,12 +872,15 @@ public class RosterServiceImpl {
 			Multipart multipart = new MimeMultipart();
 
 			multipart.addBodyPart(messageBodyPart);
-
+			String LOGFILE_DIR = "/tmp/ncab_logs";
+			String LOGFILE_PREFIX = "iNCRediCabs_Roster_MASS_UPLOAD_LOG_";
+//			String path = new String(System.getProperty("user.home") + "/Desktop/output.txt");
+			String logFileName = LOGFILE_DIR + "/" + LOGFILE_PREFIX+ ".txt";
 			messageBodyPart = new MimeBodyPart();
-			String filename = new String("/tmp/ncab_logs/RosterUploadError_log.txt");
-			DataSource source = new FileDataSource(filename);
+			//String filename = new String(System.getProperty("user.home") + "/Desktop/output.txt");
+			DataSource source = new FileDataSource(logFileName);
 			messageBodyPart.setDataHandler(new DataHandler(source));
-			messageBodyPart.setFileName(filename);
+			messageBodyPart.setFileName(logFileName);
 			multipart.addBodyPart(messageBodyPart);
 
 			message.setContent(multipart);
@@ -1642,7 +1674,10 @@ public class RosterServiceImpl {
 			long millis = System.currentTimeMillis();
 			java.sql.Date date = new java.sql.Date(millis);
 			String current_date = date.toString();
-
+			
+			System.out.println("Before If: cabno: "+cabno);
+			System.out.println("Before If: sid: "+shiftid);
+			
 			if(!cabno.equals("") && shiftid != 0)
 			{
 				PreparedStatement rfe1 = con.prepareStatement("select Route_No,count(Route_No) from ncab_roster_tbl where Cab_No = '"+cabno+"' and Shift_Id = '"+shiftid+"' and '"+current_date+"' between Start_Date and End_Date");
@@ -1893,7 +1928,7 @@ public class RosterServiceImpl {
 			HSSFSheet hssfSheet = null;
 			FileOutputStream fileOutputStream = null;
 			Properties properties = null;
-			String filename = new String("/tmp/ncab_logs/RosterUploadError_excel.xls");
+			String filename = new String(System.getProperty("user.home") + "/Desktop/roster.xls");
 
 			hssfWorkbook = new HSSFWorkbook();
 			hssfSheet = hssfWorkbook.createSheet("new sheet");
@@ -2063,205 +2098,5 @@ public JSONArray getStartandEndDate(String strdiv) {
 		return jarr;
 	}
 		
-
-public JSONArray getCabShift(JSONArray jsonarray) {
-	JSONArray jsonarr = new JSONArray();
-	DBConnectionUpd db = new DBConnectionUpd();
-	Connection connection = db.getConnection();
-	JSONObject json=jsonarray.getJSONObject(0);
-	String qlid = json.optString("qlid");
-	String date = json.optString("date");
-	String cab = "", shifttime = "";
-	int shift = 0;
-	try {
-		System.out.println("---Entering query---");
-		PreparedStatement ps = connection.prepareStatement(
-				"select Cab_No,shift_id from ncab_roster_tbl where Emp_Qlid = ? and ? BETWEEN start_date AND End_date");
-		ps.setString(1, qlid);
-		ps.setString(2, date);
-		System.out.println("---Entering result set---");
-		ResultSet rs = ps.executeQuery();
-		while (rs.next()) {
-			JSONObject jobj = new JSONObject();
-			cab = rs.getString(1);
-			shift = rs.getInt(2);
-			if (shift == 1) {
-				shifttime = "Shift--7am-4pm";
-
-			}
-			if (shift == 2) {
-				shifttime = "Regular--10am-7pm";
-
-			}
-
-			if (shift == 3) {
-				shifttime = "Shift--12pm-9pm";
-
-			}
-			if (shift == 4) {
-				shifttime = "UnScheduled";
-
-			}
-			if (shift == 5) {
-				shifttime = "Shift--2pm-11pm";
-
-			}
-			System.out.println("////" + cab + ":" + shift + "////");
-			jobj.put("cabno", cab);
-			jobj.put("shift", shifttime);
-			System.out.println("---" + cab + ":" + shifttime + "---");
-			jsonarr.put(jobj);
-		}
-		
-	} catch (Exception e) {
-		System.out.print("Error: getcab(): ---" + e.getMessage());
-	}
-	return jsonarr;
-
-}
-
-public int feedback(JSONObject json) {
-	int flag = 0;
-	
-	DBConnectionUpd db = new DBConnectionUpd();
-	Connection connection = db.getConnection();
-	String qlid = json.getString("qlid");
-	String date = json.getString("date");
-	String type = json.getString("type");
-	String pd = json.getString("pd");
-	String complaint = json.getString("comp");
-	String comment = json.getString("comments");
-	try {
-		PreparedStatement ps = connection.prepareStatement(
-				"insert into ncab_complaint_tbl (date,shift_type,pd_type,emp_qlid,complaint,comments) values (?,?,?,?,?,?)");
-		ps.setString(1, date);
-		ps.setString(2, type);
-		ps.setString(3, pd);
-		ps.setString(4, qlid);
-		ps.setString(5, complaint);
-		ps.setString(6, comment);
-		flag = ps.executeUpdate();
-	} catch (Exception e) {
-		System.out.println("Error in submission: --" + e.getMessage());
-	}
-	return flag;
-}
-
-public String sendMail(JSONObject jsonreq){	
-	String resp="";
-	String Emp_Qlid = jsonreq.getString("qlid");
-	String Emp_Name = "";
-	String Emp_FName = "";
-	String Emp_MName = "";
-	String Emp_LName = "";
-	
-	DBConnectionUpd dbconnection = new DBConnectionUpd();
-	Connection connection = dbconnection.getConnection();
-	
-	PreparedStatement ps;
-	try {
-		ps = connection.prepareStatement("SELECT  Emp_FName, Emp_MName, Emp_LName FROM ncab_master_employee_tbl WHERE Emp_Qlid =? ");
-		ps.setString(1, Emp_Qlid);
-		ResultSet rs = ps.executeQuery();
-		while(rs.next()){
-			Emp_FName=rs.getString(1);
-			Emp_MName = rs.getString(2);
-			Emp_LName=rs.getString(3);
-		}
-		Emp_Name = Emp_LName + ", " + Emp_FName + " " + Emp_MName ;
-	} catch (SQLException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-	}
-	System.out.println(Emp_Name);
-	String date = jsonreq.getString("date");
-	String type = jsonreq.getString("type");
-	String pd = jsonreq.getString("pd");
-	String complaint = jsonreq.getString("comp");
-	String comments = jsonreq.getString("comments");
-	String cabno = jsonreq.getString("cab");	
-	System.out.println("test");
-	CompServiceImpl sendMailService = new CompServiceImpl();
-	if(sendMailService.sendEmailMessage(
-			"donotreply@ncr.com",                        //from
-            "js250859@ncr.com",                   //to  Transport Manager ID
-            "harry.jaspreet@hotmail.com","",                                       //cc
-            "NCR cabs | Complaint about "+complaint+" in " +type, //subject
-            "<center>" +                              //body
-            "<table class='MsoNormalTable' border='0' cellspacing='0' cellpadding='0' width='40%' style='width:40.0%;mso-cellspacing:0in;background:white;mso-yfti-tbllook:1184;" +
-            "mso-padding-alt:0in 0in 0in 0in'>" +
-            "<tbody><tr style='mso-yfti-irow:0;mso-yfti-firstrow:yes;height:44.4pt'>" +
-            " <td colspan='2' valign='top' style='padding:1.8pt 1.8pt 1.8pt 1.8pt;height:44.4pt'>" +
-            " <p class='MsoNormal'><!--[if gte vml 1]><v:shape id='_x0000_i1025' type='#_x0000_t75'" +
-            " alt='Are you ready to experience a new world of interaction?' style='width:450pt;" +
-            "height:55.5pt'>" +
-            "<img src='http://pulkit604.esy.es/image003.jpg'" +
-            " o:href='cid:image005.jpg@01D3AB32.E8728490'/>" +
-            " </v:shape><![endif]--><!--[if !vml]--><img border='0' width='600' height='74' src='http://pulkit604.esy.es/image003.jpg' style='height:.766in;width:6.25in' alt='Are you ready to experience a new world of interaction?' v:shapes='_x0000_i1025'><!--[endif]--></p>" +
-            " </td>" +
-            " </tr>" +
-            " <tr style='mso-yfti-irow:1;height:26.4pt'>" +
-            "  <td colspan='2' style='padding:1.8pt 1.8pt 1.8pt 1.8pt;height:26.4pt'>" +
-            " <table class='MsoNormalTable' border='0' cellspacing='0' cellpadding='0' width='100%' style='width:100.0%;mso-cellspacing:0in;mso-yfti-tbllook:1184;mso-padding-alt:" +
-            " 0in 0in 0in 0in'>" +
-            "<tbody><tr style='mso-yfti-irow:0;mso-yfti-firstrow:yes;mso-yfti-lastrow:yes'>" +
-            "<td style='background:#E3E3E3;padding:3.0pt 3.0pt 3.0pt 3.0pt'>" +
-            "<table class='MsoNormalTable' border='0' cellspacing='0' cellpadding='0' width='100%' style='width:100.0%;mso-cellspacing:0in;mso-yfti-tbllook:" +
-            " 1184;mso-padding-alt:0in 0in 0in 0in'>" +
-            " <tbody><tr style='mso-yfti-irow:0;mso-yfti-firstrow:yes;mso-yfti-lastrow:yes'>" +
-            "  <td style='padding:0in 0in 0in 0in'></td>" +
-            " </tr>" +
-            "</tbody></table>" +
-            "</td>" +
-            "</tr>" +
-            "</tbody></table>" +
-            " </td>" +
-            " </tr>" +
-            " <tr style='mso-yfti-irow:2'>" +
-            "  <td style='padding:1.8pt 1.8pt 1.8pt 1.8pt'></td>" +
-            "  <td style='padding:1.8pt 1.8pt 1.8pt 1.8pt'></td>" +
-            "  </tr>" +
-            " <tr style='mso-yfti-irow:3'>" +
-            "   <td width='1%' valign='top' style='width:1.0%;padding:1.8pt 1.8pt 1.8pt 1.8pt'></td>" +
-            "   <td width='67%' valign='top' style='width:67.0%;padding:1.8pt 1.8pt 1.8pt 1.8pt'>" +
-            "   <p><span class='bodytext1'><span style='font-size:8.5pt'> The complaint about cab by <b>"+Emp_Qlid+", " +Emp_Name +
-            "   </span></span><span style='font-size:8.5pt;font-family:&quot;Verdana&quot;,sans-serif;" +
-            "   color:black'><br>" +
-            "   <span class='bodytext1'>Details about complaint are below:</span><br>" +
-            "   <span class='bodytext1'>Date of Ride: <b>"+date+"</b></span><br>" +
-            "   <span class='bodytext1'>Pickup/Drop: <b>"+pd+"</b></span><br>" +
-            "   <span class='bodytext1'>Shift time: <b>"+type+"</b></span><br>" +
-            "   <span class='bodytext1'>Cab Number: <b>"+cabno+"</b></span><br>" +
-            "   <span class='bodytext1'>Comments: <b>"+comments+"</b></span><br>" +
-            //"   <br>  <span class='bodytext1'><a href='http://idcportal.ncr.com/myidc/index.php/unscheduled-cab?view=unschedulecab&amp;id=16378&amp;mail=1'>" +
-            " </a><o:p></o:p></span></span></p>" +
-            "  </td>" +
-            " </tr>" +
-            " <tr style='mso-yfti-irow:4;mso-yfti-lastrow:yes;height:.25in'>" +
-            "  <td colspan='2' style='background:#E3E3E3;padding:1.8pt 1.8pt 1.8pt 1.8pt;" +
-            "  height:.25in'>" +
-            "  <p class='MsoNormal' align='center' style='text-align:center'><span class='mousetype1'><span style='font-size:7.5pt'>NCR Confidential: FOR INTERNAL" +
-            "  USE ONLY</span></span><span style='font-size:7.5pt;font-family:&quot;Verdana&quot;,sans-serif;" +
-            "  color:black'><br>" +
-            "   <span class='mousetype1'>© 2010 NCR Corporation. All rights reserved.</span></span></p>" +
-            "   </td>" +
-            "  </tr>" +
-            " </tbody></table></center>"))
-	{		
-		System.out.println("success");
-		resp= "success";
-	}
-	else
-	{
-		System.out.println("sending failed");
-		resp="failed";
-	}
-	System.out.println("test2");
-	
-	return resp;
-	
-}
-
-
 
 }
