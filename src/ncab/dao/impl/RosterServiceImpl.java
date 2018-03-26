@@ -1651,6 +1651,7 @@ public class RosterServiceImpl {
 					System.out.println("Already there is a route of this cab and shift");
 					//throw an error
 					jsobj.put("err_msg", "exist");
+					return jsobj;
 				}
 			}
 			
