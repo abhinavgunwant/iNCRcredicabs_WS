@@ -845,7 +845,7 @@ public class RosterServiceImpl {
 			multipart.addBodyPart(messageBodyPart);
 
 			messageBodyPart = new MimeBodyPart();
-			String filename = new String(System.getProperty("user.home") + "/Desktop/output.txt");
+			String filename = new String("/tmp/ncab_log/RosterUploadError_log.txt");
 			DataSource source = new FileDataSource(filename);
 			messageBodyPart.setDataHandler(new DataHandler(source));
 			messageBodyPart.setFileName(filename);
