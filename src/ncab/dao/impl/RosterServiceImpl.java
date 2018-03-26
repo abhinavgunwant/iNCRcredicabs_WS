@@ -430,7 +430,7 @@ public class RosterServiceImpl {
 		DBConnectionUpd dbconnection = new DBConnectionUpd();
 		Connection connection = dbconnection.getConnection();
 		RowCheck rowcheck = new RowCheck();
-		String path = new String("/tmp/ncab_log/RosterUploadError_log.txt");
+		String path = new String("/tmp/ncab_logs/RosterUploadError_log.txt");
 		FileWriter f0 = new FileWriter(path);
 		String[] route_no_arr = null;
 		String[] empid_arr = null;
@@ -845,7 +845,7 @@ public class RosterServiceImpl {
 			multipart.addBodyPart(messageBodyPart);
 
 			messageBodyPart = new MimeBodyPart();
-			String filename = new String("/tmp/ncab_log/RosterUploadError_log.txt");
+			String filename = new String("/tmp/ncab_logs/RosterUploadError_log.txt");
 			DataSource source = new FileDataSource(filename);
 			messageBodyPart.setDataHandler(new DataHandler(source));
 			messageBodyPart.setFileName(filename);
@@ -1893,7 +1893,7 @@ public class RosterServiceImpl {
 			HSSFSheet hssfSheet = null;
 			FileOutputStream fileOutputStream = null;
 			Properties properties = null;
-			String filename = new String("/tmp/ncab_log/RosterUploadError_excel.xls");
+			String filename = new String("/tmp/ncab_logs/RosterUploadError_excel.xls");
 
 			hssfWorkbook = new HSSFWorkbook();
 			hssfSheet = hssfWorkbook.createSheet("new sheet");
