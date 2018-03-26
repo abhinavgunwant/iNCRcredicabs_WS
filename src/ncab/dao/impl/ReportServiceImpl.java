@@ -511,11 +511,11 @@ public class ReportServiceImpl {
            JSONArray jsonarray=new JSONArray();
            DBConnectionRo dbconnection=new DBConnectionRo();
            Connection connection=dbconnection.getConnection();
-           PreparedStatement ps=(PreparedStatement) connection.prepareStatement("SELECT b.Emp_Qlid AS Emp_Qlid,a.vendor_name AS Vendor_Name,c.Emp_FName AS Emp_FName,c.Emp_Mgr_Qlid1 AS Emp_Mgr_Qlid1 ,\n" + 
-                        "a.Start_Date AS Start_Date_Time,a.Cab_Cost AS Cab_Cost,a.Cab_No AS Cab_No,d.model AS Cab_Type,\n" + 
-                        "b.Source AS Source,b.Destination AS Destination,b.Other_addr AS Trip_Type,c.Emp_Zone AS Zone\n" + 
-                        "FROM ncab_roster_tbl  a,NCAB_UNSCHEDULE_RQST_TBL  b ,ncab_master_employee_tbl c ,ncab_cab_master_tbl d\n" + 
-                        "WHERE b.Shift_ID=4 AND b.Emp_Qlid=c.Emp_Qlid AND a.Emp_Qlid=b.Emp_Qlid AND d.cab_license_plate_no=a.Cab_No;");
+           PreparedStatement ps=(PreparedStatement) connection.prepareStatement("SELECT b.Emp_Qlid AS Emp_Qlid,a.vendor_name AS Vendor_Name,c.Emp_FName AS Emp_FName,c.Emp_Mgr_Qlid1 AS Emp_Mgr_Qlid1 , \r\n" + 
+           		"a.Start_Date AS Start_Date_Time,a.Cab_Cost AS Cab_Cost,a.Cab_No AS Cab_No,d.model AS Cab_Type,\r\n" + 
+           		"b.Source AS Source,b.Destination AS Destination,b.Other_addr AS Trip_Type,c.Emp_Zone AS Zone\r\n" + 
+           		"FROM ncab_roster_tbl  a,NCAB_UNSCHEDULE_RQST_TBL  b ,ncab_master_employee_tbl c ,ncab_cab_master_tbl d\r\n" + 
+           		"WHERE b.Shift_ID=4 AND b.Emp_Qlid=c.Emp_Qlid AND a.Emp_Qlid=b.Emp_Qlid;");
            ResultSet rs=ps.executeQuery();
            while(rs.next())
            {
@@ -1106,7 +1106,7 @@ public class ReportServiceImpl {
 
 		}
 
-		String query7="SELECT YEAR(Start_Date) as Roster_Year, MONTH(Start_Date) as Roster_Month,cab_type,SUM(Cab_Cost) as Total_Cost FROM sum_of_scheduled_cabs GROUP BY YEAR(Start_Date), MONTH(Start_Date),cab_type;";
+		String query7="SELECT YEAR(Start_Date) as Roster_Year, MONTH(Start_Date) as Roster_Month,cab_type,SUM(Cab_Cost) as Total_Cost FROM sum_of_shift_cabs GROUP BY YEAR(Start_Date), MONTH(Start_Date),cab_type;";
 		PreparedStatement ps7=(PreparedStatement) connection.prepareStatement(query7);
 		ResultSet rs7=ps7.executeQuery();
 		int sumcostss=0 , sumcostbs=0;
@@ -1174,7 +1174,7 @@ public class ReportServiceImpl {
 		jsonobjfinalnew.put("escortGuardCost", escortGuardCost);
 		jsonobjfinalnew.put("escortGuardTaxes", escortGuardTaxes);
 		jsonobjfinalnew.put("Total_Amount_Security_Guard", Integer.parseInt(escortGuardCost)+Integer.parseInt(escortGuardTaxes));
-		jsonobjfinalnew.put("escortGuardDropDutyCost", escortGuardDropDutyCost);   
+		jsonobjfinalnew.put("escortGuardDropDutyCost", Integer.parseInt(escortGuardDropDutyCost));   
 		jsonobjfinalnew.put("Escort_Security_Guards", Integer.parseInt(escortGuardDropDutyCost)+(Integer.parseInt(jsonobjfinalnew.get("Total_Amount_Security_Guard").toString())));
 		jsonobjfinalnew.put("tptMobCost", tptMobCost);
 		jsonobjfinalnew.put("Transport_plus_Escort_Security", Integer.parseInt(tptMobCost)+(Integer.parseInt(jsonobjfinalnew.get("Total_Transportation_Cost_for_the_Month").toString()))+(Integer.parseInt(jsonobjfinalnew.get("Escort_Security_Guards").toString())));
