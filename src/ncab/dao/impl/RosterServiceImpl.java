@@ -1937,9 +1937,9 @@ public class RosterServiceImpl {
                  String query = selectFilterQuery(qlid, cab_number, shift_id, emp_name, vendor_name);
                  // Excel code
                  int counter = 1;
-                 HSSFWorkbook hssfWorkbook = null;
-                 HSSFRow row = null;
-                 HSSFSheet hssfSheet = null;
+                 XSSFWorkbook xssfWorkbook = null;
+                 XSSFRow row = null;
+                 XSSFSheet xssfSheet = null;
                  FileOutputStream fileOutputStream = null;
                  Properties properties = null;
                  
@@ -1948,15 +1948,15 @@ public class RosterServiceImpl {
                  
 //
 
-                 hssfWorkbook = new HSSFWorkbook();
-                 hssfSheet = hssfWorkbook.createSheet("new sheet");
-                 DataFormat fmt = hssfWorkbook.createDataFormat();
-                 CellStyle textStyle = hssfWorkbook.createCellStyle();
+                 xssfWorkbook = new XSSFWorkbook();
+                 xssfSheet = xssfWorkbook.createSheet("new sheet");
+                 DataFormat fmt = xssfWorkbook.createDataFormat();
+                 CellStyle textStyle = xssfWorkbook.createCellStyle();
                  textStyle.setDataFormat(fmt.getFormat("@"));
-                 hssfSheet.setDefaultColumnStyle(6, textStyle); 
+                 xssfSheet.setDefaultColumnStyle(6, textStyle); 
                  
                  
-                 HSSFRow rowhead = hssfSheet.createRow(0); // Header
+                 XSSFRow rowhead = xssfSheet.createRow(0); // Header
 
                  rowhead.createCell(0).setCellValue("S.N");
                  rowhead.createCell(1).setCellValue("Route No");
@@ -2019,7 +2019,7 @@ public class RosterServiceImpl {
                         rm.setLname(rs3.getString(3));
                         rm.setPickup_area(rs3.getString(4));
                         if (!(rm.getRoute_no().equals("000"))) {
-                              row = hssfSheet.createRow( counter);
+                              row = xssfSheet.createRow( counter);
                               row.createCell( 0).setCellValue(counter);
                               int i = Integer.parseInt(rm.getRoute_no());
                                row.createCell( 1).setCellValue(String.format("%03d", i));
@@ -2065,7 +2065,6 @@ public class RosterServiceImpl {
                  }
                  
                  RequestService obj=new RequestService();
-//                 RosterService obj=new RosterService();
                  
                  file=obj.createTempFileWithDir(req);
 
@@ -2077,17 +2076,21 @@ public class RosterServiceImpl {
                  
                  
                  fileOutputStream = new FileOutputStream(file);
-                 hssfWorkbook.write(fileOutputStream);
+                 xssfWorkbook.write(fileOutputStream);
                  fileOutputStream.close();
                  System.out.println("this is the new testing");
                  
                  msg.put("status","success");
                  
                  msg.put("fileName",file.getName().toString());
+                 System.out.println(webappPath+"WebContent"+File.separator+"tempDir");
+                 msg.put("filepath", webappPath+"WebContent"+File.separator+"tempDir");
                  System.out.println(file.getName().toString());
                  
                  
-                 msg.put("err_type","success");
+                 
+                 msg.put("err_msg","success");
+                 msg.put("err_msg","success");
                  System.out.println("Excel Sucessfully Downloaded.");
 //        } catch (Exception e) {
 //               // TODO Auto-generated catch block
@@ -2102,6 +2105,7 @@ public class RosterServiceImpl {
 System.out.println("error msg download data:- "+msg);
           return msg;
     }
+
 
 public JSONArray getStartandEndDate(String strdiv) {
 		
