@@ -2626,6 +2626,7 @@ public class EmployeeServiceImpl {
 			ps.setString(1, srb.getEmpQlid());
 			ps.setString(2, srb.getRosterId());
 			ps.setString(3, srb.getCabLicensePlateNo());
+			ps.executeUpdate();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

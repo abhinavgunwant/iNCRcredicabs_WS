@@ -849,7 +849,7 @@ public class ReportServiceImpl {
 		JSONArray jsonarray=new JSONArray();
 		connection=dbconnection.getConnection();      
 		System.out.println("Connected");
-		String query="SELECT a.trip_date AS DATE, b.route_no,b.cab_no,c.vendor_name,a.trip_type,CONCAT(d.emp_fname,' ',d.emp_mname,' ',d.emp_lname) AS Employee_Name,CONCAT(e.start_time,' - ',e.end_time) AS Shift_Time,a.check_in_time,a.check_out_time,(CASE WHEN a.trip_type = 'Pick' THEN ABS(TIMEDIFF(a.check_out_time, e.start_time)) END) AS late_arrival,(CASE WHEN a.trip_type = 'Drop' THEN TIMEDIFF(a.check_in_time,e.end_time) END) AS late_departure FROM ncab_emp_checkin_tbl a,ncab_roster_tbl b,ncab_vendor_master_tbl c,ncab_master_employee_tbl d,NCAB_SHIFT_MASTER_TBL e WHERE (" +stmt1+ ")  AND  (a.route_no=b.route_no && d.emp_qlid=a.emp_qlid) GROUP BY route_no";
+		String query="SELECT a.trip_date AS DATE, b.route_no,b.cab_no,c.vendor_name,a.trip_type,CONCAT(d.emp_fname,' ',d.emp_mname,' ',d.emp_lname) AS Employee_Name,CONCAT(e.start_time,' - ',e.end_time) AS Shift_Time,a.check_in_time,a.check_out_time,(CASE WHEN a.trip_type = 'Pick' THEN TIMEDIFF(a.check_out_time, e.start_time) END) AS late_arrival,(CASE WHEN a.trip_type = 'Drop' THEN TIMEDIFF(a.check_in_time,e.end_time) END) AS late_departure FROM ncab_emp_checkin_tbl a,ncab_roster_tbl b,ncab_vendor_master_tbl c,ncab_master_employee_tbl d,NCAB_SHIFT_MASTER_TBL e WHERE (" +stmt1+ ")  AND  (a.route_no=b.route_no && d.emp_qlid=a.emp_qlid) GROUP BY route_no";
 		System.out.println(query);
 		PreparedStatement ps4= (PreparedStatement) connection.prepareStatement(query);
 		for(int i=0;i<count;i++){
