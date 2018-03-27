@@ -123,7 +123,7 @@ public class RequestService {
 			}
 		}
 
-		File file = File.createTempFile("ExcelFile", ".xls", dir);	
+		File file = File.createTempFile("ExcelFile", ".xlsx", dir);	
 
 		return file;
 	}
@@ -399,7 +399,7 @@ public class RequestService {
                             "  <p class='MsoNormal' align='center' style='text-align:center'><span class='mousetype1'><span style='font-size:7.5pt'>NCR Confidential: FOR INTERNAL" +
                             "  USE ONLY</span></span><span style='font-size:7.5pt;font-family:&quot;Verdana&quot;,sans-serif;" +
                             "  color:black'><br>" +
-                            "   <span class='mousetype1'>© 2010 NCR Corporation. All rights reserved.</span></span></p>" +
+                            "   <span class='mousetype1'>ï¿½ 2010 NCR Corporation. All rights reserved.</span></span></p>" +
                             "   </td>" +
                             "  </tr>" +
                             " </tbody></table></center>");
@@ -473,7 +473,7 @@ public class RequestService {
                                                     "  <p class='MsoNormal' align='center' style='text-align:center'><span class='mousetype1'><span style='font-size:7.5pt'>NCR Confidential: FOR INTERNAL" +
                                                     "  USE ONLY</span></span><span style='font-size:7.5pt;font-family:&quot;Verdana&quot;,sans-serif;" +
                                                     "  color:black'><br>" +
-                                                    "   <span class='mousetype1'>© 2010 NCR Corporation. All rights reserved.</span></span></p>" +
+                                                    "   <span class='mousetype1'>ï¿½ 2010 NCR Corporation. All rights reserved.</span></span></p>" +
                                                     "   </td>" +
                                                     "  </tr>" +
                                                     " </tbody></table></center>");
