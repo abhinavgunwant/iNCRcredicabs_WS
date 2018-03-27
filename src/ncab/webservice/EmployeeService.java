@@ -16,6 +16,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.http.HttpServletRequest;
@@ -277,11 +280,6 @@ public class EmployeeService {
 		HttpSession sess = req.getSession();
 		String qlid = (String)sess.getAttribute("qlid");
 		String sessRole = (String)sess.getAttribute("role");
-//		
-//		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID ||
-//				sessRole.toUpperCase() != "ADMIN") {
-//			return EmployeeServiceImpl.noLoginMessage();
-//		}
 		
 		EmployeeServiceImpl empSrvImpl = new EmployeeServiceImpl();
 		
@@ -822,25 +820,61 @@ public class EmployeeService {
 		//// TODO: verify that user is logged in, use user qlid
 		////	return "success": false if not logged in....
 		JSONObject jsObj = new JSONObject();
+		JSONObject tmp = new JSONObject();
 		EmployeeBean empBean = new EmployeeBean();
 		EmployeeServiceImpl empSrvImpl  = new EmployeeServiceImpl();
 		
 		HttpSession sess = req.getSession();
 		String qlid = (String)sess.getAttribute("qlid");
 		
-//		empBean = empSrvImpl.getEmployeeArray()
+		String employeeName = "";
+		String shiftId = null;
+		
 		empBean = empSrvImpl.getEmployeeFromQLID(qlid);
 		jsObj = empSrvImpl.createJSON(empBean);
 		EmployeeBean mgrArr[] = empSrvImpl.getManagerDetailsEmployee(qlid);
 		
+		RosterServiceImpl rstrImpl = new RosterServiceImpl();
+		JSONArray rstrArray = rstrImpl.showRosterInfo(
+				(new JSONObject())
+				.put("qlid", qlid)
+				.put("c_n", "")
+				.put("s_i", "")
+				.put("e_n", "")
+				.put("vname", "")
+			);
+		for(int i=0; i<rstrArray.length(); ++i) {
+			tmp = (JSONObject) rstrArray.get(i);
+			if(tmp.has("shift_id")) {
+				shiftId = tmp.getString("shift_id");
+			}
+		}
+		
+		if(shiftId == null) {
+			shiftId = "0";
+		}
+		
+		if(empBean.getEmpMName() == null) {
+			if(empBean.getEmpLName() == null) {
+				employeeName = empBean.getEmpFName();
+			}else {
+				employeeName = empBean.getEmpFName() + " " + empBean.getEmpLName();
+			}
+		}else {
+			employeeName = empBean.getEmpFName() + " " + empBean.getEmpMName() + " "
+					+ empBean.getEmpLName();
+		}
+		
+		jsObj.put("shiftId", shiftId);
+		jsObj.put("empName", employeeName);
 		jsObj.put("mgr1Name", mgrArr[0].getEmpFName()
 								+" "+mgrArr[0].getEmpMName()
 								+" "+mgrArr[0].getEmpLName());
-
+		jsObj.put("mgr1Qlid", mgrArr[0].getEmpQlid());
 		jsObj.put("mgr2Name", mgrArr[1].getEmpFName()
 								+" "+mgrArr[1].getEmpMName()
 								+" "+mgrArr[1].getEmpLName());
-		
+		jsObj.put("mgr2Qlid", mgrArr[1].getEmpQlid());		
 		jsObj.put("success", true);
 				
 		return jsObj.toString();
@@ -966,10 +1000,16 @@ public class EmployeeService {
 		JSONArray sosArr = empSrvImpl.getContactJSONArray();
 		int len = sosArr.length();
 		
+		SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+		sdf.setTimeZone(TimeZone.getTimeZone("IST"));
+		String now = sdf.format(new Date());
+		
 		String mail[] = new String[3];
 		String from		= sos.getEmpQlid()+"@ncr.com";
-		String subject	= "";
-		String message	= "";
+		String subject	= "SOS received from "+emp.getEmpFName()+" "+emp.getEmpMName()+" "
+							+emp.getEmpLName()+" - iNCRediCabs";
+		String message	= "An SOS alert has been triggered by "+emp.getEmpFName()+" "+emp.getEmpMName()+" "
+				+emp.getEmpLName() + "(" +emp.getEmpQlid() + ") on "+now;
 		String receivers = "";
 		
 		JSONObject jsObj;
@@ -982,6 +1022,8 @@ public class EmployeeService {
 				mail[i] = jsObj.getString("contactEmail");
 			}
 		}
+		
+		empSrvImpl.addEntryToSOSTable(sos);
 		
 		UtilServiceImpl us = new UtilServiceImpl();
 //		us.sendEmailMessage(from, mail[0], mail[1], mail[2], subject, message);
