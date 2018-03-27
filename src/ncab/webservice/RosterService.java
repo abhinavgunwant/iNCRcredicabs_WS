@@ -1,6 +1,7 @@
 package ncab.webservice;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -575,6 +576,27 @@ public Response complaint(String data){
 	return resp;
 }
 //pull excel
+
+
+public File createTempFileWithDir(@Context HttpServletRequest req) throws IOException {
+
+	String webappPath = req.getServletContext().getRealPath("/");
+
+	File dir =new File(webappPath+"WebContent"+File.separator+"tempDir");		
+	if(!dir.exists())
+	{
+		if(dir.mkdirs()) {
+			System.out.println("Directory created");
+		}else {
+			System.out.println("Directory not created");
+		}
+	}
+
+	File file = File.createTempFile("ExcelFile", ".xls", dir);	
+
+	return file;
+}
+
 @GET  
 @Path("/pullExcel/{flp}")  
 @Produces("application/vnd.ms-excel")

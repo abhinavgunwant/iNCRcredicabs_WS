@@ -55,6 +55,7 @@ import org.json.JSONObject;
 import ncab.beans.RosterModel;
 import ncab.dao.DBConnectionUpd;
 import ncab.webservice.RequestService;
+import ncab.webservice.RosterService;
 
 public class RosterServiceImpl {
 
@@ -150,6 +151,7 @@ public class RosterServiceImpl {
 					jsonObj.put("Route_number", rm.getRoot_number());
 					jsonObj.put("shift_id", rm.getShift_id());
 					jsonObj.put("pickup_time", rm.getPickup_time());
+					jsonObj.put("Roster_Id",rs1.getString(5) );
 					System.out.println("vendor :- " + rm.getVendor_name());
 					String setVendor = "";
 					if(rm.getVendor_name().equals(" ")){
@@ -242,13 +244,13 @@ public class RosterServiceImpl {
 		System.out.println("CURRENT DATE: " + current_date);
 		if (!(vname.equals(""))) {
 			if (!(shift_id.equals("")))
-				query = "select Emp_Qlid,Shift_Id, Cab_No from ncab_roster_tbl where Vendor_Name = '" + vname
-						+ "' and Shift_Id = '" + shift_id
+				query = "select Emp_Qlid,Shift_Id, Cab_No from ncab_roster_tbl where Vendor_Name LIKE '%" + vname
+						+ "%' and Shift_Id = '" + shift_id
 						+ "' and Route_Status = 'active' and Emp_Status = 'active' and '" + current_date
 						+ "' between Start_Date and End_Date ";
 			else
-				query = "select Emp_Qlid,Shift_Id, Cab_No from ncab_roster_tbl where Vendor_Name = '" + vname
-						+ "' and Route_Status = 'active' and Emp_Status = 'active' and '" + current_date
+				query = "select Emp_Qlid,Shift_Id, Cab_No from ncab_roster_tbl where Vendor_Name LIKE '%" + vname
+						+ "%' and Route_Status = 'active' and Emp_Status = 'active' and '" + current_date
 						+ "' between Start_Date and End_Date ";
 		} else {
 			if (!(cab_number.equals(""))) {
@@ -1750,6 +1752,7 @@ public class RosterServiceImpl {
 			jsobj.put("err_msg", "fail");
 			e.printStackTrace();
 		}
+		System.out.println(jsobj);
 		return jsobj;
 	}
 
@@ -2062,6 +2065,7 @@ public class RosterServiceImpl {
                  }
                  
                  RequestService obj=new RequestService();
+//                 RosterService obj=new RosterService();
                  
                  file=obj.createTempFileWithDir(req);
 
@@ -2083,8 +2087,7 @@ public class RosterServiceImpl {
                  System.out.println(file.getName().toString());
                  
                  
-                 msg.put("err_msg","success");
-                 msg.put("err_msg","success");
+                 msg.put("err_type","success");
                  System.out.println("Excel Sucessfully Downloaded.");
 //        } catch (Exception e) {
 //               // TODO Auto-generated catch block
@@ -2249,6 +2252,7 @@ public String sendMail(JSONObject jsonreq){
 	String cabno = jsonreq.getString("cab");	
 	System.out.println("test");
 	CompServiceImpl sendMailService = new CompServiceImpl();
+//	UtilServiceImpl sendMailService = new UtilServiceImpl();
 	if(sendMailService.sendEmailMessage(
 			"donotreply@ncr.com",                        //from
             "js250859@ncr.com",                   //to  Transport Manager ID
