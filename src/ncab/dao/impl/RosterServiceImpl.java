@@ -44,6 +44,8 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 
@@ -1945,9 +1947,6 @@ public class RosterServiceImpl {
                  
                  String webappPath = req.getServletContext().getRealPath("/");
                  
-                 
-//
-
                  xssfWorkbook = new XSSFWorkbook();
                  xssfSheet = xssfWorkbook.createSheet("new sheet");
                  DataFormat fmt = xssfWorkbook.createDataFormat();
