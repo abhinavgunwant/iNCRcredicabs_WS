@@ -60,7 +60,7 @@ public class AndroidServiceImpl {
                                                           System.out.println(act);
                                            }
 
-                                           if(act.equalsIgnoreCase("UNSEEN")){
+                                           if(act.equalsIgnoreCase("UNAPPROVED")){
 
                                                           PreparedStatement ps = con.prepareStatement("UPDATE NCAB_UNSCHEDULE_RQST_TBL SET Approval=? WHERE Request_ID=?");
 
