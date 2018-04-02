@@ -506,12 +506,9 @@ public class EmployeeService {
 				if(jsObj.getString("role").toUpperCase().equals("ADMIN")) {
 					VendorServiceImpl demodaoimpl = new VendorServiceImpl();	
 					
-					if(demodaoimpl.sendnotification())
-					{
+					if(demodaoimpl.sendnotification()){
 						System.out.println("Success");
-					}
-					else
-					{
+					}else{
 						System.out.println("Failed");
 					}
 				}
@@ -556,9 +553,20 @@ public class EmployeeService {
 			@Context	HttpServletRequest	req
 	) {
 		HttpSession sess = req.getSession();
-		System.out.println(sess.getAttribute("role"));
+//		String role = sess.getAttribute("role");
+		String qlid = (String)sess.getAttribute("qlid");
+		EmployeeServiceImpl empSrvImpl = new EmployeeServiceImpl();
+		
+		EmployeeBean empBean = empSrvImpl.getEmployeeFromQLID(qlid);
+		
+		System.out.println("Employee FName: " + empBean.getEmpFName());
+		
+		String role = empSrvImpl.getRoleNameFromRoleID(empBean.getRolesId());
+				
+		System.out.println(role);
 		return (new JSONObject())
-					.put("roleName", sess.getAttribute("role"))
+					.put("roleName", role)
+					.put("empFName", empBean.getEmpFName())
 					.toString();
 	}
 	
@@ -1129,22 +1137,16 @@ public class EmployeeService {
 //			return EmployeeServiceImpl.noLoginMessage();
 //		}		
 		
-		
 		JSONObject			jsObj			= new JSONObject();
 		EmployeeServiceImpl	empSrvImpl		= new EmployeeServiceImpl();	
-		if(empSrvImpl.validateContactId(contactBean))
-			{
+		if(empSrvImpl.validateContactId(contactBean)){
 			jsObj=empSrvImpl.editContact(contactBean);
-			}
-		else
-		{
+		}else{
 			jsObj=empSrvImpl.addContact(contactBean);
 		}
 		
 		return jsObj.toString();
-	
-	
-     }
+    }
 	
 	//Contact-View
 	
@@ -1169,8 +1171,6 @@ public class EmployeeService {
 		
 			jsArr = empSrvImpl.getContactJSONArray();
 		
-		return jsArr.toString();
-
-	
+		return jsArr.toString();	
      }
 }

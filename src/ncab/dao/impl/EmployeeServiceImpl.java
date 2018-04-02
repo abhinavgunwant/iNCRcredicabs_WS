@@ -1936,6 +1936,11 @@ public class EmployeeServiceImpl {
 		
 		return jsObj;
 	}
+	
+	public String getRoleNameFromRoleID(String roleId) {
+		JSONObject roleJSON = getAllRoles();
+		return roleJSON.getString(roleId);
+	}
 
 
 	public JSONObject insertIntoDatabase(InputStream fileInputStream, FormDataContentDisposition fileFormDataContentDisposition, String qlid)
