@@ -483,7 +483,7 @@ public JSONObject deleteVendorDetailsByVendorID(JSONObject jsonrequest){
                   String fuel="";
                   String cab_type="";
                   int cab_rate;
-                  String contract_owned;
+                  String cab_id= "";
                   String reg_certi;
                   String poll_certi;
                   String fit_certi;
@@ -510,10 +510,11 @@ public JSONObject deleteVendorDetailsByVendorID(JSONObject jsonrequest){
                         JSONObject jsonresponse = new JSONObject();
                         
                         //vendor_id=rs.getString(1);
-                        cab_no=rs.getString(1);
-                        model=rs.getString(2);
-                        fuel=rs.getString(3);
-                        contract_owned=rs.getString(4);
+                        cab_id = rs.getString(1);
+                        cab_no=rs.getString(2);
+                        model=rs.getString(3);
+                        fuel=rs.getString(4);
+                        //cab_id=rs.getString(4);
                         cab_type=rs.getString(5);
                         if(cab_type.equalsIgnoreCase("BIG"))
                                cab_type="6";
@@ -542,12 +543,12 @@ public JSONObject deleteVendorDetailsByVendorID(JSONObject jsonrequest){
                         
                         
                   //     jsonresponse.put("vendor_id", vendor_id);
+                        jsonresponse.put("cab_id", cab_id);
                         jsonresponse.put("cab_no", cab_no);
                         jsonresponse.put("model", model);
                         jsonresponse.put("fuel", fuel);
                         jsonresponse.put("cab_type", cab_type);
                         jsonresponse.put("cab_rate", cab_rate);
-                        jsonresponse.put("contract_owned", contract_owned);
                         jsonresponse.put("manufacture_date", manufacture_date);
                         jsonresponse.put("poll_exp", poll_exp);
                         jsonresponse.put("fit_exp", fit_exp);
@@ -799,7 +800,7 @@ public JSONObject getDriverDetails()
 
 	
 
-	public Response AddCab(String onrshp, String license_plate_number, String model,  String fuel,String type, int occupancy, int cab_rate , String Rcert,String Pcert,String Fcert,String icert,String entry_tax_haryana_certi,String entry_tax_delhi_certi,String entry_tax_up_certi, Date date1, Date date2, Date date3, Date date4, String entry_tax_haryana_exp_date, String entry_tax_delhi_exp_date, String entry_tax_up_exp_date, int compliance ) throws Exception
+	public Response AddCab(String cab_id, String license_plate_number, String model,  String fuel,String type, int occupancy, int cab_rate , String Rcert,String Pcert,String Fcert,String icert,String entry_tax_haryana_certi,String entry_tax_delhi_certi,String entry_tax_up_certi, Date date1, Date date2, Date date3, Date date4, String entry_tax_haryana_exp_date, String entry_tax_delhi_exp_date, String entry_tax_up_exp_date, int compliance ) throws Exception
 	{
 		int cab_status=1;
 //		java.sql.Date d1 = new java.sql.Date(date1.getTime());
@@ -815,32 +816,32 @@ public JSONObject getDriverDetails()
 		try {
 			DBConnectionUpd database= new DBConnectionUpd();
 			Connection connection = database.getConnection();
-			String query = " insert into ncab_cab_master_tbl (cab_license_plate_no, model, fuel_type, contracted_or_owned, cab_type,cab_capacity, cab_rate, reg_certi ,pollution_certi,fitness_certi,insurance_certi,entry_tax_haryana_certi ,entry_tax_delhi_certi,entry_tax_up_certi ,  manufacture_date, cab_status, poll_certi_exp_date, fit_certi_exp_date, insur_certi_exp_date, entry_tax_haryana_exp_date, entry_tax_delhi_exp_date, entry_tax_up_exp_date, cab_compliance)" + " values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+			String query = " insert into ncab_cab_master_tbl (cab_license_plate_no, model, fuel_type, cab_type,cab_capacity, cab_rate, reg_certi ,pollution_certi,fitness_certi,insurance_certi,entry_tax_haryana_certi ,entry_tax_delhi_certi,entry_tax_up_certi ,  manufacture_date, cab_status, poll_certi_exp_date, fit_certi_exp_date, insur_certi_exp_date, entry_tax_haryana_exp_date, entry_tax_delhi_exp_date, entry_tax_up_exp_date, cab_compliance)" + " values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 			PreparedStatement ps = connection.prepareStatement(query);
 			//ps.setInt(1,vendor_id);
 			ps.setString(1,license_plate_number);
 			ps.setString(2,model);
 			ps.setString(3,fuel);
-			ps.setString(4,onrshp);
-			ps.setString(5,type);
-			ps.setInt(6, occupancy);
-			ps.setInt(7,cab_rate);
-			ps.setString(8, Rcert);
-			ps.setString(9, Pcert);
-			ps.setString(10, Fcert);
-			ps.setString(11, icert);
-			ps.setString(12, entry_tax_haryana_certi);
-			ps.setString(13, entry_tax_delhi_certi);
-			ps.setString(14, entry_tax_up_certi);
-			ps.setDate(15,date1);
-			ps.setInt(16, cab_status);
-			ps.setDate(17,date2);
-			ps.setDate(18,date3);
-			ps.setDate(19,date4);
-			ps.setString(20,entry_tax_haryana_exp_date);
-			ps.setString(21,entry_tax_delhi_exp_date);
-			ps.setString(22,entry_tax_up_exp_date);
-			ps.setInt(23, compliance);
+			//ps.setString(4,onrshp);
+			ps.setString(4,type);
+			ps.setInt(5, occupancy);
+			ps.setInt(6,cab_rate);
+			ps.setString(7, Rcert);
+			ps.setString(8, Pcert);
+			ps.setString(9, Fcert);
+			ps.setString(10, icert);
+			ps.setString(11, entry_tax_haryana_certi);
+			ps.setString(12, entry_tax_delhi_certi);
+			ps.setString(13, entry_tax_up_certi);
+			ps.setDate(14,date1);
+			ps.setInt(15, cab_status);
+			ps.setDate(16,date2);
+			ps.setDate(17,date3);
+			ps.setDate(18,date4);
+			ps.setString(19,entry_tax_haryana_exp_date);
+			ps.setString(20,entry_tax_delhi_exp_date);
+			ps.setString(21,entry_tax_up_exp_date);
+			ps.setInt(22, compliance);
 
 
 
@@ -1198,7 +1199,7 @@ public JSONObject getDriverDetails()
 //		}
 //	}
 
-	public Response updateCab(String onrshp, String cab_license_plate_number, String model,  String fuel_type,String type,int occupancy, int cab_rate , String Rcert,String Pcert,String Fcert,String icert,String entry_tax_haryana_certi,String entry_tax_delhi_certi,String entry_tax_up_certi, Date date1, Date date2, Date date3, Date date4, String entry_tax_haryana_exp_date, String entry_tax_delhi_exp_date, String entry_tax_up_exp_date )throws Exception 
+	public Response updateCab(String cab_id,String cab_license_plate_number, String model,  String fuel_type,String type,int occupancy, int cab_rate , String Rcert,String Pcert,String Fcert,String icert,String entry_tax_haryana_certi,String entry_tax_delhi_certi,String entry_tax_up_certi, Date date1, Date date2, Date date3, Date date4, String entry_tax_haryana_exp_date, String entry_tax_delhi_exp_date, String entry_tax_up_exp_date )throws Exception 
 	{
 		//int cab_status=0;
 		//int vendor_id = 98898;
@@ -1209,42 +1210,43 @@ public JSONObject getDriverDetails()
 
 		try {
 
-			String query = " update ncab_cab_master_tbl set model=?, fuel_type=?, contracted_or_owned=?, cab_type=?,cab_capacity=?, cab_rate=?,  manufacture_date=?,reg_certi=? ,pollution_certi=?,fitness_certi=?,insurance_certi=?,entry_tax_haryana_certi=? ,entry_tax_delhi_certi=?,entry_tax_up_certi=? ,   poll_certi_exp_date=?, fit_certi_exp_date=?, insur_certi_exp_date=?, entry_tax_haryana_exp_date=?, entry_tax_delhi_exp_date=?, entry_tax_up_exp_date=?, cab_compliance=? where cab_license_plate_no= ?";
+			String query = " update ncab_cab_master_tbl set model=?, fuel_type=?, cab_type=?,cab_capacity=?, cab_rate=?,  manufacture_date=?,reg_certi=? ,pollution_certi=?,fitness_certi=?,insurance_certi=?,entry_tax_haryana_certi=? ,entry_tax_delhi_certi=?,entry_tax_up_certi=? ,   poll_certi_exp_date=?, fit_certi_exp_date=?, insur_certi_exp_date=?, entry_tax_haryana_exp_date=?, entry_tax_delhi_exp_date=?, entry_tax_up_exp_date=?, cab_compliance=?, cab_license_plate_no= ? where cab_id =?";
 			PreparedStatement ps = connection.prepareStatement(query);
 			//ps.setInt(1,vendor_id);
 
 			ps.setString(1,model);
 			ps.setString(2,fuel_type);
-			ps.setString(3,onrshp);
-			ps.setString(4,type);
-			ps.setInt(5, occupancy);
-			ps.setInt(6,cab_rate);
-			ps.setDate(7,date1);
+			//ps.setString(3,onrshp);
+			ps.setString(3,type);
+			ps.setInt(4, occupancy);
+			ps.setInt(5,cab_rate);
+			ps.setDate(6,date1);
 			//ps.setInt(8, cab_status);
-			ps.setString(8, Rcert);
-			ps.setString(9, Pcert);
-			ps.setString(10, Fcert);
-			ps.setString(11, icert);
-			ps.setString(12, entry_tax_haryana_certi);
-			ps.setString(13, entry_tax_delhi_certi);
-			ps.setString(14, entry_tax_up_certi);
+			ps.setString(7, Rcert);
+			ps.setString(8, Pcert);
+			ps.setString(9, Fcert);
+			ps.setString(10, icert);
+			ps.setString(11, entry_tax_haryana_certi);
+			ps.setString(12, entry_tax_delhi_certi);
+			ps.setString(13, entry_tax_up_certi);
 
 
-			ps.setDate(15,date2);
-			ps.setDate(16,date3);
-			ps.setDate(17,date4);
-			ps.setString(18,entry_tax_haryana_exp_date);
-			ps.setString(19,entry_tax_delhi_exp_date);
-			ps.setString(20,entry_tax_up_exp_date);
+			ps.setDate(14,date2);
+			ps.setDate(15,date3);
+			ps.setDate(16,date4);
+			ps.setString(17,entry_tax_haryana_exp_date);
+			ps.setString(18,entry_tax_delhi_exp_date);
+			ps.setString(19,entry_tax_up_exp_date);
 			if(entry_tax_haryana_certi.equals("") || entry_tax_delhi_certi.equals("") || entry_tax_up_certi.equals(""))
 			{
-				ps.setInt(21, 0);
+				ps.setInt(20, 0);
 			}
 			else
 			{
-				ps.setInt(21, 1);
+				ps.setInt(20, 1);
 			}
-			ps.setString(22,cab_license_plate_number);
+			ps.setString(21,cab_license_plate_number);
+			ps.setString(22, cab_id);
 			
 
 

@@ -78,6 +78,8 @@ public class EmployeeServiceImpl {
 //	private final String LOGFILE_DIR = "C:\\Users\\AG250497\\Desktop\\ncab_logs";
 	private final String LOGFILE_DIR = "/tmp/ncab_logs";
 	private final String LOGFILE_PREFIX = "iNCRediCabs_EMP_MASS_UPLOAD_LOG_";
+	//	private final String LOGFILE_DIR = "C:\\Users\\AG250497\\Desktop\\ncab_logs";
+//	private final String LOGFILE_DIR = "/tmp/ncab_logs";
 	
 	public static final String DEFAULT_QLID = "NO_QLID";
 	public static final String DEFAULT_TOKEN = "NO_TOKEN";

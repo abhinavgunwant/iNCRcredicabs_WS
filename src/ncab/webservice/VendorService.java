@@ -47,7 +47,7 @@ public class VendorService {
 
 		JSONObject jsonPboject = new JSONObject(params);
 	
-		String onrshp = jsonPboject.getString("onrshp");
+		//String onrshp = jsonPboject.getString("onrshp");
 		String license_plate_number = jsonPboject.getString("license_plate_number");
 		String model = jsonPboject.getString("model");
 		String fuel = jsonPboject.getString("fuel");
@@ -72,6 +72,7 @@ public class VendorService {
 		Date date4 = new java.sql.Date(df.parse(idate).getTime());
 	//	Date date5;
 		String entry_tax_haryana_exp_date = jsonPboject.getString("entry_tax_haryana_exp_date");
+		String cab_id = jsonPboject.getString("cab_id");
 		
 		//Date date5 = new java.sql.Date(df.parse("entry_tax_haryana_exp_date").getTime());
 		String entry_tax_delhi_exp_date = jsonPboject.getString("entry_tax_delhi_exp_date");
@@ -116,7 +117,7 @@ public class VendorService {
 				System.out.println("No Data Found"); //data not exist
 				VendorServiceImpl daoimpl=new VendorServiceImpl(); 
 
-				return daoimpl.AddCab(onrshp, license_plate_number, model, fuel,type, occupancy,cab_rate, Rcert,Pcert,Fcert,icert,entry_tax_haryana_certi,entry_tax_delhi_certi,entry_tax_up_certi, date1,date2,date3,date4,entry_tax_haryana_exp_date,entry_tax_delhi_exp_date,entry_tax_up_exp_date,compliance);
+				return daoimpl.AddCab(cab_id,license_plate_number, model, fuel,type, occupancy,cab_rate, Rcert,Pcert,Fcert,icert,entry_tax_haryana_certi,entry_tax_delhi_certi,entry_tax_up_certi, date1,date2,date3,date4,entry_tax_haryana_exp_date,entry_tax_delhi_exp_date,entry_tax_up_exp_date,compliance);
 				// data exist
 			}   
 
@@ -289,9 +290,10 @@ public class VendorService {
 		int occupancy=0;
 		VendorServiceImpl daoimpl=new VendorServiceImpl();
 		JSONObject jsonPboject = new JSONObject(params);
-		String onrshp = jsonPboject.getString("contract_owned");
+		//String onrshp = jsonPboject.getString("contract_owned");
 		System.out.println("11");
-		System.out.println(onrshp);
+		//System.out.println(onrshp);
+		String cab_id = jsonPboject.getString("cab_id");
 		String cab_license_plate_number = jsonPboject.getString("cab_no");
 		String model = jsonPboject.getString("model");
 		String fuel_type = jsonPboject.getString("fuel");
@@ -326,7 +328,7 @@ public class VendorService {
 		String entry_tax_up_exp_date = jsonPboject.getString("tax_up_exp");
 		
 
-		return daoimpl.updateCab(onrshp, cab_license_plate_number, model, fuel_type, type, occupancy,cab_rate, Rcert,Pcert,Fcert,icert,entry_tax_haryana_certi,entry_tax_delhi_certi,entry_tax_up_certi, date1,date2,date3,date4,entry_tax_haryana_exp_date,entry_tax_delhi_exp_date,entry_tax_up_exp_date);
+		return daoimpl.updateCab(cab_id,cab_license_plate_number, model, fuel_type, type, occupancy,cab_rate, Rcert,Pcert,Fcert,icert,entry_tax_haryana_certi,entry_tax_delhi_certi,entry_tax_up_certi, date1,date2,date3,date4,entry_tax_haryana_exp_date,entry_tax_delhi_exp_date,entry_tax_up_exp_date);
 
 	}
 
