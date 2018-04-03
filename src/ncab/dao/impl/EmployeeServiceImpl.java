@@ -2387,10 +2387,11 @@ public class EmployeeServiceImpl {
 			setPassPs.setString(2, qlid);
 			setPassPs.setString(3, qlid);
 
-		ps.setString(1, qlid);
+			ps.setString(1, qlid);
 			rs = ps.executeQuery();
-			
+						
 			while(rs.next()) {
+				System.out.println("!!");
 				if(BCrypt.checkpw(spb.getCurrentPassword(), rs.getString("login_password"))){
 					if(spb.getPassword1().equals(spb.getPassword2())) {
 						setPassPs.setString(1, BCrypt.hashpw(spb.getPassword1(), BCrypt.gensalt()));
@@ -2461,6 +2462,8 @@ public class EmployeeServiceImpl {
 		EmployeeBean empBean;
 		EmployeeBean mgr1;
 		EmployeeBean mgr2;
+
+		JSONObject tmp;
 		
 		JSONArray rosterInfoTemp = rstrImpl.showRosterInfo(
 				(new JSONObject())
@@ -2470,6 +2473,18 @@ public class EmployeeServiceImpl {
 				.put("e_n", "")
 				.put("vname", "")
 			);
+		
+//		for(int i=0; i<rosterInfoTemp.length(); ++i) {
+//			tmp = rosterInfoTemp.getJSONObject(i);
+//			if(tmp.has("Qlid") && !tmp.has("f_name")) {
+//				empBean = getEmployeeFromQLID(tmp.getString("Qlid"));
+//				
+//				tmp.put("f_name", empBean.getEmpFName());
+//				tmp.put("m_name", empBean.getEmpMName());
+//				tmp.put("l_name", empBean.getEmpLName());
+//			}
+//		}
+		
 		JSONArray shiftTemp = getShiftJSONArray();
 		
 		JSONArray rosterInfo = new JSONArray();
@@ -2481,7 +2496,6 @@ public class EmployeeServiceImpl {
 //						.put("", value))
 //		}
 		
-		JSONObject tmp;
 		
 		for(int i=0; i<rosterInfoTemp.length(); ++i) {
 			tmp = (JSONObject) rosterInfoTemp.get(i);
@@ -2566,12 +2580,44 @@ public class EmployeeServiceImpl {
 		mgr1 = getEmployeeFromQLID(empBean.getEmpMgrQlid1());
 		mgr2 = getEmployeeFromQLID(empBean.getEmpMgrQlid2());
 		
+		String mgr1Name;
+		String mgr2Name;
 		
+		if(mgr1.getEmpMName() == "" || mgr1.getEmpMName().toUpperCase() == "NULL"
+				|| mgr1.getEmpMName() == null) {
+			if(mgr1.getEmpLName() == "") {
+				mgr1Name = mgr1.getEmpFName();
+			}else {
+				mgr1Name = mgr1.getEmpFName() + " " + mgr1.getEmpLName();
+			}
+		}else {
+			mgr1Name = mgr1.getEmpFName() + " " + mgr1.getEmpMName() + " " + mgr1.getEmpLName();
+		}
+
+		
+		if(mgr2.getEmpMName() == "" || mgr1.getEmpMName().toUpperCase() == "NULL"
+				|| mgr1.getEmpMName() == null) {
+			if(mgr2.getEmpLName() == "") {
+				mgr2Name = mgr2.getEmpFName();
+			}else {
+				mgr2Name = mgr2.getEmpFName() + " " + mgr2.getEmpLName();
+			}
+		}else {
+			mgr2Name = mgr2.getEmpFName() + " " + mgr2.getEmpMName() + " " + mgr2.getEmpLName();
+		}
+		
+		mgr1Name.replaceAll(" null", "");
+		mgr2Name.replaceAll(" null", "");
+		
+		System.out.println("manager 1: " + mgr1Name);
+		System.out.println("manager 2: " + mgr2Name);
+		
+				
 		jsObj = createJSON(empBean);
-		jsObj.put("mgr1Name", mgr1.getEmpFName() + " " + mgr1.getEmpMName() + " " + mgr1.getEmpLName())
+		jsObj.put("mgr1Name", mgr1Name)
 				.put("mgr1Contact", mgr1.getEmpMobNbr())
 				.put("mgr2Contact", mgr2.getEmpMobNbr())
-				.put("mgr2Name", mgr2.getEmpFName() + " " + mgr2.getEmpMName() + " " + mgr2.getEmpLName())
+				.put("mgr2Name", mgr2Name)
 				.put("rosterInfo", rosterInfo)
 				.put("driverDetails", getDriverInfoForEmployee(qlid))
 				.put("contacts", getContactJSONArray())

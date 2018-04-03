@@ -322,7 +322,8 @@ public class EmployeeService {
 				+ "		<div class=\"container col-sm-6 col-sm-ofset-3\">"
 				+ "			<h1 class=\"text-center\">iNCRediCabs</h1>"
 				+ "			<p>Visit the url below to reset your password:</p><br />"
-				+ "			<a href=\""+url+"\">Click Here!</a>"
+				+ "			<a href=\""+url+"\">Click Here!</a><br />"
+				+ "			<strong>Note:</strong> Supported Browsers: Chrome(ver: 50+) and Firefox(ver: 40+)"
 				+ "		</div>"
 				+ "	</body>"
 				+ "</html>";
@@ -678,6 +679,7 @@ public class EmployeeService {
 				+ "			<h1 class=\"text-center\">iNCRediCabs</h1>"
 				+ "			<p>Visit the url below to set your password:</p><br />"
 				+ "			<a href=\""+url+"\">Click Here</a>"
+				+ "			<strong>Note:</strong> Supported Browsers: Chrome(ver: 50+) and Firefox(ver: 40+)"
 				+ "		</div>"
 				+ "	</body>"
 				+ "</html>";
@@ -898,17 +900,14 @@ public class EmployeeService {
 		@Context	HttpServletResponse	res
 	) {
 		HttpSession sess = req.getSession();
-		String qlid = (String)sess.getAttribute("qlid");
-		String sessRole = (String)sess.getAttribute("role");
-		
-//		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID) {
-//			return EmployeeServiceImpl.noLoginMessage();
-//		}		
-		
-//		System.out.println(employeeBean.getEmpQlid());
-//		HttpSession sess = req.getSession();
-//		String qlid = (String)sess.getAttribute("qlid");
-//		String qlid = employeeBean.getEmpQlid();
+		String qlid;
+		String sessRole;
+		if(employeeBean.getEmpQlid() == null) {
+			qlid = (String)sess.getAttribute("qlid");
+			sessRole = (String)sess.getAttribute("role");	
+		}else {
+			qlid = employeeBean.getEmpQlid();
+		}
 		
 		JSONObject			jsObj			= new JSONObject();
 		EmployeeServiceImpl	empSrvImpl		= new EmployeeServiceImpl();
@@ -925,7 +924,7 @@ public class EmployeeService {
 			jsObj.put("success", true);
 		}
 		
-		return jsObj.toString();	
+		return jsObj.toString();
     }
 	
 	@Path("/change-password")
