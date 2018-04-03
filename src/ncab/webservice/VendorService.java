@@ -46,7 +46,7 @@ public class VendorService {
 	public Response addcab(String params) throws Exception {
 
 		JSONObject jsonPboject = new JSONObject(params);
-	
+
 		//String onrshp = jsonPboject.getString("onrshp");
 		String license_plate_number = jsonPboject.getString("license_plate_number");
 		String model = jsonPboject.getString("model");
@@ -70,15 +70,15 @@ public class VendorService {
 		Date date3 = new java.sql.Date(df.parse(Fdate).getTime());
 		String idate = jsonPboject.getString("idate");
 		Date date4 = new java.sql.Date(df.parse(idate).getTime());
-	//	Date date5;
+		//	Date date5;
 		String entry_tax_haryana_exp_date = jsonPboject.getString("entry_tax_haryana_exp_date");
 		String cab_id = jsonPboject.getString("cab_id");
-		
+
 		//Date date5 = new java.sql.Date(df.parse("entry_tax_haryana_exp_date").getTime());
 		String entry_tax_delhi_exp_date = jsonPboject.getString("entry_tax_delhi_exp_date");
-		
+
 		//Date date6; 
-		
+
 		String entry_tax_up_exp_date = jsonPboject.getString("entry_tax_up_exp_date");
 		//Date date7;
 		int compliance;
@@ -90,7 +90,7 @@ public class VendorService {
 		{
 			compliance=1;
 		}
-		
+
 
 		DBConnectionUpd database= new DBConnectionUpd();
 		Connection connection = database.getConnection();
@@ -130,100 +130,100 @@ public class VendorService {
 	}
 
 	//adding driver
-    @POST
-    @Path("/AddDriver")
-    @Consumes(MediaType.APPLICATION_JSON)
+	@POST
+	@Path("/AddDriver")
+	@Consumes(MediaType.APPLICATION_JSON)
 
-    public Response driver(String params) throws Exception {
-          JSONObject jsonPboject = new JSONObject(params);
-          System.out.println(params);
+	public Response driver(String params) throws Exception {
+		JSONObject jsonPboject = new JSONObject(params);
+		System.out.println(params);
 
-          String driver_license_num = jsonPboject.getString("driver_license_num");
-          String Name = jsonPboject.getString("Name");
-          String dPhone_Nbr = jsonPboject.getString("dPhone_Nbr");
-          String local_Address = jsonPboject.getString("local_Address");
-          String permanent_Address = jsonPboject.getString("permanent_Address");
-    
-          String license_exp_date = jsonPboject.getString("license_exp_date");
-          
-          DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-          Date license = new java.sql.Date(df.parse(license_exp_date).getTime());
-          
-          String d_comercial_liscence = jsonPboject.getString("d_comercial_liscence");
-          String d_police_verification = jsonPboject.getString("d_police_verification");
-          
-          String d_local_Address_proof = jsonPboject.getString("d_local_Address_proof");
-          String d_permanent_address_proof = jsonPboject.getString("d_permanent_address_proof");
-          String d_photo = jsonPboject.getString("d_photo");
+		String driver_license_num = jsonPboject.getString("driver_license_num");
+		String Name = jsonPboject.getString("Name");
+		String dPhone_Nbr = jsonPboject.getString("dPhone_Nbr");
+		String local_Address = jsonPboject.getString("local_Address");
+		String permanent_Address = jsonPboject.getString("permanent_Address");
 
-          
+		String license_exp_date = jsonPboject.getString("license_exp_date");
 
-          DBConnectionUpd database= new DBConnectionUpd();
-          Connection connection = database.getConnection();
-          try {
+		DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+		Date license = new java.sql.Date(df.parse(license_exp_date).getTime());
 
-              int count = 0;
-                 String query = "select count(*) from ncab_driver_master_tbl where driver_license_num = '" + driver_license_num + "' ";
-                 Statement stmt = connection.createStatement();
-                 ResultSet result = null;           
-                 result = stmt.executeQuery(query);
-                 //System.out.println(result.next());
-                 while(result.next())
-                 {
-                       count=result.getInt(1);
-                 }
-                 System.out.println(count);
-                 if(count>=1){
-                       connection.close();
-                       return Response.status(200).entity("Data Found").build();                   
-                 }
-                 else{
-                       connection.close();
-                       System.out.println("No Data Found"); 
-                       VendorServiceImpl daoimpl=new VendorServiceImpl(); 
+		String d_comercial_liscence = jsonPboject.getString("d_comercial_liscence");
+		String d_police_verification = jsonPboject.getString("d_police_verification");
 
-                       return daoimpl.AddDriver(driver_license_num, Name, dPhone_Nbr, local_Address, permanent_Address, license, d_comercial_liscence, d_police_verification, d_local_Address_proof, d_permanent_address_proof, d_photo);
+		String d_local_Address_proof = jsonPboject.getString("d_local_Address_proof");
+		String d_permanent_address_proof = jsonPboject.getString("d_permanent_address_proof");
+		String d_photo = jsonPboject.getString("d_photo");
 
-                 }   
 
-          } catch (Exception e) {
-                 throw e;
-          }
-    }
+
+		DBConnectionUpd database= new DBConnectionUpd();
+		Connection connection = database.getConnection();
+		try {
+
+			int count = 0;
+			String query = "select count(*) from ncab_driver_master_tbl where driver_license_num = '" + driver_license_num + "' ";
+			Statement stmt = connection.createStatement();
+			ResultSet result = null;           
+			result = stmt.executeQuery(query);
+			//System.out.println(result.next());
+			while(result.next())
+			{
+				count=result.getInt(1);
+			}
+			System.out.println(count);
+			if(count>=1){
+				connection.close();
+				return Response.status(200).entity("Data Found").build();                   
+			}
+			else{
+				connection.close();
+				System.out.println("No Data Found"); 
+				VendorServiceImpl daoimpl=new VendorServiceImpl(); 
+
+				return daoimpl.AddDriver(driver_license_num, Name, dPhone_Nbr, local_Address, permanent_Address, license, d_comercial_liscence, d_police_verification, d_local_Address_proof, d_permanent_address_proof, d_photo);
+
+			}   
+
+		} catch (Exception e) {
+			throw e;
+		}
+	}
 
 
 	//adding image
 
-    private static final String UPLOAD_FOLDER = System.getProperty("/tmp/vendor-documents");
+	private static final String UPLOAD_FOLDER = System.getProperty("/tmp/vendor-documents");
 
 
-    @POST
-    @Path("/AddImage")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
+	@POST
+	@Path("/AddImage")
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
 
-    public Response addimage(@FormDataParam("file_upload")  InputStream uploadedInputStream,
-                 @FormDataParam("file_upload") FormDataContentDisposition fileDetail) throws Exception {
-          VendorServiceImpl daoimpl=new VendorServiceImpl();
-          if (uploadedInputStream == null || fileDetail == null)
-                 return Response.status(400).entity("Invalid form data").build();
+	public Response addimage(@FormDataParam("file_upload")  InputStream uploadedInputStream,
+			@FormDataParam("file_upload") FormDataContentDisposition fileDetail) throws Exception {
+		VendorServiceImpl daoimpl=new VendorServiceImpl();
+		if (uploadedInputStream == null || fileDetail == null)
+			return Response.status(400).entity("Invalid form data").build();
 
-          //System.out.println("Check2");
+		//System.out.println("Check2");
 
-          // create our destination folder, if it not exists
-//          try {
-//                 daoimpl.createFolderIfNotExists(UPLOAD_FOLDER);
-//          } catch (SecurityException se) {
-//                 return Response.status(500).entity("Can not create destination folder on server").build();
-//          }
+		// create our destination folder, if it not exists
+		//          try {
+		//                 daoimpl.createFolderIfNotExists(UPLOAD_FOLDER);
+		//          } catch (SecurityException se) {
+		//                 return Response.status(500).entity("Can not create destination folder on server").build();
+		//          }
 
-          String uploadedFileLocation = UPLOAD_FOLDER + fileDetail.getFileName();;
-          try {
-                 daoimpl.saveToFile(uploadedInputStream, uploadedFileLocation);
-          } catch (IOException e) {
-                 return Response.status(500).entity("Can not save file").build();
-          }
-          return Response.status(200).entity("File saved to " + uploadedFileLocation).build();
-    }
+		String uploadedFileLocation = UPLOAD_FOLDER + fileDetail.getFileName();;
+		try {
+			daoimpl.saveToFile(uploadedInputStream, uploadedFileLocation);
+		} catch (IOException e) {
+			return Response.status(500).entity("Can not save file").build();
+		}
+		return Response.status(200).entity("File saved to " + uploadedFileLocation).build();
+	}
 
 
 	//adding vendor
@@ -265,19 +265,19 @@ public class VendorService {
 	//getting cabdetails
 
 	@POST
-    @Path("/CabDetails")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getCabDetails() throws Exception{
-           VendorServiceImpl demodaoimpl = new VendorServiceImpl();
-           JSONObject jsonresponse = new JSONObject();
-           //int vendor_id = jsonresponse.getInt("id");
-           jsonresponse = demodaoimpl.getCabDetails();
-           Response response = Response.status(200).type("application/json").entity(jsonresponse.toString()).build();
+	@Path("/CabDetails")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getCabDetails() throws Exception{
+		VendorServiceImpl demodaoimpl = new VendorServiceImpl();
+		JSONObject jsonresponse = new JSONObject();
+		//int vendor_id = jsonresponse.getInt("id");
+		jsonresponse = demodaoimpl.getCabDetails();
+		Response response = Response.status(200).type("application/json").entity(jsonresponse.toString()).build();
 
 
 
-           return response;
-    }
+		return response;
+	}
 
 
 	//updating cab
@@ -326,7 +326,7 @@ public class VendorService {
 		String entry_tax_haryana_exp_date = jsonPboject.getString("tax_haryana_exp");
 		String entry_tax_delhi_exp_date = jsonPboject.getString("tax_delhi_exp");
 		String entry_tax_up_exp_date = jsonPboject.getString("tax_up_exp");
-		
+
 
 		return daoimpl.updateCab(cab_id,cab_license_plate_number, model, fuel_type, type, occupancy,cab_rate, Rcert,Pcert,Fcert,icert,entry_tax_haryana_certi,entry_tax_delhi_certi,entry_tax_up_certi, date1,date2,date3,date4,entry_tax_haryana_exp_date,entry_tax_delhi_exp_date,entry_tax_up_exp_date);
 
@@ -411,7 +411,7 @@ public class VendorService {
 		return response;
 
 	}
-	
+
 
 	//updating driver details
 
@@ -423,8 +423,8 @@ public class VendorService {
 
 		JSONObject jsonPboject = new JSONObject(params);
 		//JSONObject jsonPboject = new JSONObject(params);
-			int driver_status = jsonPboject.getInt("status");
-			int driver_id = jsonPboject.getInt("driver_id");
+		int driver_status = jsonPboject.getInt("status");
+		int driver_id = jsonPboject.getInt("driver_id");
 		//String cab_license_plate_number = jsonPboject.getString("cab_no");
 		String driver_name = jsonPboject.getString("d_name");
 		String d_contact_num = jsonPboject.getString("d_contact_num");
@@ -450,7 +450,7 @@ public class VendorService {
 
 	}
 
-	
+
 	//filter cabs
 
 	@Path("/SearchCab")
@@ -528,7 +528,7 @@ public class VendorService {
 		String pan_id = jsonPboject.getString("pan");
 		String gst_num = jsonPboject.getString("gstnum");
 
-		
+
 		String agreement_expiry_date = jsonPboject.getString("agreementExpiry");
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 		Date date1 = new java.sql.Date(df.parse(agreement_expiry_date).getTime());
@@ -564,38 +564,38 @@ public class VendorService {
 		Response response = Response.status(200).type("application/json").entity(jsonresponse.toString()).build();
 		return response;
 	}
-	
+
 	@POST
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/EnableDriver")    
-    public Response enableDriverDetailsByDriverId(String params) throws Exception{          
-			
-           VendorServiceImpl demodaoimpl = new VendorServiceImpl();
-          JSONObject jsonreq = new JSONObject(params);
-          // JSONObject jsonreq=new JSONObject();
-           System.out.println("a");
-   		JSONObject jsonres=new JSONObject();
-//   		try {
-//			jsonreq=new JSONObject(params);
-//		} catch (ParseException e) {
-//			// TODO Auto-generated catch block
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path("/EnableDriver")    
+	public Response enableDriverDetailsByDriverId(String params) throws Exception{          
+
+		VendorServiceImpl demodaoimpl = new VendorServiceImpl();
+		JSONObject jsonreq = new JSONObject(params);
+		// JSONObject jsonreq=new JSONObject();
+		System.out.println("a");
+		JSONObject jsonres=new JSONObject();
+		//   		try {
+		//			jsonreq=new JSONObject(params);
+		//		} catch (ParseException e) {
+		//			// TODO Auto-generated catch block
 		//	e.printStackTrace();
 		//}
-   		
-          // int driver_id = jsonreq.getInt("driver_id");
-           //String result="";
-           //System.out.println(driver_id);
-           //System.out.println(driver_id);
-           
-           jsonres = demodaoimpl.enableDriverDetailsById(jsonreq);
-       //    return result;
-         Response response = Response.status(200).type("application/json").entity(jsonres.toString()).build();
-         return response;
-    }
+
+		// int driver_id = jsonreq.getInt("driver_id");
+		//String result="";
+		//System.out.println(driver_id);
+		//System.out.println(driver_id);
+
+		jsonres = demodaoimpl.enableDriverDetailsById(jsonreq);
+		//    return result;
+		Response response = Response.status(200).type("application/json").entity(jsonres.toString()).build();
+		return response;
+	}
 
 
 
-@POST
+	@POST
 
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/DisableDriver")	
@@ -616,44 +616,44 @@ public class VendorService {
 		return response;
 	}
 
-// Enable Cab By Cabno
-@POST
-@Produces(MediaType.APPLICATION_JSON)
-@Path("/EnableCab") 
-public Response enableCabDetailsByName(String jsonreqest){        
+	// Enable Cab By Cabno
+	@POST
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path("/EnableCab") 
+	public Response enableCabDetailsByName(String jsonreqest){        
 
-       VendorServiceImpl demodaoimpl = new VendorServiceImpl();
-       JSONObject jsonreq = new JSONObject();
-       JSONObject jsonres=new JSONObject();   
-       try {
-              jsonreq = new JSONObject(jsonreqest);
-       } catch (java.text.ParseException e) {
-              // TODO Auto-generated catch block
-              e.printStackTrace();
-       }
-       jsonres = demodaoimpl.enableCabDetailsById(jsonreq);
-       System.out.println(jsonres);
-       Response response = Response.status(200).type("application/json").entity(jsonres.toString()).build();
-       return response;
-}
-
-
-@POST
-@Path("/EmailNotification")	
-public void EmailNotification(){		
-
-	VendorServiceImpl demodaoimpl = new VendorServiceImpl();	
-	
-	if(demodaoimpl.sendnotification())
-	{
-		System.out.println("Success");
-	}
-	else
-	{
-		System.out.println("Failed");
+		VendorServiceImpl demodaoimpl = new VendorServiceImpl();
+		JSONObject jsonreq = new JSONObject();
+		JSONObject jsonres=new JSONObject();   
+		try {
+			jsonreq = new JSONObject(jsonreqest);
+		} catch (java.text.ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		jsonres = demodaoimpl.enableCabDetailsById(jsonreq);
+		System.out.println(jsonres);
+		Response response = Response.status(200).type("application/json").entity(jsonres.toString()).build();
+		return response;
 	}
 
-}
+
+	@POST
+	@Path("/EmailNotification")	
+	public void EmailNotification(){		
+
+		VendorServiceImpl demodaoimpl = new VendorServiceImpl();	
+
+		if(demodaoimpl.sendnotification())
+		{
+			System.out.println("Success");
+		}
+		else
+		{
+			System.out.println("Failed");
+		}
+
+	}
 
 
 }
