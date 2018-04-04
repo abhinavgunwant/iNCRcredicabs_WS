@@ -623,6 +623,51 @@ public Response pullExcelFile(@Context HttpServletRequest req,@PathParam("flp") 
 	}
 }
 
+@POST
+@Path("/unschqlid")
+@Produces(MediaType.APPLICATION_JSON)
+public Response unschQlid(){
+      Response resp = null;
+      RosterServiceImpl frd=new RosterServiceImpl();
+      JSONArray jsonarr = frd.getUnshQlid();
+      resp = Response.status(200).type("application/json").entity(jsonarr.toString()).build();
+      return resp;
+}
+
+@POST
+@Path("/unschdetails")
+@Produces(MediaType.APPLICATION_JSON)
+public Response unschEmp(String jsn){
+      Response resp = null;
+      try{
+             JSONObject json = new JSONObject(jsn);
+      RosterServiceImpl frd=new RosterServiceImpl();
+      JSONObject json1 = frd.getUnshEmpDetails(json);
+      resp = Response.status(200).type("application/json").entity(json1.toString()).build();
+      }
+      catch(ParseException e){
+             System.out.println("Error: "+e.getMessage());
+      }
+      return resp;
+}
+
+
+@POST
+@Path("/fetchdefaultdata")
+@Produces(MediaType.APPLICATION_JSON)
+public Response fetchdefaultdata(String jsn){
+	Response resp = null;
+	try{
+
+	RosterServiceImpl frd=new RosterServiceImpl();
+	JSONObject jsonobj = frd.fetchdefaultdata(jsn);
+	resp = Response.status(200).type("application/json").entity(jsonobj.toString()).build();
+	}
+	catch(Exception e){
+		System.out.println("Error: "+e.getMessage());
+	}
+	return resp;
+}
 
 	}
 

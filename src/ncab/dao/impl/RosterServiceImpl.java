@@ -225,7 +225,6 @@ public class RosterServiceImpl {
 	}
 
 	public static String selectFilterQuery(String emp_qlid, String cab_no, String s_id, String name, String vname) {
-
 		String query = "";
 		String qlid = emp_qlid;
 		String emp_name = name;
@@ -244,16 +243,16 @@ public class RosterServiceImpl {
 		java.sql.Date date = new java.sql.Date(millis);
 		String current_date = date.toString();
 		System.out.println("CURRENT DATE: " + current_date);
-		if (!(vname.equals(""))) {
+		if (!(vname.equals(""))) { // if only vendor name is given
 			if (!(shift_id.equals("")))
 				query = "select Emp_Qlid,Shift_Id, Cab_No from ncab_roster_tbl where Vendor_Name LIKE '%" + vname
 						+ "%' and Shift_Id = '" + shift_id
 						+ "' and Route_Status = 'active' and Emp_Status = 'active' and '" + current_date
-						+ "' between Start_Date and End_Date ";
-			else
+						+ "' between Start_Date and End_Date order by Route_No ";
+			else // if both vendor name and shift time is given
 				query = "select Emp_Qlid,Shift_Id, Cab_No from ncab_roster_tbl where Vendor_Name LIKE '%" + vname
 						+ "%' and Route_Status = 'active' and Emp_Status = 'active' and '" + current_date
-						+ "' between Start_Date and End_Date ";
+						+ "' between Start_Date and End_Date order by Route_No ";
 		} else {
 			if (!(cab_number.equals(""))) {
 				if (!(emp_name.equals(""))) {
@@ -295,7 +294,7 @@ public class RosterServiceImpl {
 									+ emp_name + "%')||(CONCAT(Emp_FName,' ',Emp_MName,' ',Emp_LName,' ') LIKE '%"
 									+ emp_name + "%')||(CONCAT(Emp_FName,' ',Emp_LName,' ') LIKE '%" + emp_name
 									+ "%')) AND Emp_Status = 'active' AND Route_Status = 'active' and '" + current_date
-									+ "' between Start_Date and End_Date)";
+									+ "' between Start_Date and End_Date) order by Route_No";
 						}
 					}
 				} else {
@@ -330,7 +329,7 @@ public class RosterServiceImpl {
 							query = "SELECT Emp_Qlid,Shift_Id,Cab_No FROM ncab_roster_tbl WHERE '" + current_date
 									+ "' between Start_Date and End_Date"
 									+ " and Emp_Status = 'active' and Route_Status = 'active' and Cab_No LIKE '%"
-									+ cab_number + "%'";
+									+ cab_number + "%' order by Route_No";
 						}
 					}
 				}
@@ -345,13 +344,13 @@ public class RosterServiceImpl {
 									+ " AND Cab_No in (select Cab_No from ncab_roster_tbl WHERE Shift_Id='" + shift_id
 									+ "' AND Emp_Qlid LIKE '" + qlid + "' and '" + current_date
 									+ "' between Start_Date and End_Date"
-									+ " AND Route_Status='active' AND Emp_Status='active')";
+									+ " AND Route_Status='active' AND Emp_Status='active') and Shift_Id = '"+shift_id+"' order by Route_No";
 						} else { // if emp_name, qlid is given
 							query = "select Emp_Qlid, Shift_Id, Cab_No from ncab_roster_tbl where (Cab_No, Shift_Id) In (Select Cab_No, Shift_Id from ncab_roster_tbl where Emp_Qlid = '"
 									+ qlid + "' and Route_Status = 'active' and Emp_Status='active' and '"
 									+ current_date + "' between Start_Date and End_Date"
 									+ ") and Route_Status = 'active' and Emp_Status='active' and '" + current_date
-									+ "' between Start_Date and End_Date ";
+									+ "' between Start_Date and End_Date  order by Route_No";
 
 						}
 					} else {
@@ -377,7 +376,7 @@ public class RosterServiceImpl {
 									+ "%')) and Route_Status = 'active' and Emp_Status='active' and '" + current_date
 									+ "' between Start_Date and End_Date"
 									+ ") and Route_Status = 'active' and Emp_Status='active' and '" + current_date
-									+ "' between Start_Date and End_Date ";
+									+ "' between Start_Date and End_Date order by Route_No";
 						}
 					}
 				} else {
@@ -389,14 +388,14 @@ public class RosterServiceImpl {
 									+ shift_id
 									+ "' and Cab_No IN (select Cab_No from ncab_roster_tbl where Route_Status = 'active' and Emp_Status='active' and '"
 									+ current_date + "' between Start_Date and End_Date" + " and Emp_Qlid = '" + qlid
-									+ "')";
+									+ "') order by Route_No";
 						} else {
 							// if qlid is given
 							query = "select Emp_Qlid, Shift_Id, Cab_No from ncab_roster_tbl where (Cab_No, Shift_Id) In (Select Cab_No, Shift_Id from ncab_roster_tbl where Emp_Qlid = '"
 									+ qlid + "' and Route_Status = 'active' and Emp_Status='active' and '"
 									+ current_date + "' between Start_Date and End_Date"
 									+ ") and Route_Status = 'active' and Emp_Status='active' and '" + current_date
-									+ "' between Start_Date and End_Date ";
+									+ "' between Start_Date and End_Date order by Route_No ";
 						}
 					} else {
 						if (!(shift_id.equals(""))) {
@@ -406,7 +405,7 @@ public class RosterServiceImpl {
 									+ shift_id + "' and '" + current_date + "' between Start_Date and End_Date"
 									+ " AND Cab_No IN (select Cab_No from ncab_roster_tbl where '" + current_date
 									+ "' between Start_Date and End_Date and Emp_Status = 'active' and Route_Status = 'active' and Shift_Id='"
-									+ shift_id + "')";
+									+ shift_id + "') order by Route_No";
 
 						} else {
 							// if all fields are empty
@@ -438,7 +437,7 @@ public class RosterServiceImpl {
 	//	String LOGFILE_DIR = "C:\\Users\\DB250491\\Desktop\\ncab_logs";
 		String LOGFILE_DIR = "/tmp/ncab_logs";
 		String LOGFILE_PREFIX = "iNCRediCabs_Roster_MASS_UPLOAD_LOG_";
-//		String path = new String(System.getProperty("user.home") + "/Desktop/output.txt");
+		// String path = new String(System.getProperty("user.home") + "/Desktop/output.txt");
 		String logFileName = LOGFILE_DIR + "/" + LOGFILE_PREFIX+ ".txt";
 		File logDir = new File(LOGFILE_DIR);
 		if(!logDir.exists()) {
@@ -591,8 +590,8 @@ public class RosterServiceImpl {
 				String dname = row.getCell(12).getStringCellValue().trim();
 				System.out.println("Driver Name: " + dname);
 
-//				String dnumber = row.getCell(13).getStringCellValue();
-				 String dnumber = "1234567890";
+				String dnumber = row.getCell(13).getStringCellValue();
+//				 String dnumber = "1234567890";
 				System.out.println("Driver Phone Number: " + dnumber);
 
 				String remarks = row.getCell(15, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue().trim();
@@ -699,7 +698,7 @@ public class RosterServiceImpl {
 				cs.setString(2, empid);
 				cs.setString(3, shift_id);
 				cs.setString(4, picktime);
-				cs.setString(5, cabno);
+				cs.setString(5, cabno.toUpperCase());
 				cs.setString(6, remarks);
 				cs.setString(7, Route_No);
 				cs.setString(8, sdate);
@@ -714,7 +713,7 @@ public class RosterServiceImpl {
 				System.out.println(retValue + "Point");
 				String[] flag = { "FAILURE", "NO", "NO", "NO", "No", "No", "No", "No" ,"No"};
 				String[] quote = { "FAILURE", "QLID", "Shift_Timing", "Cab_No", "Route No has no Vacancy",
-						"Route Number doesn't match", "Wrong Driver Name", "Wrong Vendor Name" ,"Duplicate Record Found"};
+						"Route Number doesn't match", "Wrong Driver Details", "Wrong Vendor Name" ,"Duplicate Record Found"};
 				String[] retValue_token = retValue.split("\\s+");
 				String final_push = "";
 				System.out.println(retValue_token[0] + "SagaCheck");
@@ -833,7 +832,7 @@ public class RosterServiceImpl {
 			e.printStackTrace();
 		}
 		
-		System.out.println("Jsarr :- " + jsobj);
+		System.out.println("Jsobj :- " + jsobj);
 		this.SendAttachmentInEmail();
 		return jsobj;
 	}
@@ -914,6 +913,7 @@ public class RosterServiceImpl {
 			String cab = json.getString("c_n");
 			String qlid = json.getString("qlid");
 			String sid = json.getString("s_i");
+			String  pick_up="";
 			System.out.println("The sid is " + sid);
 
 			//			long millis = System.currentTimeMillis();
@@ -936,6 +936,12 @@ public class RosterServiceImpl {
 				js.put("error_type", "exist");
 			}
 			else{
+			PreparedStatement ps4 = con.prepareStatement("select Distinct Pickup_Time from ncab_roster_tbl where Cab_No=? and Shift_Id=? and '"+current_date+"' between Start_Date and End_Date");
+			ps4.setString(1,cab);
+			ps4.setString(2,sid);
+			ResultSet rs3=ps4.executeQuery();
+			rs3.next();
+			pick_up=rs3.getString(1);
 			PreparedStatement ps1 = con.prepareStatement("select Route_No,max(End_Date),Vendor_Name, Driver_Id from ncab_roster_tbl where Cab_No=? and Shift_Id=? and '"+current_date+"' between Start_Date and End_Date");
 			ps1.setString(1, cab);
 			ps1.setString(2, sid);
@@ -946,7 +952,7 @@ public class RosterServiceImpl {
 				enddate = rs2.getString(2);
 				vname = rs2.getString(3);
 				did = rs2.getString(4);
-				PreparedStatement ps2 = con.prepareStatement("insert into ncab_roster_tbl(Route_No,Emp_Qlid,Shift_Id,Cab_No,Start_Date,End_Date,Vendor_Name,Driver_Id) values(?,?,?,?,?,?,?,?)");
+				PreparedStatement ps2 = con.prepareStatement("insert into ncab_roster_tbl(Route_No,Emp_Qlid,Shift_Id,Cab_No,Start_Date,End_Date,Vendor_Name,Driver_Id,Pickup_Time) values(?,?,?,?,?,?,?,?,?)");
 
 				ps2.setString(1, r_n);
 				ps2.setString(2, qlid);
@@ -956,6 +962,7 @@ public class RosterServiceImpl {
 				ps2.setString(6, enddate);
 				ps2.setString(7, vname);
 				ps2.setString(8, did);
+				ps2.setString(9, pick_up);
 
 
 				int i = ps2.executeUpdate();
@@ -993,10 +1000,10 @@ public class RosterServiceImpl {
 			PreparedStatement ps = null;
 			if (s_id.equals("4")) {
 				ps = connection.prepareStatement(
-						"select Emp_Qlid,Emp_FName,Emp_LName from ncab_master_employee_tbl where Emp_Qlid not in (select Emp_Qlid from ncab_roster_tbl where Shift_Id = '"+ s_id + "' and Emp_Status='active' and  '" + current_date+ "' between Start_Date and End_Date)");
+						"select Emp_Qlid,Emp_FName,Emp_LName from ncab_master_employee_tbl where Emp_Status='a' AND Emp_Qlid not in (select Emp_Qlid from ncab_roster_tbl where Shift_Id = '"+ s_id + "' and Emp_Status='active' and  '" + current_date+ "' between Start_Date and End_Date)");
 			} else {
 				ps = connection.prepareStatement(
-						"select Emp_Qlid,Emp_FName,Emp_LName from ncab_master_employee_tbl where Emp_Qlid not in (select Emp_Qlid from ncab_roster_tbl where Shift_Id <> '4' and Emp_Status='active' and  '"+ current_date + "' between Start_Date and End_Date)");
+						"select Emp_Qlid,Emp_FName,Emp_LName from ncab_master_employee_tbl where Emp_Status='a' AND Emp_Qlid not in (select Emp_Qlid from ncab_roster_tbl where Shift_Id <> '4' and Emp_Status='active' and  '"+ current_date + "' between Start_Date and End_Date)");
 
 			}
 			ResultSet rs = ps.executeQuery();
@@ -1231,6 +1238,8 @@ public class RosterServiceImpl {
 					guard = "No";
 				}
 				pickup = json.optString("pickup");
+//				String split_pickup[]=pickup.split(" ");
+//				StringBuilder insert_pickup=new StringBuilder(split_pickup[0]+split_pickup[1]+split_pickup[2]);
 				drop = json.optString("drop");
 				picktime = json.optString("picktime");
 				cabno = json.optString("cabno");
@@ -1393,7 +1402,7 @@ public class RosterServiceImpl {
 
 		try {
 			System.out.println("Inside try before query");
-			PreparedStatement ps = connection.prepareStatement("select Emp_Qlid,Emp_FName, Emp_MName, Emp_LName from ncab_master_employee_tbl");
+			PreparedStatement ps = connection.prepareStatement("select Emp_Qlid,Emp_FName, Emp_MName, Emp_LName from ncab_master_employee_tbl where Emp_Status='a'");
 			ResultSet rs = ps.executeQuery();
 			System.out.println("Inside try after query");
 			while (rs.next()) {
@@ -1628,8 +1637,7 @@ public class RosterServiceImpl {
 		String vendor = json.getString("ven");
 		String s_date = json.getString("s_date");
 		String e_date = json.getString("e_date");
-		System.out.println("SD: "+s_date
-				);
+		System.out.println("SD: "+s_date);
 		int s1 = 0;
 		long millis = System.currentTimeMillis();
 		java.sql.Date date = new java.sql.Date(millis);
@@ -1947,6 +1955,9 @@ public class RosterServiceImpl {
                  
                  String webappPath = req.getServletContext().getRealPath("/");
                  
+                 
+//
+
                  xssfWorkbook = new XSSFWorkbook();
                  xssfSheet = xssfWorkbook.createSheet("new sheet");
                  DataFormat fmt = xssfWorkbook.createDataFormat();
@@ -2023,7 +2034,7 @@ public class RosterServiceImpl {
                               int i = Integer.parseInt(rm.getRoute_no());
                                row.createCell( 1).setCellValue(String.format("%03d", i));
                                row.createCell( 2).setCellValue(rm.getQlid());
-                              if ((rm.getMname()).equals("")) {
+                               if ((rm.getMname()==(null))||(rm.getMname().equals(""))) {
                                      row.createCell( 3).setCellValue(rm.getFname() + " " + rm.getLname());
                               } else {
                                      row.createCell( 3)
@@ -2121,7 +2132,7 @@ public JSONArray getStartandEndDate(String strdiv) {
 			String eqlid=jsobj.getString("e_qlid");
 			String ecab=jsobj.getString("e_cab");
 			String eshift=jsobj.getString("e_sid");
-			PreparedStatement ps = connection.prepareStatement("select Start_Date,End_Date,Pickup_Time from ncab_roster_tbl where Cab_No='"+ecab+"'and Shift_Id='"+eshift+"' and Emp_Qlid='"+eqlid+"' and Emp_Status='active' and current_date between Start_Date and End_Date");
+			PreparedStatement ps = connection.prepareStatement("select Start_Date,End_Date,Pickup_Time from ncab_roster_tbl where Cab_No='"+ecab+"'and Shift_Id='"+eshift+"' and Emp_Qlid='"+eqlid+"' and Emp_Status='active' and '"+current_date+"' between Start_Date and End_Date");
 
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
@@ -2191,6 +2202,36 @@ public JSONArray getCabShift(JSONArray jsonarray) {
 		System.out.print("Error: getcab(): ---" + e.getMessage());
 	}
 	return jsonarr;
+
+}
+
+
+public JSONObject fetchdefaultdata(String str) {
+	long millis = System.currentTimeMillis();
+	java.sql.Date date = new java.sql.Date(millis);
+	String current_date = date.toString();
+	DBConnectionUpd db = new DBConnectionUpd();
+	Connection connection = db.getConnection();
+	JSONObject js=new JSONObject();
+//	js=null;
+	JSONObject json;
+	try {
+		json = new JSONObject(str);
+		String r_no=json.getString("r_n");
+		PreparedStatement ps=connection.prepareStatement("select Vendor_Name,Shift_Id,Cab_No from ncab_roster_tbl where Route_No=? AND '"+current_date+"' between Start_Date and End_Date");
+		ps.setString(1,r_no );
+		ResultSet rs=ps.executeQuery();
+		rs.next();
+	
+		js.put("vname",rs.getString(1));
+		js.put("shift",rs.getString(2));
+		js.put("cabnumber",rs.getString(3));
+	} catch (Exception e1) {
+		// TODO Auto-generated catch block
+		e1.printStackTrace();
+	}
+
+	return js;
 
 }
 
@@ -2336,5 +2377,110 @@ public String sendMail(JSONObject jsonreq){
 	
 }
 		
+
+//public JSONArray getUnshQlid(){
+//	JSONArray jsonarr = new JSONArray();
+//	DBConnectionUpd dbconnection = new DBConnectionUpd();
+//	Connection connection = dbconnection.getConnection();
+//	String qlid,fname,lname,mname,name,source,dest,type;
+//	try{
+//		PreparedStatement ps = connection.prepareStatement
+//				("SELECT r.Emp_Qlid, e.Emp_FName, e.Emp_MName, e.Emp_LName, Source, Destination, Other_Addr FROM ncab_master_employee_tbl AS e JOIN NCAB_UNSCHEDULE_RQST_TBL AS r WHERE Approval != 'REJECTED' AND r.Emp_Qlid = e.Emp_Qlid AND Rqst_Date_Time LIKE (SELECT CONCAT (CURDATE(),'%'))");
+//		ResultSet rs = ps.executeQuery();
+//		while(rs.next()){
+//			JSONObject json = new JSONObject();
+//			qlid=rs.getString(1);
+//			fname=rs.getString(2);
+//			mname=rs.getString(3);
+//			lname=rs.getString(4);
+//			source=rs.getString(5);
+//			dest=rs.getString(6);
+//			type=rs.getString(7);
+//			name=fname+" "+mname+" "+lname;
+//			json.put("qlid", qlid);
+//			json.put("name", name);
+//			json.put("source",source);
+//			json.put("dest", dest);
+//			json.put("type", type);
+//			jsonarr.put(json);
+//			}
+//		}
+//	catch(Exception e){
+//		System.out.println("Error in Unsh QLID::"+e.getMessage());
+//	}		
+//	return jsonarr;
+//}
+
+public JSONArray getUnshQlid(){
+    JSONArray jsonarr = new JSONArray();
+    DBConnectionUpd dbconnection = new DBConnectionUpd();
+    Connection connection = dbconnection.getConnection();
+    String qlid,fname,lname,mname,name,source,dest,type;
+    try{
+           PreparedStatement ps = connection.prepareStatement
+                        ("SELECT r.Emp_Qlid, e.Emp_FName, e.Emp_MName, e.Emp_LName FROM ncab_master_employee_tbl AS e JOIN NCAB_UNSCHEDULE_RQST_TBL AS r WHERE Approval != 'REJECTED' AND r.Emp_Qlid = e.Emp_Qlid AND Allocated ='0'  AND Rqst_Date_Time LIKE (SELECT CONCAT (CURDATE(),'%'))");
+           ResultSet rs = ps.executeQuery();
+           while(rs.next()){
+                  JSONObject json = new JSONObject();
+                  qlid=rs.getString(1);
+                  fname=rs.getString(2);
+                  mname=rs.getString(3);
+                  lname=rs.getString(4);           
+                  if(mname!=null)
+                  name=fname+" "+mname+" "+lname;
+                  else
+                  name=fname+" "+lname;     
+                  json.put("qlid", qlid);
+                  json.put("name", name);
+                  
+                  jsonarr.put(json);
+                  }
+           }
+    catch(Exception e){
+           System.out.println("Error in Unsh QLID::"+e.getMessage());
+    }            
+    return jsonarr;
+}
+
+public JSONObject getUnshEmpDetails(JSONObject jsn){
+    JSONArray jsonarr = new JSONArray();
+    DBConnectionUpd dbconnection = new DBConnectionUpd();
+    Connection connection = dbconnection.getConnection();
+    JSONObject json = new JSONObject();
+    String qlid=jsn.getString("qlid"),fname,lname,mname,name,source,dest,type,ph;
+    try{
+           PreparedStatement ps = connection.prepareStatement
+                        ("SELECT e.Emp_FName, e.Emp_MName, e.Emp_LName, Source, Destination, Other_Addr,r.Emp_Qlid,Emp_Mob_Nbr FROM ncab_master_employee_tbl AS e JOIN NCAB_UNSCHEDULE_RQST_TBL AS r WHERE Approval != 'REJECTED' AND r.Emp_Qlid = e.Emp_Qlid AND r.Emp_Qlid = ? AND Rqst_Date_Time LIKE (SELECT CONCAT (CURDATE(),'%'))");
+           ps.setString(1, qlid);
+           ResultSet rs = ps.executeQuery();
+           while(rs.next()){
+                  
+           
+                  fname=rs.getString(1);
+                  mname=rs.getString(2);
+                  lname=rs.getString(3);
+                  source=rs.getString(4);
+                  dest=rs.getString(5);
+                  type=rs.getString(6);
+                  qlid=rs.getString(7);
+                  ph=rs.getString(8);
+                  json.put("qlid", qlid);
+                  json.put("fname", fname);
+                  json.put("mname", mname);
+                  json.put("lname", lname);
+                  json.put("source",source);
+                  json.put("dest", dest);
+                  json.put("type", type);
+                  json.put("phone", ph);   
+                  }
+           }
+    catch(Exception e){
+           System.out.println("Error in Unsh QLID::"+e.getMessage());
+    }            
+    return json;
+}
+
+
+
 
 }
