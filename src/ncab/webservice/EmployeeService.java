@@ -361,10 +361,16 @@ public class EmployeeService {
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)	
-	public String forgotPasswordChangeEmployee(UserCredBean ucb){
-//		System.out.println("!!");
+	public String forgotPasswordChangeEmployee(UserCredBean ucb){		
 		JSONObject jsObj = new JSONObject();
 		EmployeeServiceImpl	empSrvImpl = new EmployeeServiceImpl();
+		
+		if(ucb.getPassword().toUpperCase().matches(ucb.getQlid().toUpperCase())) {
+			return (new JSONObject())
+					.put("success", false)
+					.put("message", "Password cannot have QLID!")
+					.toString();
+		}
 
 		if(empSrvImpl.isPwdTokenValid(ucb.getQlid(), ucb.getToken())) {
 			if(empSrvImpl.updatePassword(ucb.getQlid(), ucb.getPassword())) {
@@ -392,6 +398,13 @@ public class EmployeeService {
 		HttpSession sess = req.getSession();
 		String qlid = (String)sess.getAttribute("qlid");
 		String sessRole = (String)sess.getAttribute("role");
+	
+		if(ucb.getPassword().toUpperCase().matches(ucb.getQlid().toUpperCase())) {
+			return (new JSONObject())
+					.put("success", false)
+					.put("message", "Password cannot have QLID!")
+					.toString();
+		}
 //		
 //		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID) {
 //			return EmployeeServiceImpl.noLoginMessage();
@@ -598,7 +611,13 @@ public class EmployeeService {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public String newAccSetPassword(UserCredBean ucb) {
-		EmployeeServiceImpl	empSrvImpl = new EmployeeServiceImpl();
+		EmployeeServiceImpl	empSrvImpl = new EmployeeServiceImpl();		
+		if(ucb.getPassword().toUpperCase().matches(ucb.getQlid().toUpperCase())) {
+			return (new JSONObject())
+					.put("success", false)
+					.put("message", "Password cannot have QLID!")
+					.toString();
+		}
 		if(empSrvImpl.hasSetPassword(ucb.getQlid())) {
 			return (new JSONObject())
 					.put("success", false)
@@ -944,6 +963,8 @@ public class EmployeeService {
 		return (empSrvImpl.changePassword(qlid, spb)).toString();
 	}
 	
+	
+	
 	@Path("/login-android")
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -965,6 +986,31 @@ public class EmployeeService {
 		}
 		
 		return jsObj.toString();
+	}
+	
+	
+	
+	@Path("/get-qlid")
+	@POST
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public String getQlid(
+			@Context	HttpServletRequest	req
+	) {
+		HttpSession sess = req.getSession();
+		String qlid;
+		if(sess.getAttribute("qlid") == null) {
+			return (new JSONObject())
+						.put("success", false)
+						.put("message", "You are not logged in!")
+						.toString();
+		}
+		
+		qlid = (String)sess.getAttribute("qlid");
+		return (new JSONObject())
+					.put("success", true)
+					.put("qlid", qlid)
+					.toString();
 	}
 	
 	@Path("/set-push-token-android")
