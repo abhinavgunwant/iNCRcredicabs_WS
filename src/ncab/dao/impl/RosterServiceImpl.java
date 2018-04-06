@@ -37,6 +37,7 @@ import java.util.HashMap;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.DataFormat;
@@ -44,6 +45,9 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFColor;
+import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -111,6 +115,8 @@ public class RosterServiceImpl {
 			String pick_qlid = "";
 			String pick_shift = "";
 			String pick_cab_number = "";
+			String pick_remarks="";
+			int pick_remarks_int;
 			query = selectFilterQuery(qlid, cab_number, shift_id, emp_name, vname);
 			qlid_cab = "";
 			PreparedStatement ps = con.prepareStatement(query);
@@ -122,6 +128,7 @@ public class RosterServiceImpl {
 				pick_qlid = rs.getString(1);
 				pick_shift = rs.getString(2);
 				pick_cab_number = rs.getString(3);
+				pick_remarks=rs.getString(4);
 				subquery3 = "select Count(Emp_Qlid) from ncab_roster_tbl where '" + current_date
 						+ "' between Start_Date and End_Date" + " and Shift_Id='" + pick_shift + "' and Cab_No='"
 						+ pick_cab_number + "' and Emp_Status = 'active' and Route_Status = 'active' ";
@@ -130,13 +137,19 @@ public class RosterServiceImpl {
 				while (rs5.next()) {
 					qlid_cab = rs5.getString(1);
 				}
+				System.out.println(qlid_cab);
 				JSONObject jsonObj = new JSONObject();
 
 				subquery1 = "select * from ncab_roster_tbl where Emp_Qlid='" + pick_qlid + "' and Shift_Id='"
 						+ pick_shift + "' and Emp_Status = 'active' and '" + current_date
 						+ "' between Start_Date and End_Date ";
-				subquery2 = "select Emp_FName,Emp_MName,Emp_LName,Emp_Pickup_Area,Emp_Mob_Nbr from ncab_master_employee_tbl where Emp_Qlid='"
-						+ pick_qlid + "'";
+				if((pick_qlid.equalsIgnoreCase("intern"))||(pick_qlid.equalsIgnoreCase("new join"))){
+					subquery2 = "select Emp_FName,Emp_MName,Emp_LName,Emp_Pickup_Area,Emp_Mob_Nbr from ncab_master_employee_tbl where Roles_Id='5' AND Emp_Mob_Nbr='"+pick_remarks+"' ";}
+					else
+					{
+						subquery2 = "select Emp_FName,Emp_MName,Emp_LName,Emp_Pickup_Area,Emp_Mob_Nbr from ncab_master_employee_tbl where Emp_Qlid='"
+								+ pick_qlid + "'";	
+					}
 				PreparedStatement ps1 = con.prepareStatement(subquery1);
 				PreparedStatement ps2 = con.prepareStatement(subquery2);
 				rs1 = ps1.executeQuery();
@@ -154,7 +167,9 @@ public class RosterServiceImpl {
 					jsonObj.put("shift_id", rm.getShift_id());
 					jsonObj.put("pickup_time", rm.getPickup_time());
 					jsonObj.put("Roster_Id",rs1.getString(5) );
-					System.out.println("vendor :- " + rm.getVendor_name());
+					System.out.println("qlid :- " + rm.getQlid());
+					System.out.println("remarks :- "+pick_remarks);
+					System.out.println("shift :- "+rm.getShift_id());
 					String setVendor = "";
 					if(rm.getVendor_name().equals(" ")){
 						setVendor="";
@@ -173,6 +188,7 @@ public class RosterServiceImpl {
 					jsonObj.put("vendor_name", setVendor);
 
 				}
+				
 				while (rs2.next()) {
 					rm.setFname(rs2.getString(1));
 					rm.setMname(rs2.getString(2));
@@ -245,12 +261,12 @@ public class RosterServiceImpl {
 		System.out.println("CURRENT DATE: " + current_date);
 		if (!(vname.equals(""))) { // if only vendor name is given
 			if (!(shift_id.equals("")))
-				query = "select Emp_Qlid,Shift_Id, Cab_No from ncab_roster_tbl where Vendor_Name LIKE '%" + vname
+				query = "select Emp_Qlid,Shift_Id, Cab_No,Remarks from ncab_roster_tbl where Vendor_Name LIKE '%" + vname
 						+ "%' and Shift_Id = '" + shift_id
 						+ "' and Route_Status = 'active' and Emp_Status = 'active' and '" + current_date
 						+ "' between Start_Date and End_Date order by Route_No ";
 			else // if both vendor name and shift time is given
-				query = "select Emp_Qlid,Shift_Id, Cab_No from ncab_roster_tbl where Vendor_Name LIKE '%" + vname
+				query = "select Emp_Qlid,Shift_Id, Cab_No,Remarks from ncab_roster_tbl where Vendor_Name LIKE '%" + vname
 						+ "%' and Route_Status = 'active' and Emp_Status = 'active' and '" + current_date
 						+ "' between Start_Date and End_Date order by Route_No ";
 		} else {
@@ -258,7 +274,7 @@ public class RosterServiceImpl {
 				if (!(emp_name.equals(""))) {
 					if (!(qlid.equals(""))) {
 						if (!(shift_id.equals(""))) { // if all fields are given
-							query = "select Emp_Qlid,Shift_Id,Cab_No from ncab_roster_tbl WHERE Shift_Id='" + shift_id
+							query = "select Emp_Qlid,Shift_Id,Cab_No,Remarks from ncab_roster_tbl WHERE Shift_Id='" + shift_id
 									+ "' AND Cab_No LIKE '%" + cab_number + "%' and '" + current_date
 									+ "' between Start_Date and End_Date AND Route_Status='active' AND Emp_Status='active' ORDER BY Route_No";
 						} else { // if cab_number, qlid, emp_name are given
@@ -268,7 +284,7 @@ public class RosterServiceImpl {
 							System.out.println(cab_number);
 							System.out.println(shift_id);
 
-							query = "SELECT Emp_Qlid, Shift_Id, Cab_No FROM ncab_roster_tbl WHERE Emp_Status = 'active' AND Route_Status = 'active' and '"
+							query = "SELECT Emp_Qlid, Shift_Id, Cab_No,Remarks FROM ncab_roster_tbl WHERE Emp_Status = 'active' AND Route_Status = 'active' and '"
 									+ current_date + "' between Start_Date and End_Date" + " AND Cab_No LIKE '%"
 									+ cab_number
 									+ "%' AND Shift_Id IN (SELECT Shift_Id FROM ncab_roster_tbl WHERE Emp_Qlid = '"
@@ -280,13 +296,13 @@ public class RosterServiceImpl {
 						if (!(shift_id.equals(""))) { // if cab_number,
 														// emp_name,
 							// shift_id is given
-							query = "select Emp_Qlid,Shift_Id,Cab_No from ncab_roster_tbl WHERE Shift_Id='" + shift_id
+							query = "select Emp_Qlid,Shift_Id,Cab_No,Remarks from ncab_roster_tbl WHERE Shift_Id='" + shift_id
 									+ "' AND Cab_No LIKE '%" + cab_number + "%' and '" + current_date
 									+ "' between Start_Date and End_Date"
 									+ " AND Route_Status='active' AND Emp_Status='active' ORDER BY Route_No";
 
 						} else { // if cab_number, emp_name is given
-							query = "select Emp_Qlid, Shift_Id, Cab_No from ncab_roster_tbl where Emp_Status = 'active' AND Route_Status = 'active' and '"
+							query = "select Emp_Qlid, Shift_Id, Cab_No,Remarks from ncab_roster_tbl where Emp_Status = 'active' AND Route_Status = 'active' and '"
 									+ current_date + "' between Start_Date and End_Date" + " AND Cab_No LIKE '%"
 									+ cab_number
 									+ "%' AND Shift_Id IN (select Shift_id from ncab_roster_tbl where Emp_Qlid IN (SELECT Emp_Qlid FROM ncab_master_employee_tbl WHERE (Emp_FName LIKE '%"
@@ -301,13 +317,13 @@ public class RosterServiceImpl {
 					if (!(qlid.equals(""))) {
 						if (!(shift_id.equals(""))) { // if cab_number, qlid,
 							// shift_id is given
-							query = "select Emp_Qlid,Shift_Id,Cab_No from ncab_roster_tbl WHERE Shift_Id='" + shift_id
+							query = "select Emp_Qlid,Shift_Id,Cab_No,Remarks from ncab_roster_tbl WHERE Shift_Id='" + shift_id
 									+ "' AND Cab_No LIKE '%" + cab_number + "%' and '" + current_date
 									+ "' between Start_Date and End_Date"
 									+ " AND Route_Status='active' AND Emp_Status='active' ORDER BY Route_No";
 
 						} else { // if cab_number, qlid is given
-							query = "SELECT Emp_Qlid, Shift_Id, Cab_No FROM ncab_roster_tbl WHERE Emp_Status = 'active' AND Route_Status = 'active' and '"
+							query = "SELECT Emp_Qlid, Shift_Id, Cab_No,Remarks FROM ncab_roster_tbl WHERE Emp_Status = 'active' AND Route_Status = 'active' and '"
 									+ current_date + "' between Start_Date and End_Date" + " AND Cab_No LIKE '%"
 									+ cab_number
 									+ "%' AND Shift_Id IN (SELECT Shift_Id FROM ncab_roster_tbl WHERE Emp_Qlid = '"
@@ -320,13 +336,13 @@ public class RosterServiceImpl {
 						if (!(shift_id.equals(""))) { // if cab_number, shift_id
 														// is
 							// given
-							query = "select Emp_Qlid,Shift_Id,Cab_No from ncab_roster_tbl WHERE Shift_Id='" + shift_id
+							query = "select Emp_Qlid,Shift_Id,Cab_No,Remarks from ncab_roster_tbl WHERE Shift_Id='" + shift_id
 									+ "' AND Cab_No LIKE '%" + cab_number + "%' and '" + current_date
 									+ "' between Start_Date and End_Date"
 									+ " AND Route_Status='active' AND Emp_Status='active' ORDER BY Route_No";
 
 						} else { // if cab_number is given
-							query = "SELECT Emp_Qlid,Shift_Id,Cab_No FROM ncab_roster_tbl WHERE '" + current_date
+							query = "SELECT Emp_Qlid,Shift_Id,Cab_No,Remarks FROM ncab_roster_tbl WHERE '" + current_date
 									+ "' between Start_Date and End_Date"
 									+ " and Emp_Status = 'active' and Route_Status = 'active' and Cab_No LIKE '%"
 									+ cab_number + "%' order by Route_No";
@@ -339,14 +355,14 @@ public class RosterServiceImpl {
 						if (!(shift_id.equals(""))) { // if emp_name, qlid,
 														// shift_id
 							// is given
-							query = "select Emp_Qlid,Shift_Id,Cab_No from ncab_roster_tbl where Route_Status = 'active' and Emp_Status='active' and '"
+							query = "select Emp_Qlid,Shift_Id,Cab_No,Remarks from ncab_roster_tbl where Route_Status = 'active' and Emp_Status='active' and '"
 									+ current_date + "' between Start_Date and End_Date"
 									+ " AND Cab_No in (select Cab_No from ncab_roster_tbl WHERE Shift_Id='" + shift_id
 									+ "' AND Emp_Qlid LIKE '" + qlid + "' and '" + current_date
 									+ "' between Start_Date and End_Date"
 									+ " AND Route_Status='active' AND Emp_Status='active') and Shift_Id = '"+shift_id+"' order by Route_No";
 						} else { // if emp_name, qlid is given
-							query = "select Emp_Qlid, Shift_Id, Cab_No from ncab_roster_tbl where (Cab_No, Shift_Id) In (Select Cab_No, Shift_Id from ncab_roster_tbl where Emp_Qlid = '"
+							query = "select Emp_Qlid, Shift_Id, Cab_No,Remarks from ncab_roster_tbl where (Cab_No, Shift_Id) In (Select Cab_No, Shift_Id from ncab_roster_tbl where Emp_Qlid = '"
 									+ qlid + "' and Route_Status = 'active' and Emp_Status='active' and '"
 									+ current_date + "' between Start_Date and End_Date"
 									+ ") and Route_Status = 'active' and Emp_Status='active' and '" + current_date
@@ -357,7 +373,7 @@ public class RosterServiceImpl {
 						if (!(shift_id.equals(""))) { // if emp_name, shift_id
 														// is
 							// given
-							query = "select Emp_Qlid,Shift_Id,Cab_No from ncab_roster_tbl where Route_Status = 'active' and Emp_Status='active' and '"
+							query = "select Emp_Qlid,Shift_Id,Cab_No,Remarks from ncab_roster_tbl where Route_Status = 'active' and Emp_Status='active' and '"
 									+ current_date + "' between Start_Date and End_Date" + " AND Shift_Id = '"
 									+ shift_id
 									+ "' AND Cab_No IN (select Cab_No from ncab_roster_tbl where Route_Status = 'active' and Emp_Status='active' and '"
@@ -369,7 +385,7 @@ public class RosterServiceImpl {
 									+ "%')))";
 						} else {
 							// if emp_name is given
-							query = "select Emp_Qlid, Shift_Id, Cab_No from ncab_roster_tbl where (Cab_No, Shift_Id) In (Select Cab_No, Shift_Id from ncab_roster_tbl where Emp_Qlid IN (SELECT Emp_Qlid FROM ncab_master_employee_tbl WHERE (Emp_FName LIKE '%"
+							query = "select Emp_Qlid, Shift_Id, Cab_No,Remarks from ncab_roster_tbl where (Cab_No, Shift_Id) In (Select Cab_No, Shift_Id from ncab_roster_tbl where Emp_Qlid IN (SELECT Emp_Qlid FROM ncab_master_employee_tbl WHERE (Emp_FName LIKE '%"
 									+ emp_name + "%')||(Emp_MName LIKE '%" + emp_name + "%')||(Emp_LName LIKE '%"
 									+ emp_name + "%')||(CONCAT(Emp_FName,' ',Emp_MName,' ',Emp_LName,' ') LIKE '%"
 									+ emp_name + "%')||(CONCAT(Emp_FName,' ',Emp_LName,' ') LIKE '%" + emp_name
@@ -383,7 +399,7 @@ public class RosterServiceImpl {
 					if (!(qlid.equals(""))) {
 						if (!(shift_id.equals(""))) { // if qlid, shift_id is
 														// given
-							query = "select Emp_Qlid, Shift_Id, Cab_No from ncab_roster_tbl where Route_Status = 'active' and Emp_Status='active' and '"
+							query = "select Emp_Qlid, Shift_Id, Cab_No,Remarks from ncab_roster_tbl where Route_Status = 'active' and Emp_Status='active' and '"
 									+ current_date + "' between Start_Date and End_Date" + " AND Shift_Id = '"
 									+ shift_id
 									+ "' and Cab_No IN (select Cab_No from ncab_roster_tbl where Route_Status = 'active' and Emp_Status='active' and '"
@@ -391,7 +407,7 @@ public class RosterServiceImpl {
 									+ "') order by Route_No";
 						} else {
 							// if qlid is given
-							query = "select Emp_Qlid, Shift_Id, Cab_No from ncab_roster_tbl where (Cab_No, Shift_Id) In (Select Cab_No, Shift_Id from ncab_roster_tbl where Emp_Qlid = '"
+							query = "select Emp_Qlid, Shift_Id, Cab_No,Remarks from ncab_roster_tbl where (Cab_No, Shift_Id) In (Select Cab_No, Shift_Id from ncab_roster_tbl where Emp_Qlid = '"
 									+ qlid + "' and Route_Status = 'active' and Emp_Status='active' and '"
 									+ current_date + "' between Start_Date and End_Date"
 									+ ") and Route_Status = 'active' and Emp_Status='active' and '" + current_date
@@ -401,7 +417,7 @@ public class RosterServiceImpl {
 						if (!(shift_id.equals(""))) {
 							// if shift_id is given
 							System.out.println(shift_id);
-							query = "select Emp_Qlid,Shift_Id,Cab_No from ncab_roster_tbl where Route_Status = 'active' and Emp_Status='active' AND Shift_Id = '"
+							query = "select Emp_Qlid,Shift_Id,Cab_No,Remarks from ncab_roster_tbl where Route_Status = 'active' and Emp_Status='active' AND Shift_Id = '"
 									+ shift_id + "' and '" + current_date + "' between Start_Date and End_Date"
 									+ " AND Cab_No IN (select Cab_No from ncab_roster_tbl where '" + current_date
 									+ "' between Start_Date and End_Date and Emp_Status = 'active' and Route_Status = 'active' and Shift_Id='"
@@ -411,7 +427,7 @@ public class RosterServiceImpl {
 							// if all fields are empty
 
 							System.out.println("all filter fields are empty");
-							query = "select Emp_Qlid,Shift_Id,Cab_No from ncab_roster_tbl where Emp_Status='active' AND Route_Status='active'  AND '"
+							query = "select Emp_Qlid,Shift_Id,Cab_No,Remarks from ncab_roster_tbl where Emp_Status='active' AND Route_Status='active'  AND '"
 									+ current_date + "' between Start_Date AND End_Date order by Route_No";
 						}
 					}
@@ -475,7 +491,7 @@ public class RosterServiceImpl {
 			e2.printStackTrace();
 		}
 		;
-		HashMap<String, String> sr = null; // shift id and route number link
+//		HashMap<String, String> sr = null; // shift id and route number link
 		HashMap<String, HashMap<String, String>> hm = new HashMap<String, HashMap<String, String>>(); // cab
 
 		PreparedStatement ps;
@@ -536,10 +552,27 @@ public class RosterServiceImpl {
 			empid_arr = new String[last_row_valid];
 			cab_arr = new String[last_row_valid];
 
+			
+			int validity = 0,valid_rows = 0;
+			
 			Row row;
 			String newLine = System.getProperty("line.separator");
+			System.out.println("lrv: "+last_row_valid);
 			for (i = 1; i <= last_row_valid; i++) {
+				
 				row = sheet.getRow(i);
+				if(row == null)
+				{
+					validity++;
+					if(validity > 1)
+						break;
+					continue;
+				}
+				else
+					validity = 0;
+				if(row.getCell(1, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue().contains("Route"))
+					continue;
+				valid_rows++;
 				String shift_id = null;
 				String empid = row.getCell(2, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue().trim();
 				empid_arr[i - 1] = empid;
@@ -582,7 +615,7 @@ public class RosterServiceImpl {
 				System.out.println("Start Date: " + start_date);
 
 				String end_date = row.getCell(10).getStringCellValue().trim();
-				System.out.println("Start Date: " + end_date);
+				System.out.println("End Date: " + end_date);
 
 				String vname = row.getCell(8).getStringCellValue().trim();
 				System.out.println("Vendor name:" + vname);
@@ -718,7 +751,7 @@ public class RosterServiceImpl {
 				String final_push = "";
 				System.out.println(retValue_token[0] + "SagaCheck");
 				if (retValue_token[0].compareTo("FAILURE") == 0) {
-
+					counter++;
 					try {
 						PreparedStatement update = connection
 								.prepareStatement("update ncab_roster_tbl set Emp_Status = 'active' where Emp_Qlid = '"
@@ -729,38 +762,42 @@ public class RosterServiceImpl {
 					} catch (Exception e) {
 						System.out.println(e);
 					}
-					PreparedStatement occupancy = connection.prepareStatement(
-							"select cab_capacity from ncab_cab_master_tbl where cab_license_plate_no = '" + cabno
-									+ "';");
-					ResultSet occupancy_no = occupancy.executeQuery();
-					// ResultSet will be returning null if Validation fails onto
-					// given Cab_No.
-					occupancy_no.next();
-					String occ_no = occupancy_no.getString(1);
-					PreparedStatement vacancy = connection
-							.prepareStatement("select COUNT(Emp_Qlid) from ncab_roster_tbl where Cab_No = '" + cabno
-									+ "' and Shift_Id = '" + shift_id + "' and Emp_Status = 'active' and '"
-									+ current_date + "' between Start_Date and End_Date");
-					ResultSet vacancy_num = vacancy.executeQuery();
-					vacancy_num.next();
-					String vacan_num = vacancy_num.getString(1);
-					int idiot = Integer.parseInt(occ_no) - Integer.parseInt(vacan_num);
-					System.out.println("This is the idiot" + idiot);
-					String idiot_value = Integer.toString(idiot);
-					System.out.println("occu: " + occ_no);
-					System.out.println("vacancy: " + vacan_num);
+					if(!cabno.equals("invalid_cab"))
+					{
+						PreparedStatement occupancy = connection.prepareStatement(
+								"select cab_capacity from ncab_cab_master_tbl where cab_license_plate_no = '" + cabno
+										+ "';");
+						ResultSet occupancy_no = occupancy.executeQuery();
+						// ResultSet will be returning null if Validation fails onto
+						// given Cab_No.
+						occupancy_no.next();
+						String occ_no = occupancy_no.getString(1);
+						PreparedStatement vacancy = connection
+								.prepareStatement("select COUNT(Emp_Qlid) from ncab_roster_tbl where Cab_No = '" + cabno
+										+ "' and Shift_Id = '" + shift_id + "' and Emp_Status = 'active' and '"
+										+ current_date + "' between Start_Date and End_Date");
+						ResultSet vacancy_num = vacancy.executeQuery();
+						vacancy_num.next();
+						String vacan_num = vacancy_num.getString(1);
+						int idiot = Integer.parseInt(occ_no) - Integer.parseInt(vacan_num);
+						System.out.println("This is the idiot" + idiot);
+						String idiot_value = Integer.toString(idiot);
+						System.out.println("occu: " + occ_no);
+						System.out.println("vacancy: " + vacan_num);
 
-					if (occ_no.compareTo(idiot_value) == 0) {
-						System.out.println("Before Inside error:" + hm);
+						if (occ_no.compareTo(idiot_value) == 0) {
+							System.out.println("Before Inside error:" + hm);
 
-						if (hm.get(cabno).size() == 1)
-							hm.remove(cabno);
-						else
-							hm.get(cabno).remove(shift_id);
-						System.out.println("After Inside error:" + hm);
-						ct--;
+							if (hm.get(cabno).size() == 1)
+								hm.remove(cabno);
+							else
+								hm.get(cabno).remove(shift_id);
+							System.out.println("After Inside error:" + hm);
+							ct--;
+						}
+
 					}
-
+					
 					if (retValue_token[1].compareTo("1") != 0) {
 						System.out.println("Check Inside QLID IF");
 						flag[1] = "Yes";
@@ -801,7 +838,7 @@ public class RosterServiceImpl {
 					for (int y = 1; y < 9; y++) {
 						if (flag[y].compareTo("Yes") == 0) {
 							final_push = final_push.concat(quote[y]) + " ";
-							counter++;
+//							counter++;
 						}
 					}
 
@@ -814,12 +851,12 @@ public class RosterServiceImpl {
 							+ " Invalid @ " + new Timestamp(System.currentTimeMillis()) + newLine);
 				}
 			}
-			jsobj.put("tr", i - 1);
+			jsobj.put("tr", valid_rows);
 			jsobj.put("eo", counter);
 			
 			//
 
-			f0.write("XXXXXXXXXXXXXXXXXX " + (i - 1) + " Records Processed @  "
+			f0.write("XXXXXXXXXXXXXXXXXX " + (valid_rows) + " Records Processed @  "
 					+ new Timestamp(System.currentTimeMillis()) + "  XXXXXXXXXXXXXXXXXXX");
 			f0.close();
 			workbook.close();
@@ -1934,7 +1971,8 @@ public class RosterServiceImpl {
           System.out.println("inside download");
 
           try {
-                 
+        	  	 XSSFRow rowhead;
+        	  	 int s_n=0;
                  JSONObject jsn = new JSONObject(s);
                  DBConnectionUpd db = new DBConnectionUpd();
                  RosterModel rm = new RosterModel();
@@ -1946,7 +1984,7 @@ public class RosterServiceImpl {
                  String vendor_name = jsn.getString("vname");
                  String query = selectFilterQuery(qlid, cab_number, shift_id, emp_name, vendor_name);
                  // Excel code
-                 int counter = 1;
+                 int counter = 0;
                  XSSFWorkbook xssfWorkbook = null;
                  XSSFRow row = null;
                  XSSFSheet xssfSheet = null;
@@ -1960,30 +1998,44 @@ public class RosterServiceImpl {
 
                  xssfWorkbook = new XSSFWorkbook();
                  xssfSheet = xssfWorkbook.createSheet("new sheet");
+                 //setting view of column
+                 xssfSheet.setColumnWidth(0,1000);
+                 xssfSheet.setColumnWidth(1,3000);
+                 xssfSheet.setColumnWidth(2,3000);
+                 xssfSheet.setColumnWidth(3,6000);
+                 xssfSheet.setColumnWidth(4,4500);
+                 xssfSheet.setColumnWidth(5,6000);
+                 xssfSheet.setColumnWidth(6,3000);
+                 xssfSheet.setColumnWidth(7,3000);
+                 xssfSheet.setColumnWidth(8,6000);
+                 xssfSheet.setColumnWidth(9,3000);
+                 xssfSheet.setColumnWidth(10,3000);
+                 xssfSheet.setColumnWidth(11,4000);
+                 xssfSheet.setColumnWidth(12,6000);
+                 xssfSheet.setColumnWidth(13,4000);
+                 xssfSheet.setColumnWidth(14,2000);
+                 xssfSheet.setColumnWidth(15,3000);
+                 //setting view of column ends
                  DataFormat fmt = xssfWorkbook.createDataFormat();
                  CellStyle textStyle = xssfWorkbook.createCellStyle();
                  textStyle.setDataFormat(fmt.getFormat("@"));
                  xssfSheet.setDefaultColumnStyle(6, textStyle); 
                  
-                 
-                 XSSFRow rowhead = xssfSheet.createRow(0); // Header
 
-                 rowhead.createCell(0).setCellValue("S.N");
-                 rowhead.createCell(1).setCellValue("Route No");
-                 rowhead.createCell(2).setCellValue("QLID");
-                 rowhead.createCell(3).setCellValue("Employee Name");
-                 rowhead.createCell(4).setCellValue("Shift Time");
-                 rowhead.createCell(5).setCellValue("Pick-up Area");
-                 rowhead.createCell(6).setCellValue("Pick Time");
-                 rowhead.createCell(7).setCellValue("Drop at");
-                 rowhead.createCell(8).setCellValue("Vendor Name");
-                 rowhead.createCell(9).setCellValue("Start Date");
-                 rowhead.createCell(10).setCellValue("End Date");
-                 rowhead.createCell(11).setCellValue("Cab Number");
-                 rowhead.createCell(12).setCellValue("Driver Name");
-                 rowhead.createCell(13).setCellValue("Driver Number");
-                 rowhead.createCell(14).setCellValue("Guard Needed");
-                 rowhead.createCell(15).setCellValue("Remarks");
+                //creating font for bold
+ 				XSSFFont font_bold= xssfWorkbook.createFont();
+				font_bold.setBold(true);
+				font_bold.setItalic(false);
+				XSSFCellStyle style = xssfWorkbook.createCellStyle();
+				style.setFont(font_bold);
+				
+				//creating font for underline border
+				XSSFFont font_underline= xssfWorkbook.createFont();
+				font_underline.setBold(false);
+				font_underline.setItalic(false);
+				XSSFCellStyle style1 = xssfWorkbook.createCellStyle();
+				style.setBorderTop(BorderStyle.MEDIUM);
+				style.setBorderBottom(BorderStyle.MEDIUM);
 
                  // excel header created
                  JSONObject jsobj = new JSONObject();
@@ -1992,15 +2044,114 @@ public class RosterServiceImpl {
                               "select Route_No,Emp_Qlid,Shift_Id,Pickup_Time,Cab_No,Guard_Needed,Start_Date,End_Date,Vendor_Name,Driver_Id from ncab_roster_tbl where Emp_Qlid=? and Shift_Id=? and Cab_No=?");
                  PreparedStatement ps2 = con
                               .prepareStatement("select driver_name,d_contact_num from ncab_driver_master_tbl where driver_id=?");
-                 PreparedStatement ps3 = con.prepareStatement(
-                              "select Emp_FName,Emp_MName,Emp_LName,Emp_Pickup_Area from ncab_master_employee_tbl where Emp_Qlid=?");
+                 PreparedStatement ps3;
                  ResultSet rs = ps.executeQuery();
+                 ArrayList<String> route=new ArrayList<String>();
+                 int index=0;
+                 boolean start=true;
                  while (rs.next()) {
                         ps1.setString(1, rs.getString(1));
                         ps1.setString(2, rs.getString(2));
                         ps1.setString(3, rs.getString(3));
+                        if((rs.getString(1).equalsIgnoreCase("intern"))||(rs.getString(1).equalsIgnoreCase("new join")))
+                        {
+                        	 ps3 = con.prepareStatement(
+                                     "select Emp_FName,Emp_MName,Emp_LName,Emp_Pickup_Area from ncab_master_employee_tbl where Roles_Id='5' AND Emp_Mob_Nbr=?");
+                        }
+                        else{
+                        	 ps3 = con.prepareStatement(
+                                     "select Emp_FName,Emp_MName,Emp_LName,Emp_Pickup_Area from ncab_master_employee_tbl where Emp_Qlid=?");
+                        }
                         ResultSet rs1 = ps1.executeQuery();
                         while (rs1.next()) {
+                        	  String route_no=rs1.getString(1).toString();
+                        	  if((route.indexOf(route_no)==-1)&&(!route_no.equals("000"))){
+                        		  System.out.println("route nnnot found"+route_no);
+                        		  s_n=1;
+                        	  	if(!start){
+                        	  		counter++;
+                        	  	//empty row with border starts
+                        	  		row = xssfSheet.createRow( counter);
+                            	  	row.createCell( 0).setCellValue("");
+                            	  	row.getCell(0).setCellStyle(style1);
+                            	  	row.createCell( 1).setCellValue("");
+                            	  	row.getCell(1).setCellStyle(style1);
+                            	  	row.createCell( 2).setCellValue("");
+                            	  	row.getCell(2).setCellStyle(style1);
+                            	  	row.createCell( 3).setCellValue("");
+                            	  	row.getCell(3).setCellStyle(style1);
+                            	  	row.createCell(4).setCellValue("");
+                            	  	row.getCell(4).setCellStyle(style1);
+                            	  	row.createCell( 5).setCellValue("");
+                            	  	row.getCell(5).setCellStyle(style1);
+                            	  	row.createCell( 6).setCellValue("");
+                            	  	row.getCell(6).setCellStyle(style1);
+                            	  	row.createCell( 7).setCellValue("");
+                            	  	row.getCell(7).setCellStyle(style1);
+                            	  	row.createCell( 8).setCellValue("");
+                            	  	row.getCell(8).setCellStyle(style1);
+                            	  	row.createCell( 9).setCellValue("");
+                            	  	row.getCell(9).setCellStyle(style1);
+                            	  	row.createCell( 10).setCellValue("");
+                            	  	row.getCell(10).setCellStyle(style1);
+                            	  	row.createCell( 11).setCellValue("");
+                            	  	row.getCell(11).setCellStyle(style1);
+                            	  	row.createCell( 12).setCellValue("");
+                            	  	row.getCell(12).setCellStyle(style1);
+                            	  	row.createCell( 13).setCellValue("");
+                            	  	row.getCell(13).setCellStyle(style1);
+                            	  	row.createCell( 14).setCellValue("");
+                            	  	row.getCell(14).setCellStyle(style1);
+                            	  	row.createCell( 15).setCellValue("");
+                            	  	row.getCell(15).setCellStyle(style1);
+                            	  	//empty row with border ends
+                        	  	}
+                        	  	start=false;
+                        		
+                    	  		
+                    	  		
+                        	  	System.out.println("header created :- "+counter);
+                        	 // Header starts
+                        	  	 rowhead = xssfSheet.createRow(counter); 
+                                 rowhead.createCell(0).setCellValue("S.N");
+                                 rowhead.getCell(0).setCellStyle(style);
+                                 rowhead.createCell(1).setCellValue("Route No");
+                                 rowhead.getCell(1).setCellStyle(style);
+                                 rowhead.createCell(2).setCellValue("QLID");
+                                 rowhead.getCell(2).setCellStyle(style);
+                                 rowhead.createCell(3).setCellValue("Employee Name");
+                                 rowhead.getCell(3).setCellStyle(style);
+                                 rowhead.createCell(4).setCellValue("Shift Time");
+                                 rowhead.getCell(4).setCellStyle(style);
+                                 rowhead.createCell(5).setCellValue("Pick-up Area");
+                                 rowhead.getCell(5).setCellStyle(style);
+                                 rowhead.createCell(6).setCellValue("Pick Time");
+                                 rowhead.getCell(6).setCellStyle(style);
+                                 rowhead.createCell(7).setCellValue("Drop at");
+                                 rowhead.getCell(7).setCellStyle(style);
+                                 rowhead.createCell(8).setCellValue("Vendor Name");
+                                 rowhead.getCell(8).setCellStyle(style);
+                                 rowhead.createCell(9).setCellValue("Start Date");
+                                 rowhead.getCell(9).setCellStyle(style);
+                                 rowhead.createCell(10).setCellValue("End Date");
+                                 rowhead.getCell(10).setCellStyle(style);
+                                 rowhead.createCell(11).setCellValue("Cab Number");
+                                 rowhead.getCell(11).setCellStyle(style);
+                                 rowhead.createCell(12).setCellValue("Driver Name");
+                                 rowhead.getCell(12).setCellStyle(style);
+                                 rowhead.createCell(13).setCellValue("Driver Number");
+                                 rowhead.getCell(13).setCellStyle(style);
+                                 rowhead.createCell(14).setCellValue("Guard Needed");
+                                 rowhead.getCell(14).setCellStyle(style);
+                                 rowhead.createCell(15).setCellValue("Remarks");
+                                 rowhead.getCell(15).setCellStyle(style);
+                        	  	 route.add(route_no);
+                        	  	index++;
+                        	  	counter++;
+                        	 // Header ends
+                        	  }
+                        	 
+                        	  //data filling in a row starts
                               rm.setRoute_no(rs1.getString(1));
                               rm.setQlid(rs1.getString(2));
                               rm.setShift_id(rs1.getString(3));
@@ -2019,7 +2170,13 @@ public class RosterServiceImpl {
                               rm.setDriver_name(rs2.getString(1));
                               rm.setDriver_phone_number(rs2.getString(2));
                         }
+                        //checking if intern
+                        if((rs.getString(1).equalsIgnoreCase("intern"))||(rs.getString(1).equalsIgnoreCase("new join"))){
+                        ps3.setString(1, rs.getString(4));
+                        }
+                        else{
                         ps3.setString(1, rs.getString(1));
+                        }
 
                         // fetching emp data
                         ResultSet rs3 = ps3.executeQuery();
@@ -2030,7 +2187,7 @@ public class RosterServiceImpl {
                         rm.setPickup_area(rs3.getString(4));
                         if (!(rm.getRoute_no().equals("000"))) {
                               row = xssfSheet.createRow( counter);
-                              row.createCell( 0).setCellValue(counter);
+                              row.createCell( 0).setCellValue(s_n);
                               int i = Integer.parseInt(rm.getRoute_no());
                                row.createCell( 1).setCellValue(String.format("%03d", i));
                                row.createCell( 2).setCellValue(rm.getQlid());
@@ -2070,6 +2227,7 @@ public class RosterServiceImpl {
                                row.createCell( 14).setCellValue(rm.getGuard_required());
                                row.createCell( 15).setCellValue(rm.getRemarks());
                               counter++;
+                              s_n++;
                               System.out.println("row Added :- " + counter);
                         }
                  }
@@ -2115,8 +2273,7 @@ public class RosterServiceImpl {
 System.out.println("error msg download data:- "+msg);
           return msg;
     }
-
-
+		
 public JSONArray getStartandEndDate(String strdiv) {
 		
 		long millis = System.currentTimeMillis();
