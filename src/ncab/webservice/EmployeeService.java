@@ -365,7 +365,11 @@ public class EmployeeService {
 		JSONObject jsObj = new JSONObject();
 		EmployeeServiceImpl	empSrvImpl = new EmployeeServiceImpl();
 		
-		if(ucb.getPassword().toUpperCase().matches(ucb.getQlid().toUpperCase())) {
+//		System.out.println("\n\nForgot Password------------");
+//		System.out.println(ucb.getPassword().toUpperCase());
+//		System.out.println(ucb.getQlid().toUpperCase().trim());
+//		System.out.println(ucb.getPassword().toUpperCase().matches(ucb.getQlid().toUpperCase().trim()));
+		if(ucb.getPassword().toUpperCase().matches(ucb.getQlid().toUpperCase().trim())) {
 			return (new JSONObject())
 					.put("success", false)
 					.put("message", "Password cannot have QLID!")
@@ -611,7 +615,7 @@ public class EmployeeService {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public String newAccSetPassword(UserCredBean ucb) {
-		EmployeeServiceImpl	empSrvImpl = new EmployeeServiceImpl();		
+		EmployeeServiceImpl	empSrvImpl = new EmployeeServiceImpl();
 		if(ucb.getPassword().toUpperCase().matches(ucb.getQlid().toUpperCase())) {
 			return (new JSONObject())
 					.put("success", false)
