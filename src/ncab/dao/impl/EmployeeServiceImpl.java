@@ -1850,7 +1850,7 @@ public class EmployeeServiceImpl {
 		      
 			Connection connection = (new DBConnectionUpd()).getConnection();
 			PreparedStatement ps = connection.prepareStatement(
-				"INSERT INTO ncabdb.ncab_password_token_tbl("
+				"INSERT INTO ncab_password_token_tbl("
 				+ "Pwd_Token,Pwd_Token_Expiry, Emp_Qlid, Pwd_Token_Status,Pwd_Token_Created_By,"
 				+ "Pwd_Token_Creation_Date,Pwd_Token_Last_Updated_By,Pwd_Token_Last_Update_Date,"
 				+ "Account_Type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'O')");

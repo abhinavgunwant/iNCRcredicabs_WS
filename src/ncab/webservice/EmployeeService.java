@@ -312,21 +312,11 @@ public class EmployeeService {
 			String recepient = ucb.getQlid()+"@ncr.com";
 			String subject="iNCRediCabs: Link to reset password";
 			String message = 
-				"<html>"
-				+ "	<head>"
-				+ "		<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css\">" 
-				+ "  	<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js\"></script>"
-				+ "  	<script src=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js\"></script>"
-				+ "	</head>"
-				+ "	<body>"
-				+ "		<div class=\"container col-sm-6 col-sm-ofset-3\">"
-				+ "			<h1 class=\"text-center\">iNCRediCabs</h1>"
-				+ "			<p>Visit the url below to reset your password:</p><br />"
-				+ "			<a href=\""+url+"\">Click Here!</a><br />"
-				+ "			<strong>Note:</strong> Supported Browsers: Chrome(ver: 50+) and Firefox(ver: 40+)"
-				+ "		</div>"
-				+ "	</body>"
-				+ "</html>";
+				"<html><head><style>#link-box{padding: 10px 0px 10px 0px;margin-top: 10px; background: #dddddd;}" + 
+				"code{margin: 0px 10px 0px 10px;}</style></head><body><div class=\"col-sm-8 col-sm-offset-2\">" + 
+				"<h1 class=\"text-center\">iNCRediCabs</h1><p>Visit the url below to reset your password:</p>" + 
+				"<strong>Note:</strong>Copy the url below and paste in supported browser: Chrome(ver: 50+) or Firefox(ver: 40+)" + 
+				"<div id=\"link-box\"><code>"+url+"</code></div></div></body></html>";
 			if(empSrvImpl.sendMessage(recepient, subject, message)) {
 				jsObj.put("success", true)
 					.put("message", 
@@ -346,7 +336,7 @@ public class EmployeeService {
 				.put("message", "An error occured!, please try after some time....");
 
 			empSrvImpl.insertforgotpasswordDetails(ucb.getQlid(), token);
-			System.out.println(jsonResponse.get("status"));
+//			System.out.println(jsonResponse.get("status"));
 
 			return jsObj.toString();
 		}
@@ -691,21 +681,11 @@ public class EmployeeService {
 			String recepient = qlid+"@ncr.com";
 			String subject = "iNCRediCabs: Link to set password.....";
 			String messageBody = 
-				"<html>"
-				+ "	<head>"
-				+ "		<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css\">" 
-				+ "  	<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js\"></script>"
-				+ "  	<script src=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js\"></script>"
-				+ "	</head>"
-				+ "	<body>"
-				+ "		<div class=\"container col-sm-6 col-sm-ofset-3\">"
-				+ "			<h1 class=\"text-center\">iNCRediCabs</h1>"
-				+ "			<p>Visit the url below to set your password:</p><br />"
-				+ "			<a href=\""+url+"\">Click Here</a>"
-				+ "			<strong>Note:</strong> Supported Browsers: Chrome(ver: 50+) and Firefox(ver: 40+)"
-				+ "		</div>"
-				+ "	</body>"
-				+ "</html>";
+				"<html><head><style>#link-box{padding: 10px 0px 10px 0px;margin-top: 10px; background: #dddddd;}" + 
+				"code{margin: 0px 10px 0px 10px;}</style></head><body><div class=\"col-sm-8 col-sm-offset-2\">" + 
+				"<h1 class=\"text-center\">iNCRediCabs</h1><p>Visit the url below to set your password:</p>" + 
+				"<strong>Note:</strong>Copy the url below and paste in supported browser: Chrome(ver: 50+) or Firefox(ver: 40+)" + 
+				"<div id=\"link-box\"><code>"+url+"</code></div></div></body></html>";
 	
 			if(empSrvImpl.sendMessage(recepient, subject, messageBody)) {
 				jsObj.put("success", true)
