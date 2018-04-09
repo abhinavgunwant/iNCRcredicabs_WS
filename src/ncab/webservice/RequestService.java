@@ -337,7 +337,7 @@ public class RequestService {
 	                    System.out.println("out"+push_Level1_token);
                     sendMailService.sendEmailMessage(
                             "donotreply@ncr.com",                                                              //from
-                            "guppul@gmail.com",                   //to  Transport Manger ID
+                            "hanif.mohd@ncr.com",                   //to  Transport Manger ID
                             Mgr_QLID+"@ncr.com","",                                                              //cc
                             "NCR cabs | Request generated for "+Shift_Name+" by "+Employee_Name+"("+Emp_QLID+")", //subject
                             "<center>" +
@@ -359,7 +359,7 @@ public class RequestService {
                             " 0in 0in 0in 0in'>" +
                             "<tbody><tr style='mso-yfti-irow:0;mso-yfti-firstrow:yes;mso-yfti-lastrow:yes'>" +
                             "<td style='background:#E3E3E3;padding:3.0pt 3.0pt 3.0pt 3.0pt'>" +
-                            "<table class='MsoNormalTable' border='0' cellspacing='0' cellpadding='0' width='100%' style='width:100.0%;mso-cellspacing:0in;mso-yfti-tbllook:" +
+                            "<table class='MsoNormalTable' border='0' cellspacing='0' cellfpadding='0' width='100%' style='width:100.0%;mso-cellspacing:0in;mso-yfti-tbllook:" +
                             " 1184;mso-padding-alt:0in 0in 0in 0in'>" +
                             " <tbody><tr style='mso-yfti-irow:0;mso-yfti-firstrow:yes;mso-yfti-lastrow:yes'>" +
                             "  <td style='padding:0in 0in 0in 0in'></td>" +
@@ -377,8 +377,8 @@ public class RequestService {
                             " <tr style='mso-yfti-irow:3'>" +
                             "   <td width='1%' valign='top' style='width:1.0%;padding:1.8pt 1.8pt 1.8pt 1.8pt'></td>" +
                             "   <td width='67%' valign='top' style='width:67.0%;padding:1.8pt 1.8pt 1.8pt 1.8pt'>" +
-                            "   <p><span class='bodytext1'><span style='font-size:8.5pt'>The cab request by <b>"+Employee_Name+"("+Emp_QLID+")"+"</b> for &quot;Cab Request Id:&quot; <b>"+result+ " </b>has been forwarded to the Approver: <b>"+Employee_Manager_1_Name+"("+Mgr_QLID+")"+"</b>  for approval. Once the request is approved, it will be forwarded to the" +
-                            "   concerned person.</span></span><span style='font-size:8.5pt;font-family:&quot;Verdana&quot;,sans-serif;" +
+                            "   <p><span class='bodytext1'><span style='font-size:8.5pt'>The cab request by <b>"+Employee_Name+"("+Emp_QLID+")"+"</b> for &quot;Cab Request Id:&quot; <b>"+result+ " </b>has been forwarded to the Approver: <b>"+Employee_Manager_1_Name+"("+Mgr_QLID+")"+"</b>  for approval. Once the request is approved, you will recieve a mail." +
+                            "   </span></span><span style='font-size:8.5pt;font-family:&quot;Verdana&quot;,sans-serif;" +
                             "   color:black'><br>" +
                             "   <span class='bodytext1'>Details about the cab request are below:</span><br>" +
                             "   <span class='bodytext1'>From: <b>"+date+"</b></span><br>" +
@@ -411,7 +411,7 @@ public class RequestService {
 					
                     sendMailService.sendEmailMessage(
                                                     "donotreply@ncr.com",                                                              //from
-                                                    "successfulmanrb@gmail.com",                   //to  Transport Manger ID
+                                                    "hanif.mohd@ncr.com",                   //to  Transport Manger ID
                                                     Mgr_QLID+"@ncr.com",Level2_mgr+"@ncr.com",                                                        //cc
                                                     "NCR cabs | Request generated for "+Shift_Name+" by "+Employee_Name+"("+Emp_QLID+")", //subject
                                                     "<center>" +
@@ -451,8 +451,8 @@ public class RequestService {
                                                     " <tr style='mso-yfti-irow:3'>" +
                                                     "   <td width='1%' valign='top' style='width:1.0%;padding:1.8pt 1.8pt 1.8pt 1.8pt'></td>" +
                                                     "   <td width='67%' valign='top' style='width:67.0%;padding:1.8pt 1.8pt 1.8pt 1.8pt'>" +
-                                                    "   <p><span class='bodytext1'><span style='font-size:8.5pt'>The cab request by <b>"+Employee_Name+"("+Emp_QLID+")"+"</b> for &quot;Cab Request Id:&quot; <b>"+result+ " </b>has been forwarded to the Approvers: <b>"+Employee_Manager_1_Name+"("+Mgr_QLID+")"+" and "+Employee_Manager_2_Name+"("+Level2_mgr+")"+"</b>  for approval. Once the request is approved, it will be forwarded to the" +
-                                                    "   concerned person.</span></span><span style='font-size:8.5pt;font-family:&quot;Verdana&quot;,sans-serif;" +
+                                                    "   <p><span class='bodytext1'><span style='font-size:8.5pt'>The cab request by <b>"+Employee_Name+"("+Emp_QLID+")"+"</b> for &quot;Cab Request Id:&quot; <b>"+result+ " </b>has been forwarded to the Approvers: <b>"+Employee_Manager_1_Name+"("+Mgr_QLID+")"+" and "+Employee_Manager_2_Name+"("+Level2_mgr+")"+"</b>  for approval. Once the request is approved, you will recieve a mail." +
+                                                    "   </span></span><span style='font-size:8.5pt;font-family:&quot;Verdana&quot;,sans-serif;" +
                                                     "   color:black'><br>" +
                                                     "   <span class='bodytext1'>Details about the cab request are below:</span><br>" +
                                                     "   <span class='bodytext1'>From: <b>"+date+"</b></span><br>" +
