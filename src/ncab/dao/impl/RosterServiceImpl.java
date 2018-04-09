@@ -711,12 +711,20 @@ public class RosterServiceImpl {
 				System.out.println("Import rows " + i);
 				connection.setAutoCommit(false);
 
-				if (rn_from_excel.equals(Route_No)) // undo this update if the
-					// insert is a failure
+				//
+				
+				String rid = "";
+				//
+				
+				if (rn_from_excel.equals(Route_No)) // undo this update if the insert is a failure
 					try {
+						PreparedStatement retrieve_rid = connection.prepareStatement("select Roster_Id from ncab_roster_tbl where Emp_Qlid = '"+empid+"' and Shift_Id <> 4 and Emp_Status = 'active' and '"+current_date+"' between Start_Date and End_Date");
+						ResultSet rsrid = retrieve_rid.executeQuery();
+						rsrid.next();
+						rid = rsrid.getString(1);
 						PreparedStatement update = connection.prepareStatement(
 								"update ncab_roster_tbl set Emp_Status = 'inactive' where Emp_Qlid = '" + empid
-										+ "' and Route_No = '" + rn_from_excel + "' and '" + current_date
+										+ "' and Shift_Id <> 4 and  '" + current_date
 										+ "' between Start_Date and End_Date;");
 						update.executeUpdate();
 					} catch (Exception e) {
@@ -742,7 +750,8 @@ public class RosterServiceImpl {
 
 				cs.execute();
 				String retValue = cs.getString(1);
-
+				
+				
 				System.out.println(retValue + "Point");
 				String[] flag = { "FAILURE", "NO", "NO", "NO", "No", "No", "No", "No" ,"No"};
 				String[] quote = { "FAILURE", "QLID", "Shift_Timing", "Cab_No", "Route No has no Vacancy",
@@ -755,7 +764,7 @@ public class RosterServiceImpl {
 					try {
 						PreparedStatement update = connection
 								.prepareStatement("update ncab_roster_tbl set Emp_Status = 'active' where Emp_Qlid = '"
-										+ empid + "' and Route_No = '" + rn_from_excel + "' and '" + current_date
+										+ empid + "' and Roster_Id = '"+rid+"' and '" + current_date
 										+ "' between Start_Date and End_Date;");
 						update.executeUpdate();
 						System.out.println("Update undone");
@@ -834,11 +843,11 @@ public class RosterServiceImpl {
 						System.out.println("Duplicate Record");
 						flag[8] = "Yes";
 					}
-					
+					int counter2 = 0;
 					for (int y = 1; y < 9; y++) {
 						if (flag[y].compareTo("Yes") == 0) {
 							final_push = final_push.concat(quote[y]) + " ";
-//							counter++;
+							counter2++;
 						}
 					}
 
@@ -847,7 +856,7 @@ public class RosterServiceImpl {
 
 					empid_arr[i - 1] = "Error";
 					cab_arr[i - 1] = "Error";
-					f0.write("Error for " + i + " record" + " Reason for Error(" + counter + "):- " + final_push
+					f0.write("Error for " + i + " record" + " Reason for Error(" + counter2 + "):- " + final_push
 							+ " Invalid @ " + new Timestamp(System.currentTimeMillis()) + newLine);
 				}
 			}
