@@ -1314,6 +1314,9 @@ public class RosterServiceImpl {
 				ps1.setString(14, pickup);
 				
 				flag += ps1.executeUpdate();
+				PreparedStatement ps2 = connection.prepareStatement("UPDATE NCAB_UNSCHEDULE_RQST_TBL SET allocated = '1' WHERE emp_qlid = ? AND Rqst_Date_Time LIKE (SELECT CONCAT (CURDATE(),'%'))");
+				ps1.setString(1, qlid);
+				ps2.executeUpdate();
 				System.out.println("------query fired");
 
 			}
@@ -1332,7 +1335,8 @@ public class RosterServiceImpl {
 		}
 		return flag;
 	}
-	
+
+
 	public JSONArray showVendor() {
 		DBConnectionUpd dbconnection = new DBConnectionUpd();
 		Connection connection = dbconnection.getConnection();
@@ -1830,8 +1834,6 @@ public class RosterServiceImpl {
 		System.out.println(jsobj);
 		return jsobj;
 	}
-
-
 	public JSONArray getcablist(String s) {
 		DBConnectionUpd db = new DBConnectionUpd();
 		Connection connection = db.getConnection();
@@ -1840,6 +1842,7 @@ public class RosterServiceImpl {
 		java.sql.Date date = new java.sql.Date(millis);
 		String current_date = date.toString();
 		System.out.println("String s: "+s);
+		String shift = null, shiftid;
 		try {
 			JSONObject json = new JSONObject(s);
 			System.out.println("emp edit json: "+json);
@@ -1866,8 +1869,26 @@ public class RosterServiceImpl {
 				int vacancy = Integer.parseInt(ctrs2.getString(1)) - Integer.parseInt(ctrs1.getString(1));
 				if (vacancy >= 1) {
 					JSONObject js = new JSONObject();
-					js.put("s_id", rs.getString(2));
+					shiftid=rs.getString(2);
+					if (shiftid.contains("1")) {
+					      shift = "07:00 AM - 04:00 PM";
+					    }
+					    else if (shiftid.contains("2")) {
+					      shift = "10:00 AM - 07:00 PM";
+					    }
+					    else if (shiftid.contains("3")) {
+					      shift = "12:00 PM - 09:00 PM";
+					    }
+					    else if (shiftid.contains("4")) {
+					      shift = "Unscheduled";
+					    }
+					    else if (shiftid.contains("5")) {
+					      shift = "02:00 PM - 11:00 PM";
+					    }
+					js.put("s_id", shift);
+					//js.put("s_id", rs.getString(2));
 					js.put("c_n", rs.getString(1));
+					System.out.println("shift in bababab:::::::"+shift);
 					jsarr.put(js);
 				}
 			}
