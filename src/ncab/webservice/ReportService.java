@@ -486,6 +486,18 @@ public class ReportService {
 	}
 
 
+	@GET
+    @Path("/checkinoutDefault")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response checkinout_default() throws SQLException, ClassNotFoundException
+    {
+          ReportServiceImpl reportserviceimpl=new ReportServiceImpl();
+          JSONArray jsonarray=new JSONArray();
+           jsonarray=reportserviceimpl.checkinout_defaultReport();
+          System.out.print(jsonarray);
+          return Response.status(200).type("application/json").entity(jsonarray.toString()).build();
+    }
+
 
 
 }
