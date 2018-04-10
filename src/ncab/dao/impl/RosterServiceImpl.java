@@ -2069,7 +2069,7 @@ public class RosterServiceImpl {
                  JSONObject jsobj = new JSONObject();
                  PreparedStatement ps = con.prepareStatement(query);
                  PreparedStatement ps1 = con.prepareStatement(
-                              "select Route_No,Emp_Qlid,Shift_Id,Pickup_Time,Cab_No,Guard_Needed,Start_Date,End_Date,Vendor_Name,Driver_Id from ncab_roster_tbl where Emp_Qlid=? and Shift_Id=? and Cab_No=?");
+                              "select Route_No,Emp_Qlid,Shift_Id,Pickup_Time,Cab_No,Guard_Needed,Start_Date,End_Date,Vendor_Name,Driver_Id,Remarks from ncab_roster_tbl where Emp_Qlid=? and Shift_Id=? and Cab_No=?");
                  PreparedStatement ps2 = con
                               .prepareStatement("select driver_name,d_contact_num from ncab_driver_master_tbl where driver_id=?");
                  PreparedStatement ps3;
@@ -2190,6 +2190,8 @@ public class RosterServiceImpl {
                               rm.setEnd_time(rs1.getString(8));
                               rm.setVendor_name(rs1.getString(9));
                               rm.setDriver_id(rs1.getString(10));
+                              rm.setRemarks(rs1.getString(11));
+                              
                         }
                         // fetching driver data
                         ps2.setInt(1, Integer.parseInt(rm.getDriver_id().toString()));
