@@ -1375,68 +1375,87 @@ public class RosterServiceImpl {
 		JSONArray jarr = new JSONArray();
 		DBConnectionUpd dbconnection = new DBConnectionUpd();
 		Connection connection = dbconnection.getConnection();
-		String Fname = "", Mname = "", Lname = "", parea = "", ph = "", route = "";
+		String Fname = "", Mname = "", Lname = "", parea = "", ph = "", route = "",rote="";
 		String qlid = json.getString("qlid");
-		String month = json.getString("date");
-
+		String smonth = json.getString("sdate");
+		String emonth = json.getString("edate");
 		JSONObject json1 = new JSONObject();
 		System.out.println("inside getEmpDetails");
 		try {
-			System.out.println("inside try before query");
-			PreparedStatement ps1 = connection.prepareStatement(
-					"select Route_No from ncab_roster_tbl where Emp_Qlid = ? and  ? Between Start_Date and End_Date and Emp_Status='active'");
-			ps1.setString(1, qlid);
-			ps1.setString(2, month);
-			ResultSet rs1 = ps1.executeQuery();
-			while (rs1.next()) {
-				route = "" + rs1.getString(1);
-				if (route.isEmpty()) {
-					route = " ";
-				} else {
-					route = "RN" + route;
-				}
+			   System.out.println("inside try before query");
+			   PreparedStatement ps1 = connection.prepareStatement(
+							"select Route_No from ncab_roster_tbl where Emp_Qlid = ? and  ? Between Start_Date and End_Date and Emp_Status='active'");
+			   ps1.setString(1, qlid);
+			   ps1.setString(2, smonth);
+			   ResultSet rs1 = ps1.executeQuery();
+			   while (rs1.next()) {
+					 route = "" + rs1.getString(1);
+					 System.out.println("Start Route---------: "+route);
+					 if (route.isEmpty()) {
+							route = " ";
+					 } else {
+							route = "RN" + route;
+					 }
 
-			}
+			   }
+			   System.out.println("Start Route: "+route);
+			   
+			   PreparedStatement ps2 = connection.prepareStatement(
+							"select Route_No from ncab_roster_tbl where Emp_Qlid = ? and  ? Between Start_Date and End_Date and Emp_Status='active'");
+			   ps2.setString(1, qlid);
+			   ps2.setString(2, emonth);
+			   ResultSet rs2 = ps2.executeQuery();
+			   while (rs2.next()) {
+					 route = "" + rs2.getString(1);
+					 System.out.println("End Route--------: "+route);
+					 if (route.isEmpty()) {
+							route = " ";
+					 } else {
+							route = "RN" + route;
+					 }
 
-			json1.put("route", route);
-			jarr.put(json1);
-			System.out.println(json1.getString("route"));
-			PreparedStatement ps = connection.prepareStatement(
-					"select Emp_FName, Emp_MName, Emp_LName, Emp_Pickup_Area, Emp_Mob_Nbr  from ncab_master_employee_tbl where Emp_Qlid = ?");
-			ps.setString(1, qlid);
-			ResultSet rs = ps.executeQuery();
-			System.out.println("Inside try after query");
-			while (rs.next()) {
-				// JSONObject json1 = new JSONObject();
-				Fname = rs.getString(1);
-				Mname = rs.getString(2);
-				Lname = rs.getString(3);
-				parea = rs.getString(4);
-				ph = rs.getString(5);
-				json1.put("qlid", qlid);
-				json1.put("fname", Fname);
-				json1.put("mname", Mname);
-				json1.put("lname", Lname);
-				json1.put("parea", parea);
-				json1.put("ph", ph);
-				jarr.put(json1);
-			}
-			System.out.println(json1.getString("route"));
+			   }
+			   System.out.println("End Route: "+route);
+			   //route+=rote;
+			   json1.put("route", route);
+			   jarr.put(json1);
+			   System.out.println(json1.getString("route"));
+			   PreparedStatement ps = connection.prepareStatement(
+							"select Emp_FName, Emp_MName, Emp_LName, Emp_Pickup_Area, Emp_Mob_Nbr  from ncab_master_employee_tbl where Emp_Qlid = ?");
+			   ps.setString(1, qlid);
+			   ResultSet rs = ps.executeQuery();
+			   System.out.println("Inside try after query");
+			   while (rs.next()) {
+					 // JSONObject json1 = new JSONObject();
+					 Fname = rs.getString(1);
+					 Mname = rs.getString(2);
+					 Lname = rs.getString(3);
+					 parea = rs.getString(4);
+					 ph = rs.getString(5);
+					 json1.put("qlid", qlid);
+					 json1.put("fname", Fname);
+					 json1.put("mname", Mname);
+					 json1.put("lname", Lname);
+					 json1.put("parea", parea);
+					 json1.put("ph", ph);
+					 jarr.put(json1);
+			   }
+			   System.out.println(json1.getString("route"));
 
 		} catch (Exception e) {
-			System.out.println("error in imp" + e.getMessage());
+			   System.out.println("error in imp:  " + e.getMessage());
 		} finally {
-			if (connection != null) {
-				try {
-					connection.close();
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
-			}
+			   if (connection != null) {
+					 try {
+							connection.close();
+					 } catch (SQLException e) {
+							e.printStackTrace();
+					 }
+			   }
 		}
 		return json1;
 
-	}
+  }
 
 	public JSONArray getQlid() {
 
