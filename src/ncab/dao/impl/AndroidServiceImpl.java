@@ -212,94 +212,245 @@ public class AndroidServiceImpl {
            }
 */              
               
-              public JSONObject postCheckInDetails(String Emp_Qlid,String Route_No,String date,String Check_in_Time,String Trip_Type,String Cab_Type) {
-                  // TODO Auto-generated method stub
-                  int x=0;
-                  DBConnectionUpd database= new DBConnectionUpd();
-                  JSONObject ob=new JSONObject();
-                  System.out.println("Check1");
-                  Connection connection = (Connection) database.getConnection();        
-                  try {
-                     System.out.println("Check2");
-                       String query_check="Select * from ncab_emp_checkin_tbl where Emp_Qlid=? AND Trip_Date=? AND Trip_Type=?";
-                       PreparedStatement ps_check = connection.prepareStatement(query_check);
-                         ps_check.setString(1,Emp_Qlid);
-                         ps_check.setString(2,date);
-                         ps_check.setString(3,Trip_Type );
-                         ResultSet rs=ps_check.executeQuery();
-                         System.out.println(rs);
-                         if(rs.next() )
-                         {
-                                  System.out.println("Check3");
-                             ob.put("Check_In","ALREADY");
-                             return new JSONObject().put("result",ob);
-                          }
-                         else
-                         {
-                           String query = "INSERT INTO ncab_emp_checkin_tbl(Emp_Qlid,Route_No,Trip_Date,Check_in_Time,Trip_Type,Cab_Type) VALUES(?,?,?,?,?,?);";
-                             PreparedStatement ps = connection.prepareStatement(query);
-                             ps.setString(1,Emp_Qlid);
-                             ps.setString(2,Route_No);
-                             ps.setString(3,date);
-                             ps.setString(4,Check_in_Time);
-                             ps.setString(5,Trip_Type);
-                             ps.setString(6,Cab_Type);
-                             //     ps.setString(5, Pickup_Time );
-                             x = ps.executeUpdate();
-                             if(x==1){
-                                    ob.put("Check_In","Done");
-                                    return new JSONObject().put("result",ob);
-                             }
-                             
-                         }                         connection.close();
+public JSONObject postCheckInDetails(String Emp_Qlid,String Route_No,String date,String Check_in_Time,String Trip_Type,String Cab_Type,String QRcode) 
+{
+    // TODO Auto-generated method stub
+    int x=0;
+    DBConnectionUpd database= new DBConnectionUpd();
+    JSONObject ob=new JSONObject();
+    System.out.println("Check1");
+    System.out.println("Hello");
+    Connection connection = (Connection) database.getConnection();        
+    try {
+           System.out.println("Hello");
+           if(QRcode.equals("NULL")||QRcode.equals("")||QRcode.equals("null"))
+           {
+                   System.out.println("Check2");
+               String query_check="Select * from ncab_emp_checkin_tbl where Emp_Qlid=? AND Trip_Date=? AND Trip_Type=?";
+               PreparedStatement ps_check = connection.prepareStatement(query_check);
+               ps_check.setString(1,Emp_Qlid);
+               ps_check.setString(2,date);
+               ps_check.setString(3,Trip_Type );
+               ResultSet rs=ps_check.executeQuery();
+               System.out.println(rs);
+               if(rs.next() )
+               {
+                        System.out.println("Check3");
+                   ob.put("Check_In","ALREADY");
+                   return new JSONObject().put("result",ob);
+                }
+               else
+               {
+                     String query = "INSERT INTO ncab_emp_checkin_tbl(Emp_Qlid,Route_No,Trip_Date,Check_in_Time,Trip_Type,Cab_Type) VALUES(?,?,?,?,?,?);";
+                   PreparedStatement ps = connection.prepareStatement(query);
+                   ps.setString(1,Emp_Qlid);
+                   ps.setString(2,Route_No);
+                   ps.setString(3,date);
+                   ps.setString(4,Check_in_Time);
+                   ps.setString(5,Trip_Type);
+                   ps.setString(6,Cab_Type);
+                   //     ps.setString(5, Pickup_Time );
+                   x = ps.executeUpdate();
+                   if(x==1){
+                          ob.put("Check_In","Done");
+                          return new JSONObject().put("result",ob);
+                   }
+                }
+                   
 
-                  } catch (Exception e) {
-                         try {
-                               throw e;
-                         } catch (Exception e1) {
-                               // TODO Auto-generated catch block
-                               e1.printStackTrace();
-                         }
-                  }
-
-                  return null;
-           }
+                  } 
+              else
+              {
+                    String query_check_QRcode="SELECT * FROM  ncab_roster_tbl WHERE Cab_No=? AND Emp_Qlid=?;";
+                  PreparedStatement ps_check_QRcode = connection.prepareStatement(query_check_QRcode);
+                  ps_check_QRcode.setString(1, QRcode);
+                  ps_check_QRcode.setString(2,Emp_Qlid);
+                  System.out.println(QRcode);
+                  ResultSet rscheck_QRcode=ps_check_QRcode.executeQuery();
+                Boolean check_QR=rscheck_QRcode.next();
+                System.out.println(check_QR);     
+                    if(check_QR)
+                {
+                   
+                   System.out.println("Check2");
+               String query_check="Select * from ncab_emp_checkin_tbl where Emp_Qlid=? AND Trip_Date=? AND Trip_Type=?";
+               PreparedStatement ps_check = connection.prepareStatement(query_check);
+               ps_check.setString(1,Emp_Qlid);
+               ps_check.setString(2,date);
+               ps_check.setString(3,Trip_Type );
+               ResultSet rs=ps_check.executeQuery();
+               System.out.println(rs);
+               if(rs.next() )
+               {
+                        System.out.println("Check3");
+                   ob.put("Check_In","ALREADY");
+                   return new JSONObject().put("result",ob);
+                }
+               else
+               {
+                     String query = "INSERT INTO ncab_emp_checkin_tbl(Emp_Qlid,Route_No,Trip_Date,Check_in_Time,Trip_Type,Cab_Type) VALUES(?,?,?,?,?,?);";
+                   PreparedStatement ps = connection.prepareStatement(query);
+                   ps.setString(1,Emp_Qlid);
+                   ps.setString(2,Route_No);
+                   ps.setString(3,date);
+                   ps.setString(4,Check_in_Time);
+                   ps.setString(5,Trip_Type);
+                   ps.setString(6,Cab_Type);
+                   //     ps.setString(5, Pickup_Time );
+                   x = ps.executeUpdate();
+                   if(x==1){
+                          ob.put("Check_In","Done");
+                          return new JSONObject().put("result",ob);
+                   }
+                } 
+                 }       
+                 else
+                {
+                    System.out.println("Check4");
+                ob.put("Check_In","INCORRECT QRcode");
+                return new JSONObject().put("result",ob);
               
-              
-              public JSONObject postCheckOutDetails(String Emp_Qlid,String date,String Check_out_Time,String Trip_Type) {
-                  // TODO Auto-generated method stub
-                  int x=0;
-                  DBConnectionUpd database= new DBConnectionUpd();
-                  Connection connection = (Connection) database.getConnection();
-                  try {
+                }
+                                     
+             
+          }
+           connection.close();
 
-                         String query = "UPDATE ncab_emp_checkin_tbl SET Check_out_Time=? WHERE Emp_Qlid=? AND Trip_Date=? AND Trip_Type=?;";
-                         PreparedStatement ps = connection.prepareStatement(query);
-                         ps.setString(1,Check_out_Time);
-                         ps.setString(2,Emp_Qlid);
-                         ps.setString(3,date);
-                         ps.setString(4,Trip_Type);
-                         x = ps.executeUpdate();
-                         System.out.println("Check1");
-                         if(x==1){
-                         }
-
-                         connection.close();
-
-                  } catch (Exception e) {
-                         try {
-                               throw e;
-                         } catch (Exception e1) {
-                               // TODO Auto-generated catch block
-                               e1.printStackTrace();
-                         }
-                  }
-                  JSONObject ob=new JSONObject();
-
-                  ob.put("Emp_Qlid", Emp_Qlid);
-                  return new JSONObject().put("result",ob);
-
+    } catch (Exception e) {
+           try {
+                 throw e;
+           } catch (Exception e1) {
+                 // TODO Auto-generated catch block
+                 e1.printStackTrace();
            }
+    }
+
+    return null;
+}
+public JSONObject postCheckOutDetails(String Emp_Qlid,String date,String Check_out_Time,String Trip_Type,String QRcode) {
+    // TODO Auto-generated method stub
+    int x=0;
+    DBConnectionUpd database= new DBConnectionUpd();
+    Connection connection = (Connection) database.getConnection();
+    JSONObject ob=new JSONObject();    	 
+    try {
+          if(QRcode.equals("NULL")||QRcode.equals("")||QRcode.equals("null"))
+              {
+                String query_check="Select Check_out_time from ncab_emp_checkin_tbl where Emp_Qlid=? AND Trip_Date=? AND Trip_Type=?";
+            PreparedStatement ps_check = connection.prepareStatement(query_check);
+            ps_check.setString(1,Emp_Qlid);
+            ps_check.setString(2,date);
+            ps_check.setString(3,Trip_Type );
+            ResultSet rs=ps_check.executeQuery();
+           // Boolean check_record=rs.next();
+            String temp="";
+            while(rs.next())
+            {
+             temp=rs.getString(1);	
+            }
+            System.out.println("temp"+temp);
+            //System.out.println(check_record);                   
+            if(temp!=null)
+            {
+                   System.out.println("Check3");
+                 ob.put("Check_Out","ALREADY");
+                 return new JSONObject().put("result",ob);
+            }
+            else
+            {
+          
+             String query = "UPDATE ncab_emp_checkin_tbl SET Check_out_Time=? WHERE Emp_Qlid=? AND Trip_Date=? AND Trip_Type=?;";
+             PreparedStatement ps = connection.prepareStatement(query);
+             ps.setString(1,Check_out_Time);
+             ps.setString(2,Emp_Qlid);
+             ps.setString(3,date);
+             ps.setString(4,Trip_Type);
+             x = ps.executeUpdate();
+             System.out.println("Check1");
+             if(x==1){
+                   System.out.println("Check2");
+                   
+             }
+             ob.put("Check_out","Done");
+             connection.close();
+             return new JSONObject().put("result",ob);
+             
+            }
+               
+           }
+          else
+          {
+          String query_check_QRcode="SELECT * FROM  ncab_roster_tbl WHERE Cab_No=? AND Emp_Qlid=?;";
+             PreparedStatement ps_check_QRcode = connection.prepareStatement(query_check_QRcode);
+             ps_check_QRcode.setString(1, QRcode);
+             ps_check_QRcode.setString(2,Emp_Qlid);
+             System.out.println(QRcode);
+             ResultSet rscheck_QRcode=ps_check_QRcode.executeQuery();
+             Boolean check_QR=rscheck_QRcode.next();
+             System.out.println(check_QR);     
+           if(check_QR)
+             {
+          String query_check="Select Check_out_time from ncab_emp_checkin_tbl where Emp_Qlid=? AND Trip_Date=? AND Trip_Type=?";
+          PreparedStatement ps_check = connection.prepareStatement(query_check);
+          ps_check.setString(1,Emp_Qlid);
+          ps_check.setString(2,date);
+          ps_check.setString(3,Trip_Type );
+          ResultSet rs=ps_check.executeQuery();
+          //Boolean check_record=rs.next();
+          String temp1="null";
+          while(rs.next())
+          {  
+                temp1=rs.getString(1);	
+                
+          }
+          System.out.println("temp"+temp1+"temp");
+      //    System.out.println(check_record);                   
+          if(temp1!=null )
+          {
+                 System.out.println("Check3");
+               ob.put("Check_Out","ALREADY");
+               return new JSONObject().put("result",ob);
+          }
+          else
+          {
+        
+           String query = "UPDATE ncab_emp_checkin_tbl SET Check_out_Time=? WHERE Emp_Qlid=? AND Trip_Date=? AND Trip_Type=?;";
+           PreparedStatement ps = connection.prepareStatement(query);
+           ps.setString(1,Check_out_Time);
+           ps.setString(2,Emp_Qlid);
+           ps.setString(3,date);
+           ps.setString(4,Trip_Type);
+           x = ps.executeUpdate();
+           System.out.println("Check1");
+           if(x==1){
+                 System.out.println("Check2");
+                 
+           }
+           ob.put("Check_out","Done");
+           connection.close();
+           return new JSONObject().put("result",ob);
+           
+          }
+              }
+         else
+            {
+                  System.out.println("Check4");
+              ob.put("Check_In","INCORRECT QRcode");
+              return new JSONObject().put("result",ob);
+            
+            }
+          }
+      } 
+       catch (Exception e) {
+           try {
+                 throw e;
+           } catch (Exception e1) {
+                 // TODO Auto-generated catch block
+                 e1.printStackTrace();
+           }          
+    }
+    return null;
+}
 
               public JSONObject getRoasterDetailsByEmpID(String emp_Qlid) {
                   // TODO Auto-generated method stub
