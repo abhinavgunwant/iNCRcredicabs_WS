@@ -648,6 +648,61 @@ public class ReportServiceImpl {
 	}
 
 
+	//checkin out default code starts
+
+    public JSONArray checkinout_defaultReport() throws SQLException, ClassNotFoundException {
+           
+           Connection connection=null;
+           DBConnectionRo dbconnection=new DBConnectionRo();
+           JSONArray jsonarray=new JSONArray();
+           connection=dbconnection.getConnection();      
+           System.out.println("Connected");
+           String query="SELECT b.trip_date,a.route_no,a.cab_no,a.vendor_name,b.trip_type,CONCAT(d.emp_fname,' ',d.emp_mname,' ',d.emp_lname) AS Employee_Name,CONCAT(c.start_time,' - ',c.end_time) AS Shift_Time,b.check_in_time,b.check_out_time,(CASE WHEN b.trip_type = 'pick' THEN CAST(TIMEDIFF(b.check_out_time, c.start_time) AS CHAR)   END) AS late_arrival,(CASE WHEN b.trip_type = 'drop' THEN CAST(TIMEDIFF(b.check_in_time, c.end_time) AS CHAR) END) AS late_departure,a.pickup_time FROM ncab_master_employee_tbl d INNER JOIN ncab_emp_checkin_tbl b NATURAL JOIN ncab_roster_tbl a INNER JOIN NCAB_SHIFT_MASTER_TBL c WHERE  (a.shift_id = c.shift_id && d.emp_qlid = b.emp_qlid)";
+           System.out.println(query);
+           PreparedStatement ps5= (PreparedStatement) connection.prepareStatement(query);
+           
+        ResultSet rs5=ps5.executeQuery();
+           while (rs5.next())
+           {   
+                 JSONObject jsonresponse = new JSONObject();
+           String Date =rs5.getString(1);
+           String Route_no =rs5.getString(2);
+           String Cab_no=rs5.getString(3);
+           String Vendor_name=rs5.getString(4);
+           String trip_type=rs5.getString(5);
+           String Employee_name=rs5.getString(6);
+           String Shift_time=rs5.getString(7);
+           String check_in_time=rs5.getString(8);
+           String check_out_time=rs5.getString(9);
+           String late_arrival=rs5.getString(10);
+           String late_departure=rs5.getString(11);
+           String pickup_time=rs5.getString(12);
+           System.out.println(Employee_name);
+
+           jsonresponse.put("DATE",Date);
+           jsonresponse.put("route_no",Route_no);
+           jsonresponse.put("cab_No",Cab_no);
+           jsonresponse.put("vendor_name",Vendor_name);
+           jsonresponse.put("trip_type",trip_type );
+           jsonresponse.put("Employee_Name",Employee_name);
+
+           jsonresponse.put("Shift_Time",Shift_time);
+           jsonresponse.put("check_in_time",check_in_time);
+           jsonresponse.put("check_out_time",check_out_time);
+           jsonresponse.put("late_arrival",late_arrival);
+           jsonresponse.put("late_departure",late_departure);
+           jsonresponse.put("pickup_time",pickup_time);
+
+
+           jsonarray.put(jsonresponse);
+
+           }
+           return jsonarray; 
+
+    }
+
+    //checkin out default code ends
+
 
 
 
@@ -782,123 +837,126 @@ public class ReportServiceImpl {
 
 	//checkin out code starts
 
-	public JSONArray checkinoutReport(String route_no,String from_date,String to_date,String cab_no,String emp_fname,String emp_lname,String vendor_name) throws SQLException, ClassNotFoundException {
-		String stmt1="";
-		int count=0;
-		String[] arr=new String[7];
-		String[] parameter={route_no,from_date,to_date,cab_no,emp_fname,emp_lname,vendor_name};
+    public JSONArray checkinoutReport(String route_no,String from_date,String to_date,String cab_no,String emp_fname,String emp_lname,String vendor_name) throws SQLException, ClassNotFoundException {
+          String stmt1="";
+          int count=0;
+          String[] arr=new String[7];
+          String[] parameter={route_no,from_date,to_date,cab_no,emp_fname,emp_lname,vendor_name};
 
-		for(int i=0,j=-1;i<parameter.length;i++)
-		{   System.out.println(parameter[i]);
-		if(parameter[i].length()>1)
-		{
+          for(int i=0,j=-1;i<parameter.length;i++)
+          {   System.out.println(parameter[i]);
+          if(parameter[i].length()>1)
+          {
 
-			if(i==0){ stmt1=stmt1+"a.route_no = ? ";
-			arr[++j]=parameter[i]; count++;  }
-			else if(i==1){  
-				if(count>0)
-				{
-					stmt1=stmt1+"&&"+" a.trip_date BETWEEN ? ";
+                 if(i==0){ stmt1=stmt1+"a.route_no = ? ";
+                 arr[++j]=parameter[i]; count++;  }
+                 else if(i==1){  
+                       if(count>0)
+                       {
+                              stmt1=stmt1+"&&"+" b.trip_date BETWEEN ? ";
 
-				}
-				else
-					stmt1=stmt1+" a.trip_date BETWEEN ? ";
-				arr[++j]=parameter[i]; count++;
-			}
-			else if(i==2){  stmt1=stmt1+" AND ? ";
-			arr[++j]=parameter[i];count++;}
-			else if(i==3){  
-				if(count>0){
-					stmt1=stmt1+"&&"+" b.cab_no = ?  ";
-				}
-				else stmt1=stmt1+" b.cab_no = ?  ";
-				arr[++j]=parameter[i];count++;
-			}
-			else if(i==4){  
+                       }
+                       else
+                              stmt1=stmt1+" b.trip_date BETWEEN ? ";
+                       arr[++j]=parameter[i]; count++;
+                 }
+                 else if(i==2){  stmt1=stmt1+" AND ? ";
+                 arr[++j]=parameter[i];count++;}
+                 else if(i==3){  
+                       if(count>0){
+                              stmt1=stmt1+"&&"+" a.cab_no = ?  ";
+                       }
+                       else stmt1=stmt1+" a.cab_no = ?  ";
+                       arr[++j]=parameter[i];count++;
+                 }
+                 else if(i==4){  
 
-				if(count>0){
+                       if(count>0){
 
-					stmt1=stmt1+"&&"+" d.emp_fname = ?";
-				}
-				else stmt1=stmt1+" d.emp_fname = ?";
-				arr[++j]=parameter[i];count++;
-			}
-			else if(i==5){  stmt1=stmt1+" && d.emp_lname = ?  ";
-			arr[++j]=parameter[i];count++;}
-			else if(i==6){  
-				if(count>0){
-					stmt1=stmt1+"&&"+" c.vendor_name = ? ";
-				}
-				else stmt1=stmt1+" c.vendor_name = ? ";
-				arr[++j]=parameter[i];count++;
-			}
-
-
-
-		}
-
-		}
-
-		System.out.println(stmt1);
-		/*for(int i=0;i<count;i++)
-       {
-              System.out.println(arr[i]);
-       }*/
-		Connection connection=null;
-		DBConnectionRo dbconnection=new DBConnectionRo();
-		JSONArray jsonarray=new JSONArray();
-		connection=dbconnection.getConnection();      
-		System.out.println("Connected");
-		String query="SELECT a.trip_date AS DATE, b.route_no,b.cab_no,c.vendor_name,a.trip_type,CONCAT(d.emp_fname,' ',d.emp_mname,' ',d.emp_lname) AS Employee_Name,CONCAT(e.start_time,' - ',e.end_time) AS Shift_Time,a.check_in_time,a.check_out_time,(CASE WHEN a.trip_type = 'Pick' THEN TIMEDIFF(a.check_out_time, e.start_time) END) AS late_arrival,(CASE WHEN a.trip_type = 'Drop' THEN TIMEDIFF(a.check_in_time,e.end_time) END) AS late_departure FROM ncab_emp_checkin_tbl a,ncab_roster_tbl b,ncab_vendor_master_tbl c,ncab_master_employee_tbl d,NCAB_SHIFT_MASTER_TBL e WHERE (" +stmt1+ ")  AND  (a.route_no=b.route_no && d.emp_qlid=a.emp_qlid) GROUP BY route_no";
-		System.out.println(query);
-		PreparedStatement ps4= (PreparedStatement) connection.prepareStatement(query);
-		for(int i=0;i<count;i++){
-			String s=arr[i];
-			int j=i+1;
-			ps4.setString(j,s);
+                              stmt1=stmt1+"&&"+" d.emp_fname = ?";
+                       }
+                       else stmt1=stmt1+" d.emp_fname = ?";
+                       arr[++j]=parameter[i];count++;
+                 }
+                 else if(i==5){  stmt1=stmt1+" && d.emp_lname = ?  ";
+                 arr[++j]=parameter[i];count++;}
+                 else if(i==6){  
+                       if(count>0){
+                              stmt1=stmt1+"&&"+" a.vendor_name = ? ";
+                       }
+                       else stmt1=stmt1+" a.vendor_name = ? ";
+                       arr[++j]=parameter[i];count++;
+                 }
 
 
-		}
+
+          }
+
+          }
+
+          System.out.println(stmt1);
+          for(int i=0;i<count;i++)
+    {
+           System.out.println(arr[i]);
+    }
+          Connection connection=null;
+          DBConnectionRo dbconnection=new DBConnectionRo();
+          JSONArray jsonarray=new JSONArray();
+          connection=dbconnection.getConnection();      
+          System.out.println("Connected");
+          String query="SELECT b.trip_date,a.route_no,a.cab_no,a.vendor_name,b.trip_type,CONCAT(d.emp_fname,' ',d.emp_mname,' ',d.emp_lname) AS Employee_Name,CONCAT(c.start_time,' - ',c.end_time) AS Shift_Time,b.check_in_time,b.check_out_time,(CASE WHEN b.trip_type = 'pick' THEN TIMEDIFF(b.check_out_time, c.start_time) END) AS late_arrival,(CASE WHEN b.trip_type = 'drop' THEN TIMEDIFF(b.check_in_time, c.end_time) END) AS late_departure,a.pickup_time FROM  ncab_master_employee_tbl d INNER JOIN ncab_emp_checkin_tbl b NATURAL JOIN ncab_roster_tbl a INNER JOIN NCAB_SHIFT_MASTER_TBL c WHERE "+stmt1+" AND (a.shift_id = c.shift_id && d.emp_qlid = b.emp_qlid)";
+          System.out.println(query);
+          PreparedStatement ps4= (PreparedStatement) connection.prepareStatement(query);
+          for(int i=0;i<count;i++){
+                 String s=arr[i];
+                 int j=i+1;
+                 ps4.setString(j,s);
 
 
-		ResultSet rs4=ps4.executeQuery();
-		while (rs4.next())
-		{   JSONObject jsonresponse = new JSONObject();
-		String Date =rs4.getString(1);
-		String Route_no =rs4.getString(2);
-		String Cab_no=rs4.getString(3);
-		String Vendor_name=rs4.getString(4);
-		String trip_type=rs4.getString(5);
-		String Employee_name=rs4.getString(6);
-		String Shift_time=rs4.getString(7);
-		String check_in_time=rs4.getString(8);
-		String check_out_time=rs4.getString(9);
-		String late_arrival=rs4.getString(10);
-		String late_departure=rs4.getString(11);
-		System.out.println(Employee_name);
-
-		jsonresponse.put("DATE",Date);
-		jsonresponse.put("route_no",Route_no);
-		jsonresponse.put("cab_No",Cab_no);
-		jsonresponse.put("vendor_name",Vendor_name);
-		jsonresponse.put("trip_type",trip_type );
-		jsonresponse.put("Employee_Name",Employee_name);
-
-		jsonresponse.put("Shift_Time",Shift_time);
-		jsonresponse.put("check_in_time",check_in_time);
-		jsonresponse.put("check_out_time",check_out_time);
-		jsonresponse.put("late_arrival",late_arrival);
-		jsonresponse.put("late_departure",late_departure);
+          }
 
 
-		jsonarray.put(jsonresponse);
+          ResultSet rs4=ps4.executeQuery();
+          while (rs4.next())
+          {   JSONObject jsonresponse = new JSONObject();
+          String Date =rs4.getString(1);
+          String Route_no =rs4.getString(2);
+          String Cab_no=rs4.getString(3);
+          String Vendor_name=rs4.getString(4);
+          String trip_type=rs4.getString(5);
+          String Employee_name=rs4.getString(6);
+          String Shift_time=rs4.getString(7);
+          String check_in_time=rs4.getString(8);
+          String check_out_time=rs4.getString(9);
+          String late_arrival=rs4.getString(10);
+          String late_departure=rs4.getString(11);
+          String pickup_time=rs4.getString(12);
+          System.out.println(Employee_name);
 
-		}
-		return jsonarray; 
+          jsonresponse.put("DATE",Date);
+          jsonresponse.put("route_no",Route_no);
+          jsonresponse.put("cab_No",Cab_no);
+          jsonresponse.put("vendor_name",Vendor_name);
+          jsonresponse.put("trip_type",trip_type );
+          jsonresponse.put("Employee_Name",Employee_name);
 
-	}
+          jsonresponse.put("Shift_Time",Shift_time);
+          jsonresponse.put("check_in_time",check_in_time);
+          jsonresponse.put("check_out_time",check_out_time);
+          jsonresponse.put("late_arrival",late_arrival);
+          jsonresponse.put("late_departure",late_departure);
+          jsonresponse.put("pickup_time",pickup_time);
 
-	//checkin out code ends
+
+          jsonarray.put(jsonresponse);
+
+          }
+          return jsonarray; 
+
+    }
+
+    //checkin out code ends
+
 
 
 
