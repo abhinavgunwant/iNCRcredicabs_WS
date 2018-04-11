@@ -136,7 +136,7 @@ public String getTime(String dateTime) {
 
 			PreparedStatement ps=(PreparedStatement) con.prepareStatement("SELECT a.Rqst_Date_Time,a.Request_ID,a.Emp_Qlid AS Emp_ID ,a.Emp_Fname AS Employee_First_Name,a.Emp_Lname AS \r\n" + 
 					"Employee_Last_Name,a.Emp_Gender,a.Emp_Mob_Nbr,b.Emp_Qlid AS Manager_Qlid,b.Emp_Fname AS Manager_First_Name,\r\n" + 
-					" b.Emp_LName AS Manager_Last_Name,a.Start_Date_Time,a.End_Date_Time,a.Allocated,a.Emp_Pickup_Area, a.Other_Address , a.Source ,  a.Destination , a.Approval FROM NCAB_UNSCHEDULE_RQST_VIEW a, ncab_master_employee_tbl b  \r\n" + 
+					" b.Emp_LName AS Manager_Last_Name,a.Start_Date_Time,a.End_Date_Time,a.Allocated,a.Emp_Pickup_Area, a.Other_Address , a.Source ,  a.Destination , a.Approval ,c.Cab_no as Cab_no FROM NCAB_UNSCHEDULE_RQST_VIEW a, ncab_master_employee_tbl b ,ncab_roster_tbl c  \r\n" + 
 					"WHERE a.Emp_Mgr_Qlid1 = b.Emp_Qlid  AND a.Request_ID IN ("+requestIds+") AND Allocated=? ORDER BY a.Rqst_Date_Time DESC \r\n" + 
 					" ");
 			
@@ -232,7 +232,7 @@ public String getTime(String dateTime) {
 				String Emp_Mob_Nbr=rs.getString("Emp_Mob_Nbr");
 				String Manager_Qlid=rs.getString("Manager_Qlid");
 				String Manager_First_Name=rs.getString("Manager_First_Name");
-				String Manager_Last_Name=rs.getString("Employee_Last_Name");
+				String Manager_Last_Name=rs.getString("Manager_Last_Name");
 				String Manager_Name=Manager_First_Name+" "+Manager_Last_Name;
 				String Rqst_Date_Time=rs.getString("Rqst_Date_Time");
 				String Start_Date_Time=rs.getString("Start_Date_Time");
