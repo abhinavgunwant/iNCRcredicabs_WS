@@ -1315,7 +1315,7 @@ public class RosterServiceImpl {
 				
 				flag += ps1.executeUpdate();
 				PreparedStatement ps2 = connection.prepareStatement("UPDATE NCAB_UNSCHEDULE_RQST_TBL SET allocated = '1' WHERE emp_qlid = ? AND Rqst_Date_Time LIKE (SELECT CONCAT (CURDATE(),'%'))");
-				ps1.setString(1, qlid);
+				ps2.setString(1, qlid);
 				ps2.executeUpdate();
 				System.out.println("------query fired");
 
