@@ -1542,10 +1542,24 @@ public class RosterServiceImpl {
 		String cab_and_shift = obj.getString("cabno");
 		String arr[] = cab_and_shift.split(" ");
 		String cabno = arr[0];
-		String sid = arr[1];
+		String shift_time = arr[1];
+		String shift_id=null;
+	
+		if (shift_time.equals("07:00")) {
+			shift_id = "1";
+		}
+		if (shift_time.equals("10:00")) {
+			shift_id = "2";
+		}
+		if (shift_time.equals("12:00")) {
+			shift_id = "3";
+		}
+		if (shift_time.equals("02:00")) {
+			shift_id = "5";
+		}
 		System.out.println("CAB NUMBER: " + cabno);
-		System.out.println("SHIFT ID: " + sid);
-
+		System.out.println("SHIFT ID: " + shift_id);
+		System.out.println("SHIFT : " + shift_time);
 		String picktime = obj.getString("picktime");
 		// String shifttime="";
 		String qlid = obj.getString("qlid");
@@ -1573,7 +1587,7 @@ public class RosterServiceImpl {
 		String v_n = "";
 		String r_n = "";
 		String query2 = "select Route_No,Vendor_Name,Driver_Id from ncab_roster_tbl where Cab_No='" + cabno
-				+ "' and Shift_Id = '" + sid + "' and '" + current_date
+				+ "' and Shift_Id = '" + shift_id + "' and '" + current_date
 				+ "' between Start_Date and End_Date and Emp_Status='active' and Route_Status = 'active'";
 		PreparedStatement ps2 = con.prepareStatement(query2);
 		ResultSet rs = ps2.executeQuery();
@@ -1600,7 +1614,7 @@ public class RosterServiceImpl {
 		ps.setString(2, qlid);
 		ps.setString(3, cabno);
 		ps.setString(4, picktime);
-		ps.setString(5, sid);
+		ps.setString(5, shift_id);
 		ps.setString(6, sdate);
 		ps.setString(7, edate);
 		ps.setString(8, vname);
