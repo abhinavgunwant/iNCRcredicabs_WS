@@ -531,7 +531,7 @@ public JSONObject deleteVendorDetailsByVendorID(JSONObject jsonrequest){
                         //cab_id=rs.getString(4);
                         cab_type=rs.getString(5);
                         if(cab_type.equalsIgnoreCase("BIG"))
-                               cab_type="6";
+                               cab_type="7";
                         else
                                cab_type="4";
                         cab_rate=rs.getInt(7);
@@ -946,7 +946,7 @@ public JSONObject getDriverDetails()
 			
 
 			if(key.equals("cab_type")){
-				if(value.equals("6"))
+				if(value.equals("7"))
 				{
 					value="BIG";
 				}
@@ -1010,10 +1010,6 @@ public JSONObject getDriverDetails()
                   fuel=rs.getString(4);
                   contract_owned=rs.getString(5);
                   cab_type=rs.getString(6);
-                  if(cab_type.equals("BIG"))
-                         cab_type="6";
-                  else
-                         cab_type="4";
                   cab_rate=rs.getInt(7);
                   manufacture_date=rs.getString(8);
                   cab_status=rs.getInt(9);

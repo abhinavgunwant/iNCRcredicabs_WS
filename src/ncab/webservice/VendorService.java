@@ -328,7 +328,7 @@ public class VendorService {
 		String type = jsonPboject.getString("cab_type");
 		if(type=="Big")
 		{
-			occupancy = 6;
+			occupancy = 7;
 		}
 		else
 		{
