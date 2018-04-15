@@ -20,7 +20,7 @@ import java.util.NoSuchElementException;
 
 import org.json.JSONArray;
 import org.json.JSONObject;  
-
+import java.util.TimeZone;
 
 public class RequestServiceImpl {
 
@@ -32,24 +32,26 @@ public class RequestServiceImpl {
 	DBConnectionUpd dbconnectionUpd=new DBConnectionUpd();
 	Connection con = null;
 
-	 public String getCurrentDate()
-		{
-			Date date=new Date();
-			SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-			String str=df.format(date);
-	                return str;
-		}
+	public String getCurrentDate()
+	{
+		TimeZone.setDefault(TimeZone.getTimeZone("Asia/Calcutta"));
+		Date date=new Date();
+		SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		String str=df.format(date);
+		return str;
+
+	}
 
 	public int saveRequest(String emp_QLID, String shift_ID, String Start_Date_Time, String End_Date_Time,String source ,String destination , String other_addr,String reason) {
 		// TODO Auto-generated method stub
 		int result=0;
-		
+
 		try {	
 			con=(Connection) dbconnectionUpd.getConnection();
 
 			PreparedStatement ps = con.prepareStatement("insert into NCAB_UNSCHEDULE_RQST_TBL (Emp_Qlid,Shift_ID,Rqst_Date_Time,Start_Date_Time,End_Date_Time,Source,Destination, Other_Addr ,Reason) values (?,?,?,?,?,?,?,?,?) "
 					,Statement.RETURN_GENERATED_KEYS);
-		
+
 			ps.setString(1,emp_QLID);
 			ps.setString(2,shift_ID);
 			ps.setString(3,getCurrentDate());
@@ -59,76 +61,76 @@ public class RequestServiceImpl {
 			ps.setString(7,destination);
 			ps.setString(8,other_addr);
 			ps.setString(9,reason);
-			 ps.executeUpdate();
-		
-			 ResultSet rs = ps.getGeneratedKeys();
-			 
-			 if(rs.next()){
-				 
-				 result = rs.getInt(1);
-				 
-				 
-			 }
-		
+			ps.executeUpdate();
+
+			ResultSet rs = ps.getGeneratedKeys();
+
+			if(rs.next()){
+
+				result = rs.getInt(1);
+
+
+			}
+
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-				
-		    finally {
-		    	if (con != null) {
-		    		try {
-						con.close();
-					} catch (SQLException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-		    	}
-		    }		
-		
-		 return result;
+
+		finally {
+			if (con != null) {
+				try {
+					con.close();
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}		
+
+		return result;
 
 	}
 
-public String getDate(String dateTime) {
-		
+	public String getDate(String dateTime) {
+
 		return dateTime.substring(8,10)+"-"+dateTime.substring(5,7)+"-"+dateTime.substring(0,4);
-	
+
 	}
 
-public String getTime(String dateTime) {
-	
-	String resultTime="";
-	 Calendar time = Calendar.getInstance();
+	public String getTime(String dateTime) {
 
-	    //Calendar.HOUR_OF_DAY is in 24-hour format
-	    time.set(Calendar.HOUR_OF_DAY, Integer.parseInt(dateTime.substring(11,13)));
+		String resultTime="";
+		Calendar time = Calendar.getInstance();
 
-	    time.set(Calendar.MINUTE, Integer.parseInt(dateTime.substring(14,16)));
-	    int am_pm = time.get(GregorianCalendar.AM_PM);
-	    String zone ;
-	    switch (am_pm) {
-	        case  Calendar.AM:
-	        zone="AM";
-	            //System.out.println("AM");
-	            break;
-	        default:
-	        zone="PM";
-	            //System.out.println("PM");
-	            break;
-	       }
-	    
-	    resultTime+=time.get(Calendar.HOUR) + ":" + time.get(Calendar.MINUTE) + " " +zone;
-	
-	return resultTime;
-}
+		//Calendar.HOUR_OF_DAY is in 24-hour format
+		time.set(Calendar.HOUR_OF_DAY, Integer.parseInt(dateTime.substring(11,13)));
 
-	
+		time.set(Calendar.MINUTE, Integer.parseInt(dateTime.substring(14,16)));
+		int am_pm = time.get(GregorianCalendar.AM_PM);
+		String zone ;
+		switch (am_pm) {
+		case  Calendar.AM:
+			zone="AM";
+			//System.out.println("AM");
+			break;
+		default:
+			zone="PM";
+			//System.out.println("PM");
+			break;
+		}
+
+		resultTime+=time.get(Calendar.HOUR) + ":" + time.get(Calendar.MINUTE) + " " +zone;
+
+		return resultTime;
+	}
+
+
 	public ArrayList<ArrayList<String>> getUnscheduledRequestByIdImpl(String requestIds,String allocatedFlag) throws SQLException {
-		
+
 		ArrayList<ArrayList<String>> excelBody = new ArrayList<ArrayList<String>>();	
-		
-//		System.out.println("in getUnscheduledRequestByIdImpl() >>requestIds"+requestIds+" >>allocatedFlag"+allocatedFlag);
+
+		//		System.out.println("in getUnscheduledRequestByIdImpl() >>requestIds"+requestIds+" >>allocatedFlag"+allocatedFlag);
 
 		int i=0;
 		try {
@@ -136,16 +138,16 @@ public String getTime(String dateTime) {
 
 			PreparedStatement ps=(PreparedStatement) con.prepareStatement("SELECT a.Rqst_Date_Time,a.Request_ID,a.Emp_Qlid AS Emp_ID ,a.Emp_Fname AS Employee_First_Name,a.Emp_Lname AS \r\n" + 
 					"Employee_Last_Name,a.Emp_Gender,a.Emp_Mob_Nbr,b.Emp_Qlid AS Manager_Qlid,b.Emp_Fname AS Manager_First_Name,\r\n" + 
-					" b.Emp_LName AS Manager_Last_Name,a.Start_Date_Time,a.End_Date_Time,a.Allocated,a.Emp_Pickup_Area, a.Other_Address , a.Source ,  a.Destination , a.Approval ,c.Cab_no as Cab_no FROM NCAB_UNSCHEDULE_RQST_VIEW a, ncab_master_employee_tbl b ,ncab_roster_tbl c  \r\n" + 
+					" b.Emp_LName AS Manager_Last_Name,a.Start_Date_Time,a.End_Date_Time,a.Allocated,a.Emp_Pickup_Area, a.Other_Address , a.Source ,  a.Destination , a.Approval FROM NCAB_UNSCHEDULE_RQST_VIEW a, ncab_master_employee_tbl b   \r\n" + 
 					"WHERE a.Emp_Mgr_Qlid1 = b.Emp_Qlid  AND a.Request_ID IN ("+requestIds+") AND Allocated=? ORDER BY a.Rqst_Date_Time DESC \r\n" + 
 					" ");
-			
-//			ps.setString(1,requestIds);
+
+			//			ps.setString(1,requestIds);
 			ps.setString(1,allocatedFlag);
 			ResultSet rs=ps.executeQuery();
 
-//			System.out.println("Prepared Statement after bind variables set:\n\t" + ps.toString());
-			
+			//			System.out.println("Prepared Statement after bind variables set:\n\t" + ps.toString());
+
 			while (rs.next())
 
 			{
@@ -185,8 +187,8 @@ public String getTime(String dateTime) {
 				excelRow.add(Other_Address);	//Trip Type
 				excelRow.add(Approval);			//Request Status		
 
-//				System.out.println(excelRow.toString());
-				
+				//				System.out.println(excelRow.toString());
+
 				excelBody.add(excelRow);
 			}
 
@@ -264,7 +266,7 @@ public String getTime(String dateTime) {
 
 				jsonArray.add(jsonobj);
 			}
-//			System.out.print(jsonArray);
+			//			System.out.print(jsonArray);
 			return jsonArray; 
 		}
 
@@ -299,7 +301,7 @@ public String getTime(String dateTime) {
 	public boolean onApprovedService(JSONArray requestIdArr){
 
 		//		System.out.println("In onApprovedService  request_id->"+ request.getString("Allocate"));
-//		System.out.println("In onApprovedService  request_id->"+requestIdArr.toString());
+		//		System.out.println("In onApprovedService  request_id->"+requestIdArr.toString());
 		return new RequestServiceImpl().onApprovedDao(requestIdArr);
 
 	} 
@@ -312,8 +314,8 @@ public String getTime(String dateTime) {
 		try {
 
 			for(int count=0;count<requestIdArr.length();count++) {
-				
-//				System.out.println("id in onApprovedDao"+requestIdArr.get(count));
+
+				//				System.out.println("id in onApprovedDao"+requestIdArr.get(count));
 				PreparedStatement ps = (PreparedStatement) con.prepareStatement("UPDATE  NCAB_UNSCHEDULE_RQST_TBL SET Allocated=1 WHERE Request_ID=?");
 				ps.setString(1,String.valueOf(requestIdArr.get(count)));
 				i= ps.executeUpdate();

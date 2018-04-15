@@ -65,6 +65,8 @@ import ncab.webservice.RosterService;
 
 public class RosterServiceImpl {
 
+	static public String Rosterfilename="Roster"; 
+
 	@SuppressWarnings("unused")
 	public JSONArray showRosterInfo(JSONObject jsn) {
 		Calendar cal = Calendar.getInstance();
@@ -260,15 +262,19 @@ public class RosterServiceImpl {
 		String current_date = date.toString();
 		System.out.println("CURRENT DATE: " + current_date);
 		if (!(vname.equals(""))) { // if only vendor name is given
-			if (!(shift_id.equals("")))
+			if (!(shift_id.equals(""))){
 				query = "select Emp_Qlid,Shift_Id, Cab_No,Remarks from ncab_roster_tbl where Vendor_Name LIKE '%" + vname
 						+ "%' and Shift_Id = '" + shift_id
 						+ "' and Route_Status = 'active' and Emp_Status = 'active' and '" + current_date
 						+ "' between Start_Date and End_Date order by Route_No ";
-			else // if both vendor name and shift time is given
+				Rosterfilename="Roster Vendor-Shift";
+			}
+			else{ // if both vendor name and shift time is given
 				query = "select Emp_Qlid,Shift_Id, Cab_No,Remarks from ncab_roster_tbl where Vendor_Name LIKE '%" + vname
 						+ "%' and Route_Status = 'active' and Emp_Status = 'active' and '" + current_date
 						+ "' between Start_Date and End_Date order by Route_No ";
+				Rosterfilename="Roster Vendor";
+			}
 		} else {
 			if (!(cab_number.equals(""))) {
 				if (!(emp_name.equals(""))) {
@@ -277,6 +283,7 @@ public class RosterServiceImpl {
 							query = "select Emp_Qlid,Shift_Id,Cab_No,Remarks from ncab_roster_tbl WHERE Shift_Id='" + shift_id
 									+ "' AND Cab_No LIKE '%" + cab_number + "%' and '" + current_date
 									+ "' between Start_Date and End_Date AND Route_Status='active' AND Emp_Status='active' ORDER BY Route_No";
+							Rosterfilename="Roster EmployeeName-Cab-Qlid-Shift";
 						} else { // if cab_number, qlid, emp_name are given
 							// System.out.println(current_roster_month);
 							// System.out.println(current_roster_year);
@@ -291,6 +298,7 @@ public class RosterServiceImpl {
 									+ qlid + "' AND Cab_No LIKE '%" + cab_number
 									+ "%' AND Emp_Status='active' AND Route_Status='active' and '" + current_date
 									+ "' between Start_Date and End_Date) order by Route_No;";
+							Rosterfilename="Roster Vendor-EmployeeName-Cab-Qlid";
 						}
 					} else {
 						if (!(shift_id.equals(""))) { // if cab_number,
@@ -300,6 +308,7 @@ public class RosterServiceImpl {
 									+ "' AND Cab_No LIKE '%" + cab_number + "%' and '" + current_date
 									+ "' between Start_Date and End_Date"
 									+ " AND Route_Status='active' AND Emp_Status='active' ORDER BY Route_No";
+							Rosterfilename="Roster Vendor-EmployeeName-Cab-Shift";
 
 						} else { // if cab_number, emp_name is given
 							query = "select Emp_Qlid, Shift_Id, Cab_No,Remarks from ncab_roster_tbl where Emp_Status = 'active' AND Route_Status = 'active' and '"
@@ -311,6 +320,7 @@ public class RosterServiceImpl {
 									+ emp_name + "%')||(CONCAT(Emp_FName,' ',Emp_LName,' ') LIKE '%" + emp_name
 									+ "%')) AND Emp_Status = 'active' AND Route_Status = 'active' and '" + current_date
 									+ "' between Start_Date and End_Date) order by Route_No";
+							Rosterfilename="Roster Vendor-EmployeeName-Cab";
 						}
 					}
 				} else {
@@ -321,6 +331,7 @@ public class RosterServiceImpl {
 									+ "' AND Cab_No LIKE '%" + cab_number + "%' and '" + current_date
 									+ "' between Start_Date and End_Date"
 									+ " AND Route_Status='active' AND Emp_Status='active' ORDER BY Route_No";
+							Rosterfilename="Roster Cab-Qlid-Shift";
 
 						} else { // if cab_number, qlid is given
 							query = "SELECT Emp_Qlid, Shift_Id, Cab_No,Remarks FROM ncab_roster_tbl WHERE Emp_Status = 'active' AND Route_Status = 'active' and '"
@@ -330,6 +341,7 @@ public class RosterServiceImpl {
 									+ qlid + "' AND Cab_No LIKE '%" + cab_number
 									+ "%' AND Emp_Status='active' AND Route_Status='active' and '" + current_date
 									+ "' between Start_Date and End_Date" + ") ORDER BY Route_No;";
+							Rosterfilename="Roster Cab-Qlid";
 
 						}
 					} else {
@@ -340,12 +352,14 @@ public class RosterServiceImpl {
 									+ "' AND Cab_No LIKE '%" + cab_number + "%' and '" + current_date
 									+ "' between Start_Date and End_Date"
 									+ " AND Route_Status='active' AND Emp_Status='active' ORDER BY Route_No";
+							Rosterfilename="Roster Cab-Shift";
 
 						} else { // if cab_number is given
 							query = "SELECT Emp_Qlid,Shift_Id,Cab_No,Remarks FROM ncab_roster_tbl WHERE '" + current_date
 									+ "' between Start_Date and End_Date"
 									+ " and Emp_Status = 'active' and Route_Status = 'active' and Cab_No LIKE '%"
 									+ cab_number + "%' order by Route_No";
+							Rosterfilename="Roster Cab";
 						}
 					}
 				}
@@ -361,12 +375,14 @@ public class RosterServiceImpl {
 									+ "' AND Emp_Qlid LIKE '" + qlid + "' and '" + current_date
 									+ "' between Start_Date and End_Date"
 									+ " AND Route_Status='active' AND Emp_Status='active') and Shift_Id = '"+shift_id+"' order by Route_No";
+							Rosterfilename="Roster EmployeeName-Qlid-Shift";
 						} else { // if emp_name, qlid is given
 							query = "select Emp_Qlid, Shift_Id, Cab_No,Remarks from ncab_roster_tbl where (Cab_No, Shift_Id) In (Select Cab_No, Shift_Id from ncab_roster_tbl where Emp_Qlid = '"
 									+ qlid + "' and Route_Status = 'active' and Emp_Status='active' and '"
 									+ current_date + "' between Start_Date and End_Date"
 									+ ") and Route_Status = 'active' and Emp_Status='active' and '" + current_date
 									+ "' between Start_Date and End_Date  order by Route_No";
+							Rosterfilename="Roster EmployeeName-Qlid";
 
 						}
 					} else {
@@ -381,8 +397,8 @@ public class RosterServiceImpl {
 									+ " and Emp_Qlid IN (SELECT Emp_Qlid FROM ncab_master_employee_tbl WHERE (Emp_FName LIKE '%"
 									+ emp_name + "%')||(Emp_MName LIKE '%" + emp_name + "%')||(Emp_LName LIKE '%"
 									+ emp_name + "%')||(CONCAT(Emp_FName,' ',Emp_MName,' ',Emp_LName,' ') LIKE '%"
-									+ emp_name + "%')||(CONCAT(Emp_FName,' ',Emp_LName,' ') LIKE '%" + emp_name
-									+ "%')))";
+									+ emp_name + "%')||(CONCAT(Emp_FName,' ',Emp_LName,' ') LIKE '%" + emp_name+ "%')))";
+							Rosterfilename="Roster EmployeeName-Shift";
 						} else {
 							// if emp_name is given
 							query = "select Emp_Qlid, Shift_Id, Cab_No,Remarks from ncab_roster_tbl where (Cab_No, Shift_Id) In (Select Cab_No, Shift_Id from ncab_roster_tbl where Emp_Qlid IN (SELECT Emp_Qlid FROM ncab_master_employee_tbl WHERE (Emp_FName LIKE '%"
@@ -393,6 +409,7 @@ public class RosterServiceImpl {
 									+ "' between Start_Date and End_Date"
 									+ ") and Route_Status = 'active' and Emp_Status='active' and '" + current_date
 									+ "' between Start_Date and End_Date order by Route_No";
+							Rosterfilename="Roster EmployeeName";
 						}
 					}
 				} else {
@@ -405,6 +422,7 @@ public class RosterServiceImpl {
 									+ "' and Cab_No IN (select Cab_No from ncab_roster_tbl where Route_Status = 'active' and Emp_Status='active' and '"
 									+ current_date + "' between Start_Date and End_Date" + " and Emp_Qlid = '" + qlid
 									+ "') order by Route_No";
+							Rosterfilename="Roster Qlid-Shift";
 						} else {
 							// if qlid is given
 							query = "select Emp_Qlid, Shift_Id, Cab_No,Remarks from ncab_roster_tbl where (Cab_No, Shift_Id) In (Select Cab_No, Shift_Id from ncab_roster_tbl where Emp_Qlid = '"
@@ -412,6 +430,7 @@ public class RosterServiceImpl {
 									+ current_date + "' between Start_Date and End_Date"
 									+ ") and Route_Status = 'active' and Emp_Status='active' and '" + current_date
 									+ "' between Start_Date and End_Date order by Route_No ";
+							Rosterfilename="Roster Qlid";
 						}
 					} else {
 						if (!(shift_id.equals(""))) {
@@ -422,6 +441,7 @@ public class RosterServiceImpl {
 									+ " AND Cab_No IN (select Cab_No from ncab_roster_tbl where '" + current_date
 									+ "' between Start_Date and End_Date and Emp_Status = 'active' and Route_Status = 'active' and Shift_Id='"
 									+ shift_id + "') order by Route_No";
+							Rosterfilename="Roster Shift";
 
 						} else {
 							// if all fields are empty
@@ -429,6 +449,7 @@ public class RosterServiceImpl {
 							System.out.println("all filter fields are empty");
 							query = "select Emp_Qlid,Shift_Id,Cab_No,Remarks from ncab_roster_tbl where Emp_Status='active' AND Route_Status='active'  AND '"
 									+ current_date + "' between Start_Date AND End_Date order by Route_No";
+							Rosterfilename="Roster";
 						}
 					}
 				}
@@ -438,7 +459,10 @@ public class RosterServiceImpl {
 
 		return query;
 	}
-
+  
+  
+  
+  
 	public JSONObject insertIntoDB(InputStream fileInputStream,
 			FormDataContentDisposition fileFormDataContentDisposition) throws IOException {
 		int counter = 0;

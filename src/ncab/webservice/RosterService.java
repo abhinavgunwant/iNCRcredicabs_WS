@@ -8,7 +8,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.websocket.server.PathParam;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -611,7 +611,7 @@ public Response pullExcelFile(@Context HttpServletRequest req,@PathParam("flp") 
 	{
 //		System.out.println("File found");
 		ResponseBuilder rb = Response.ok(file);  
-		rb.header("content-disposition", "attachment; filename=\"File.xls\"");  
+		rb.header("content-disposition", "attachment; filename=\""+RosterServiceImpl.Rosterfilename+".xlsx\"");  
 		return rb.build();  
 	}else {
 //		System.out.println("File not found");
