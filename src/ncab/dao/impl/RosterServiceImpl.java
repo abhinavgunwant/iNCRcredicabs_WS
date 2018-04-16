@@ -653,7 +653,16 @@ public class RosterServiceImpl {
 
 				String remarks = row.getCell(15, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue().trim();
 				System.out.println("Remarks are " + remarks);
-
+				
+				String guard_from_excel = row.getCell(14, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue().trim();
+				System.out.println("Guard Status is " + guard_from_excel);
+				
+				String guard = "";
+				if(guard_from_excel.equals(""))
+					guard = "NO";
+				else
+					guard = guard_from_excel;
+				
 				String Route_No = "";
 
 				// working date conversion
@@ -758,7 +767,7 @@ public class RosterServiceImpl {
 				// function call for insertion
 
 				CallableStatement cs = (CallableStatement) connection
-						.prepareCall("{? = call ncab_add_excel_row_3_fnc(?,?,?,?,?,?,?,?,?,?,?)}");
+						.prepareCall("{? = call ncab_add_excel_row_3_fnc(?,?,?,?,?,?,?,?,?,?,?,?)}");
 				cs.registerOutParameter(1, Types.VARCHAR);
 				cs.setString(2, empid);
 				cs.setString(3, shift_id);
@@ -771,6 +780,7 @@ public class RosterServiceImpl {
 				cs.setString(10, dname);
 				cs.setString(11, dnumber);
 				cs.setString(12, vname);
+				cs.setString(13, guard);
 
 				cs.execute();
 				String retValue = cs.getString(1);
@@ -972,88 +982,96 @@ public class RosterServiceImpl {
 	} 
 	
 	public JSONObject addEmpToDb(JSONObject json) {
-		JSONObject js = new JSONObject();
-		long millis = System.currentTimeMillis();  
-		java.sql.Date date = new java.sql.Date(millis);
-		String current_date = date.toString();
+        JSONObject js = new JSONObject();
+        long millis = System.currentTimeMillis();  
+        java.sql.Date date = new java.sql.Date(millis);
+        String current_date = date.toString();
 
-		try {
-			DBConnectionUpd db = new DBConnectionUpd();
-			Connection con = db.getConnection();
-			String cab = json.getString("c_n");
-			String qlid = json.getString("qlid");
-			String sid = json.getString("s_i");
-			String  pick_up="";
-			System.out.println("The sid is " + sid);
+        try {
+               DBConnectionUpd db = new DBConnectionUpd();
+               Connection con = db.getConnection();
+               String cab = json.getString("c_n");
+               String qlid = json.getString("qlid");
+               String sid = json.getString("s_i");
+               String  pick_up="";
+               System.out.println("The sid is " + sid);
 
-			//			long millis = System.currentTimeMillis();
-			java.sql.Date startdate = new java.sql.Date(millis);
-			System.out.println("Start Date: " + startdate);
+               //                  long millis = System.currentTimeMillis();
+               java.sql.Date startdate = new java.sql.Date(millis);
+               System.out.println("Start Date: " + startdate);
 
-			int count = 0;
-			String enddate = null;
-			// String pick=json.getString("p_time");
-			System.out.println(cab + "   " + qlid);
-			String r_n = "";
-			PreparedStatement ps = con.prepareStatement("select count(Emp_Qlid) from ncab_roster_tbl where Cab_No=? and Shift_Id=? and Emp_Qlid=? and '"+current_date+"' between Start_Date and End_Date");
-			ps.setString(1,cab);
-			ps.setString(2,sid);
-			ps.setString(3,qlid);
-			ResultSet rs=ps.executeQuery();
-			rs.next();
-			int count1=Integer.parseInt(rs.getString(1));
-			if(count1 >0){
-				js.put("error_type", "exist");
-			}
-			else{
-			PreparedStatement ps4 = con.prepareStatement("select Distinct Pickup_Time from ncab_roster_tbl where Cab_No=? and Shift_Id=? and '"+current_date+"' between Start_Date and End_Date");
-			ps4.setString(1,cab);
-			ps4.setString(2,sid);
-			ResultSet rs3=ps4.executeQuery();
-			rs3.next();
-			pick_up=rs3.getString(1);
-			PreparedStatement ps1 = con.prepareStatement("select Route_No,max(End_Date),Vendor_Name, Driver_Id from ncab_roster_tbl where Cab_No=? and Shift_Id=? and '"+current_date+"' between Start_Date and End_Date");
-			ps1.setString(1, cab);
-			ps1.setString(2, sid);
-			ResultSet rs2 = ps1.executeQuery();
-			String vname="",did="";
-			while (rs2.next()) {
-				r_n = rs2.getString(1);
-				enddate = rs2.getString(2);
-				vname = rs2.getString(3);
-				did = rs2.getString(4);
-				PreparedStatement ps2 = con.prepareStatement("insert into ncab_roster_tbl(Route_No,Emp_Qlid,Shift_Id,Cab_No,Start_Date,End_Date,Vendor_Name,Driver_Id,Pickup_Time) values(?,?,?,?,?,?,?,?,?)");
+               int count = 0;
+               String enddate = null;
+               // String pick=json.getString("p_time");
+               System.out.println(cab + "   " + qlid);
+               String r_n = "";
+               PreparedStatement ps = con.prepareStatement("select count(Emp_Qlid) from ncab_roster_tbl where Cab_No=? and Shift_Id=? and Emp_Qlid=? and '"+current_date+"' between Start_Date and End_Date and Emp_Status = 'active'");
+               ps.setString(1,cab);
+               ps.setString(2,sid);
+               ps.setString(3,qlid);
+               ResultSet rs=ps.executeQuery();
+               rs.next();
+               int count1=Integer.parseInt(rs.getString(1));
+               System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX ----- Outside -------- XXXXXXXXXXXXX");
+               System.out.println("XXXXXYY" + count1);
+               if(count1 >0){
+                     js.put("error_type", "exist");
+                     System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX ----- Inside IF for Error -------- XXXXXXXXXXXXX");
+               }
+               else{
+               PreparedStatement ps4 = con.prepareStatement("select Distinct Pickup_Time from ncab_roster_tbl where Cab_No=? and Shift_Id=? and '"+current_date+"' between Start_Date and End_Date");
+               ps4.setString(1,cab);
+               ps4.setString(2,sid);
+               ResultSet rs3=ps4.executeQuery();
+               rs3.next();
+               pick_up=rs3.getString(1);
+               System.out.println("This is the pick up "+pick_up);
+               PreparedStatement ps1 = con.prepareStatement("select Route_No,max(End_Date),Vendor_Name, Driver_Id from ncab_roster_tbl where Cab_No=? and Shift_Id=? and '"+current_date+"' between Start_Date and End_Date");
+               ps1.setString(1, cab);
+               ps1.setString(2, sid);
+               ResultSet rs2 = ps1.executeQuery();
+               String vname="",did="";
+               while (rs2.next()) {
+                     System.out.println("The test values are"+rs2.getString(1)+" "+rs2.getString(2)+" "+rs2.getString(3)+" "+rs2.getString(4));
+                     r_n = rs2.getString(1);
+                     enddate = rs2.getString(2);
+                     vname = rs2.getString(3);
+                     did = rs2.getString(4);
+                     PreparedStatement ps2 = con.prepareStatement("insert into ncab_roster_tbl(Route_No,Emp_Qlid,Shift_Id,Cab_No,Start_Date,End_Date,Vendor_Name,Driver_Id,Pickup_Time) values(?,?,?,?,?,?,?,?,?)");
 
-				ps2.setString(1, r_n);
-				ps2.setString(2, qlid);
-				ps2.setString(3, sid);
-				ps2.setString(4, cab);
-				ps2.setString(5, startdate.toString());
-				ps2.setString(6, enddate);
-				ps2.setString(7, vname);
-				ps2.setString(8, did);
-				ps2.setString(9, pick_up);
+                     ps2.setString(1, r_n);
+                     ps2.setString(2, qlid);
+                     ps2.setString(3, sid);
+                     ps2.setString(4, cab);
+                     ps2.setString(5, startdate.toString());
+                     ps2.setString(6, enddate);
+                     ps2.setString(7, vname);
+                     ps2.setString(8, did);
+                     ps2.setString(9, pick_up);
 
 
-				int i = ps2.executeUpdate();
-				System.out.println("Return value update: "+i);
-				if (i > 0) {
-					js.put("error_type", "success");
-					System.out.println("success in inserting");
-				} else {
-					js.put("error_type", "fail");
-				}
+                     int i = ps2.executeUpdate();
+                     System.out.println("Return value update: "+i);
+                     if (i>0) {
+                            js.put("error_type", "success");
+                            System.out.println("success in inserting");
+                     } else {
+                            js.put("error_type", "fail");
+                            System.out.println("failure in inserting");
 
-			}
-		 }	
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+                     }
 
-		return js;
+               }
+        }     
+        } catch (Exception e) {
+               // TODO Auto-generated catch block
+               e.printStackTrace();
+        }
 
-	}
+        return js;
+
+ }
+
 
 	public JSONArray getAddData(JSONObject json) {
 		String c_no = json.getString("c_n");
