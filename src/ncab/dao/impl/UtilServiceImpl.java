@@ -92,7 +92,7 @@ public class UtilServiceImpl {
 
 	}
 
-	public boolean sendEmailMessage(String from,String recepient1,String recepient2 ,String recepient3,String subject,String messageAttribute) {
+	public boolean sendEmailMessage(String from,String recepient1,String recepient2 ,String recepient3,String recepient4,String subject,String messageAttribute) {
 
 		String host = "localhost";
 		Properties props = new Properties();
@@ -101,6 +101,56 @@ public class UtilServiceImpl {
 		props.put("mail.smtp.socketFactory.class","javax.net.ssl.SSLSocketFactory");
 		props.put("mail.smtp.auth", "true");
 		props.put("mail.smtp.port", "465");
+
+		Session mySession = Session.getInstance(props, new Authenticator(){
+
+			protected PasswordAuthentication getPasswordAuthentication()
+			{
+				return new PasswordAuthentication("javamailsystem1@gmail.com","javamail1");
+
+			}
+		});
+
+		try
+		{
+			MimeMessage message = new MimeMessage(mySession);
+			message.setFrom(new InternetAddress(from));
+			message.addRecipient(Message.RecipientType.TO,new InternetAddress(recepient1));
+			message.addRecipients(Message.RecipientType.CC, InternetAddress.parse(recepient2+","+recepient3+","+recepient4));
+			//		    	message.addRecipient(Message.RecipientType.BCC,new InternetAddress(recepient3));
+
+			message.setSubject(subject);
+
+			message.setContent(messageAttribute, "text/html; charset=utf-8"); 
+			System.out.println("App Engine: Sending Mail to " + recepient1);
+			System.out.println("App Engine: Sending CC Mail to " + recepient2);
+			System.out.println("App Engine: Sending CC Mail to " + recepient3);
+			System.out.println("App Engine: Sending CC Mail to " + recepient4);
+
+			Transport.send(message);
+			System.out.println("AppEngine: Message Sent");
+			return true;
+
+		}catch( HeadlessException | MessagingException e)
+		{
+			e.printStackTrace();
+			return false;
+		}
+
+	}
+
+	public boolean testEmailMessage(String from,String recepient1,String recepient2 ,String recepient3,String subject,String messageAttribute) {
+
+		String host = "localhost";
+		Properties props = new Properties();
+		props.put("mail.smtp.host", "relay2.daytonoh.ncr.com");
+		props.put("mail.smtp.socketFactory.port", "25");
+//		props.put("mail.smtps.ssl.enable", "true");
+//        props.setProperty("mail.smtp.starttls.enable", "true");
+//		props.put("mail.smtp.socketFactory.class","javax.net.ssl.SSLSocketFactory");
+		props.put("mail.smtp.auth", "false");
+		props.put("mail.smtp.port", "25");
+		props.put("mail.debug", "true");
 
 		Session mySession = Session.getInstance(props, new Authenticator(){
 
@@ -138,7 +188,7 @@ public class UtilServiceImpl {
 
 	}
 
-
+	
 }
 
 
