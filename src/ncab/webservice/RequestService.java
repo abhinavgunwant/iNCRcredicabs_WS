@@ -107,8 +107,6 @@ public class RequestService {
 
 	}  
 
-
-
 	public File createTempFileWithDir(@Context HttpServletRequest req) throws IOException {
 
 		String webappPath = req.getServletContext().getRealPath("/");
@@ -341,7 +339,9 @@ public class RequestService {
 			sendMailService.sendEmailMessage(
 					"donotreply@ncr.com",                                                              //from
 					"hanif.mohd@ncr.com",                   //to  Transport Manger ID
-					Mgr_QLID+"@ncr.com","",                                                              //cc
+					Mgr_QLID+"@ncr.com",
+					Emp_QLID+"@ncr.com",
+					"",//cc
 					"NCR cabs | Request generated for "+Shift_Name+" by "+Employee_Name+"("+Emp_QLID+")", //subject
 					"<center>" +
 					"<table class='MsoNormalTable' border='0' cellspacing='0' cellpadding='0' width='40%' style='width:40.0%;mso-cellspacing:0in;background:white;mso-yfti-tbllook:1184;" +
@@ -415,7 +415,9 @@ public class RequestService {
 			sendMailService.sendEmailMessage(
 					"donotreply@ncr.com",                                                              //from
 					"hanif.mohd@ncr.com",                   //to  Transport Manger ID
-					Mgr_QLID+"@ncr.com",Level2_mgr+"@ncr.com",                                                        //cc
+					Mgr_QLID+"@ncr.com",
+					Level2_mgr+"@ncr.com",							//cc
+					Emp_QLID+"@ncr.com",							//cc
 					"NCR cabs | Request generated for "+Shift_Name+" by "+Employee_Name+"("+Emp_QLID+")", //subject
 					"<center>" +
 					"<table class='MsoNormalTable' border='0' cellspacing='0' cellpadding='0' width='40%' style='width:40.0%;mso-cellspacing:0in;background:white;mso-yfti-tbllook:1184;" +

@@ -56,6 +56,7 @@ public class UtilityService {
 		return response;
 	}
 
+	
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/sendEmail")
@@ -65,12 +66,40 @@ public class UtilityService {
 		
 		utilServiceImpl = new UtilServiceImpl();
 		
-		if(utilServiceImpl.sendEmailMessage(jsonRequest.getString("from"),jsonRequest.getString("recepient1"),jsonRequest.getString("recepient2"),jsonRequest.getString("recepient3"),jsonRequest.getString("subject"),jsonRequest.getString("message")))
+		if(utilServiceImpl.sendEmailMessage(jsonRequest.getString("from"),jsonRequest.getString("recepient1"),jsonRequest.getString("recepient2"),jsonRequest.getString("recepient3"),jsonRequest.getString("recepient4"),jsonRequest.getString("subject"),jsonRequest.getString("message")))
 				jsonResponse.put("status", "success");
 			else
 				jsonResponse.put("status", "fail");
 		return jsonResponse;
 	}
+	
+	
+//	For testing purpose only
+	@POST
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path("/internalMail")
+	public JSONObject internalEmail(String request) {
+		
+		JSONObject jsonRequest=null;
+		try {
+			jsonRequest = new JSONObject(request);
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		JSONObject jsonResponse =new JSONObject();
+		
+		utilServiceImpl = new UtilServiceImpl();
+		
+		if(utilServiceImpl.testEmailMessage(jsonRequest.getString("from"),jsonRequest.getString("recepient1"),jsonRequest.getString("recepient2"),jsonRequest.getString("recepient3"),jsonRequest.getString("subject"),jsonRequest.getString("message")))
+				jsonResponse.put("status", "success");
+			else
+				jsonResponse.put("status", "fail");
+		return jsonResponse;
+	}
+	
 	
 	
 	
