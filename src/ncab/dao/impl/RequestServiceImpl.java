@@ -11,6 +11,9 @@ import ncab.dao.DBConnectionUpd;
 import com.mysql.jdbc.Connection;
 
 import java.text.SimpleDateFormat;
+import java.text.DateFormat;
+import java.text.ParseException;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -100,29 +103,25 @@ public class RequestServiceImpl {
 
 	public String getTime(String dateTime) {
 
-		String resultTime="";
-		Calendar time = Calendar.getInstance();
+		//Date/time pattern of input date
+		DateFormat df = new SimpleDateFormat("yyyy-mm-dd HH:mm:ss");
+		//Date/time pattern of desired output date
+		DateFormat outputformat = new SimpleDateFormat("hh:mm:ss aa");
+		Date date = null;
+		String output = null;
+		try{
+			//Conversion of input String to date
+			date= df.parse(dateTime);
+			//old date format to new date format
+			output = outputformat.format(date);
+			System.out.println(output);
+			return output;
+		}catch(ParseException pe){
+			pe.printStackTrace();
+			return "error";
 
-		//Calendar.HOUR_OF_DAY is in 24-hour format
-		time.set(Calendar.HOUR_OF_DAY, Integer.parseInt(dateTime.substring(11,13)));
-
-		time.set(Calendar.MINUTE, Integer.parseInt(dateTime.substring(14,16)));
-		int am_pm = time.get(GregorianCalendar.AM_PM);
-		String zone ;
-		switch (am_pm) {
-		case  Calendar.AM:
-			zone="AM";
-			//System.out.println("AM");
-			break;
-		default:
-			zone="PM";
-			//System.out.println("PM");
-			break;
 		}
 
-		resultTime+=time.get(Calendar.HOUR) + ":" + time.get(Calendar.MINUTE) + " " +zone;
-
-		return resultTime;
 	}
 
 
