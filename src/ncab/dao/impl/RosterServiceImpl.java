@@ -585,7 +585,8 @@ public class RosterServiceImpl {
 			for (i = 1; i <= last_row_valid; i++) {
 				
 				row = sheet.getRow(i);
-				if(row == null)
+				// if(row == null)
+				if(RowCheck.isRowEmpty(row))
 				{
 					validity++;
 					if(validity > 1)
