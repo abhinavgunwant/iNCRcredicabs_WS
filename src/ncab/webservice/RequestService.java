@@ -268,7 +268,7 @@ public class RequestService {
 		String End_Date_Time = jsonreq.getString("End_Date_Time");
 		String Destination= jsonreq.getString("Destination");
 		String Source= jsonreq.getString("Source");
-		String Level2_mgr = jsonreq.getString("Level2_mgr");
+		String Level2_mgr = jsonreq.getString("Mgr_QLID_Level2");
 		String Employee_Manager_2_Name = jsonreq.getString("Employee_Manager_2_Name");
 		int Counter = jsonreq.getInt("Counter");
 		String date=Start_Date_Time.substring(0,10);
