@@ -1666,7 +1666,7 @@ public void downloadImage(OutputStream outputStream, String image)throws IOExcep
 			}
 			else{
 				// TODO add email id for Expiry document
-					String from = "incredicabs@yahoo.in";
+					String from = "incredicabs@ncr.com";
 					String recepient1 = "Hanif.Mohd@ncr.com";
 					String recepient2 = "sk250865@ncr.com";
 					String recepient3 = "";
