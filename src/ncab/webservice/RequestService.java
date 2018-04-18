@@ -353,7 +353,7 @@ public class RequestService {
 					"height:55.5pt'>" +
 					"<img src='https://digitalbridge.000webhostapp.com/images/ncr.jpg'" +
 					" o:href='cid:image005.jpg@01D3AB32.E8728490'/>" +
-					" </v:shape><![endif]--><!--[if !vml]--><img border='0' width='0' height='74' src='https://digitalbridge.000webhostapp.com/images/ncr.jpg' style='height:.766in;width:6.25in' alt='Are you ready to experience a new world of interaction?' v:shapes='_x0000_i1025'><!--[endif]--></p>" +
+					" </v:shape><![endif]--><!--[if !vml]--><!--[endif]--></p>" +
 					" </td>" +
 					" </tr>" +
 					" <tr style='mso-yfti-irow:1;height:26.4pt'>" +
@@ -429,7 +429,7 @@ public class RequestService {
 					"height:55.5pt'>" +
 					"<img src='https://digitalbridge.000webhostapp.com/images/ncr.jpg'" +
 					" o:href='cid:image005.jpg@01D3AB32.E8728490'/>" +
-					" </v:shape><![endif]--><!--[if !vml]--><img border='0' width='0' height='74' src='https://digitalbridge.000webhostapp.com/images/ncr.jpg' style='height:.766in;width:6.25in' alt='Are you ready to experience a new world of interaction?' v:shapes='_x0000_i1025'><!--[endif]--></p>" +
+					" </v:shape><![endif]--><!--[if !vml]--><!--[endif]--></p>" +
 					" </td>" +
 					" </tr>" +
 					" <tr style='mso-yfti-irow:1;height:26.4pt'>" +

@@ -1633,124 +1633,98 @@ public void downloadImage(OutputStream outputStream, String image)throws IOExcep
  }
 	
 	public boolean sendnotification(){
-	    DBConnectionUpd dbconnection = new DBConnectionUpd();
-	    Connection connection = dbconnection.getConnection();
-	    int count =0;
-	    PreparedStatement ps;
-	    int flag = 0;
-	    try {
-	    	ps = connection.prepareStatement("SELECT count(*) FROM ncab_expiry_notification_tbl where flag_sent = '" + flag + "' ");
-	    	ResultSet rs1 = ps.executeQuery();
-	    	while(rs1.next())
-	    	{
-	    		count = rs1.getInt(1);
-	    	}
-	    	ps = connection.prepareStatement("SELECT * FROM ncab_expiry_notification_tbl where flag_sent = '" + flag + "' ");
-	        ResultSet rs = ps.executeQuery();
-	           
-	        String[] document_name= new String[count];
-	        String[] entity_name= new String[count];
-	        String[] entity_identifier= new String[count];
-	        String[] contact_number= new String[count];
-	        String[] expiry_date= new String[count];
-	        int[] days_left = new int[count];
-	        int i = 0;
-	          
-	           while(rs.next()){
-	        	     document_name[i]=rs.getString(1);
-	        	     entity_name[i]=rs.getString(2);
-	        	     entity_identifier[i]=rs.getString(3);
-	        	     contact_number[i]=rs.getString(4);
-	        	     expiry_date[i]=rs.getString(5);
-	        	     days_left[i]=rs.getInt(6);
-	        	     i++;
-	           }                  
-	           
-	           Properties props = new Properties();
-				props.put("mail.smtp.host", "smtp.gmail.com");
-				props.put("mail.smtp.socketFactory.port", "465");
-				props.put("mail.smtp.socketFactory.class","javax.net.ssl.SSLSocketFactory");
-				props.put("mail.smtp.auth", "true");
-				props.put("mail.smtp.port", "465");
-				    
-				    
-				Session mySession = Session.getInstance(props, new Authenticator(){
+		DBConnectionUpd dbconnection = new DBConnectionUpd();
+		Connection connection = dbconnection.getConnection();
+		int count =0;
+		PreparedStatement ps;
+		int flag = 0;
+		try {
+			ps = connection.prepareStatement("SELECT count(*) FROM ncab_expiry_notification_tbl where flag_sent = '" + flag + "' ");
+			ResultSet rs1 = ps.executeQuery();
+			while(rs1.next())
+			{
+				count = rs1.getInt(1);
+			}
+			ps = connection.prepareStatement("SELECT * FROM ncab_expiry_notification_tbl where flag_sent = '" + flag + "' ");
+			ResultSet rs = ps.executeQuery();
 
-					protected PasswordAuthentication getPasswordAuthentication()
-				    	{
-				    		return new PasswordAuthentication("javamailsystem1@gmail.com","javamail1");
+			String[] document_name= new String[count];
+			String[] entity_name= new String[count];
+			String[] entity_identifier= new String[count];
+			String[] contact_number= new String[count];
+			String[] expiry_date= new String[count];
+			int[] days_left = new int[count];
+			int i = 0;
+
+			while(rs.next()){
+				document_name[i]=rs.getString(1);
+				entity_name[i]=rs.getString(2);
+				entity_identifier[i]=rs.getString(3);
+				contact_number[i]=rs.getString(4);
+				expiry_date[i]=rs.getString(5);
+				days_left[i]=rs.getInt(6);
+				i++;
+			}                  
+
+			if(count == 0)
+			{
+				return false;
+			}
+			else{
+				// TODO add email id for Expiry document
+					String from = "";
+					String recepient1 = "Hanif.Mohd@ncr.com";
+					String recepient2 = "sk250865@ncr.com";
+					String recepient3 = "";
+					String recepient4 = "";
 					
-				    	}
-				    });
-				if(count == 0)
-				{
-					return false;
-				}
-				else{
-			    try
-			    {
-			    	MimeMessage message = new MimeMessage(mySession);
-			    	message.setFrom(new InternetAddress("javamailsystem1@gmail.com"));
-			    	message.addRecipient(Message.RecipientType.TO,new InternetAddress("Hanif.Mohd@ncr.com"));
-			    	message.addRecipients(Message.RecipientType.CC,InternetAddress.parse("sk250865@ncr.com"));
-			    	//message.addRecipient(Message.RecipientType.CC,new InternetAddress(recepient2 + ","+recepient3));
-			    //	message.addRecipient(Message.RecipientType.BCC,new InternetAddress(recepient3));
+					String subject = "Expiry Notification";
 
-		String subject = "Expiry Notification";
-		
-		String body = "Hi Transport Team, <br><br>"
-		         + "<table width='100%' border='1' align='center'>"
-		                + "<tr align='center'>"
-		                + "<td><b>Document Name<b></td>"
-		                + "<td><b>Entity Name<b></td>"
-		                + "<td><b>Entity Identifier<b></td>"
-		                + "<td><b>Contact Number<b></td>"
-		                + "<td><b>Expiry Date<b></td>"
-		                + "<td><b>Days Left<b></td>"
-		                + "</tr>";
-		for(int j=0;j<count;j++)
-		{
-				body += "<tr>"
-		        + "<td>" + document_name[j] + "</td>"
-		        + "<td>" + entity_name[j] + "</td>"
-		        + "<td>" + entity_identifier[j] + "</td>"
-		        + "<td>" + contact_number[j] + "</td>"
-		        + "<td>" + expiry_date[j] + "</td>"
-		        + "<td>" + days_left[j] + "</td>"
-		        + "</tr>";
+					String messageAttribute = "Hi Transport Team, <br><br>"
+							+ "<table width='100%' border='1' align='center'>"
+							+ "<tr align='center'>"
+							+ "<td><b>Document Name<b></td>"
+							+ "<td><b>Entity Name<b></td>"
+							+ "<td><b>Entity Identifier<b></td>"
+							+ "<td><b>Contact Number<b></td>"
+							+ "<td><b>Expiry Date<b></td>"
+							+ "<td><b>Days Left<b></td>"
+							+ "</tr>";
+					for(int j=0;j<count;j++)
+					{
+						messageAttribute += "<tr>"
+								+ "<td>" + document_name[j] + "</td>"
+								+ "<td>" + entity_name[j] + "</td>"
+								+ "<td>" + entity_identifier[j] + "</td>"
+								+ "<td>" + contact_number[j] + "</td>"
+								+ "<td>" + expiry_date[j] + "</td>"
+								+ "<td>" + days_left[j] + "</td>"
+								+ "</tr>";
+					}
+					messageAttribute += "</table><br>";
+
+					//message.setContent(messageAttribute, "text/html");
+					
+					UtilServiceImpl obj = new UtilServiceImpl();
+					 if(obj.sendEmailMessage(from, recepient1, recepient2, recepient3, recepient4, subject, messageAttribute)) 
+					 {
+						 System.out.println("AppEngine: Message Sent");
+						 
+						 	ps = connection.prepareStatement("update ncab_expiry_notification_tbl set flag_sent = 1 where flag_sent = 0");
+							ps.executeUpdate();
+							System.out.println("Flag Updated");                 
+						
+							return true;
+					 }
+			}
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
 		}
-		body += "</table><br>";
-		message.setSubject(subject);
-
-		//message.setText(body);
-		message.setContent(body, "text/html");
-		Transport.send(message);
-		System.out.println("AppEngine: Message Sent");
-
-
-			    }catch( HeadlessException | MessagingException e)
-			    {
-			    	e.printStackTrace();
-			    	return false;
-			    }
-
-
-	           
-	           
-	                 //int f=1;
-	                 ps = connection.prepareStatement("update ncab_expiry_notification_tbl set flag_sent = 1 where flag_sent = 0");
-	                 ps.executeUpdate();
-	     	    	 System.out.println("Flag Updated");                 
-	     	    	 return true;
-				}
-	    } catch (SQLException e) {
-	           // TODO Auto-generated catch block
-	           e.printStackTrace();
-	           return false;
-	           }
-	  
+		return false;
 	}
-
 
 
 
