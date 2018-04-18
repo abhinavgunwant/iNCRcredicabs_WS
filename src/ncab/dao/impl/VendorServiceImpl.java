@@ -1532,12 +1532,6 @@ public void downloadImage(OutputStream outputStream, String image)throws IOExcep
                String did = jsonreq.getString("driver_id");
                System.out.println(did);
 
-
-
-
-
-
-
                PreparedStatement ps = connection.prepareStatement("update ncab_driver_master_tbl set driver_status=1 where driver_id = ?");
                ps.setString(1,  did);
                i=ps.executeUpdate();
@@ -1672,7 +1666,7 @@ public void downloadImage(OutputStream outputStream, String image)throws IOExcep
 			}
 			else{
 				// TODO add email id for Expiry document
-					String from = "";
+					String from = "incredicabs@yahoo.in";
 					String recepient1 = "Hanif.Mohd@ncr.com";
 					String recepient2 = "sk250865@ncr.com";
 					String recepient3 = "";
