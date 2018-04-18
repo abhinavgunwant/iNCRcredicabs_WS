@@ -773,7 +773,7 @@ public class EmployeeServiceImpl {
 			DBConnectionUpd DBConnectionUpd = new DBConnectionUpd();
 			Connection connection = DBConnectionUpd.getConnection();
 			PreparedStatement ps = connection.prepareStatement(
-				"SELECT * FROM "+DBTables.EMPLOYEE+" WHERE roles_id = 2"
+				"SELECT * FROM "+DBTables.EMPLOYEE+" WHERE roles_id = 2 or roles_id = 1"
 			);
 			
 			ResultSet rs = ps.executeQuery();
@@ -1375,6 +1375,7 @@ public class EmployeeServiceImpl {
 			ps.executeUpdate();
 			
 			System.out.println("SQL update executed succesfully!");
+			connection.close();
 		}catch(SQLException e) {
 			e.printStackTrace();
 			return false;
@@ -1407,7 +1408,8 @@ public class EmployeeServiceImpl {
 			ResultSet rs = ps.executeQuery();
 			if(rs.next()){
 				return true;
-			}			
+			}
+			con.close();		
 		} catch (SQLException e) {
 			System.out.println("SQL ERROR!");
 			e.printStackTrace();
@@ -1521,7 +1523,9 @@ public class EmployeeServiceImpl {
 			if(!userRecordFound) {
 				message = "User with the QLID \""+ qlid +"\" is not registered,"
 						+ " Please go to \"New Account Setup\" to register yourself...";
-			}			
+			}
+			
+			con.close();
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -1661,6 +1665,8 @@ public class EmployeeServiceImpl {
 //			ps.setString(6, df.format(cal));
 //			ps.setString(7, df.format(cal));
 			ps.executeUpdate();
+			
+			con.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -1691,6 +1697,8 @@ public class EmployeeServiceImpl {
 			if(rs.next()) {
 				return true;
 			}
+			
+			con.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -1723,6 +1731,8 @@ public class EmployeeServiceImpl {
 			ps.setString(1, "SYSTEM");
 			ps.setString(2, dateFormat.format(today));
 			ps.executeUpdate();
+			
+			con.close();
 		} catch (SQLException e) {
 			System.out.println("Error while invalidating old tokens....");
 			e.printStackTrace();
@@ -1756,6 +1766,8 @@ public class EmployeeServiceImpl {
 			if(rs.next()) {
 				return true;
 			}
+			
+			con.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			System.out.println("Exception!!");
@@ -1809,8 +1821,9 @@ public class EmployeeServiceImpl {
 				ps.setString(4, accType);
 				ps.setString(5, "SYSTEM");
 				ps.setString(6, "SYSTEM");				
-				ps.executeUpdate();
+				ps.executeUpdate();			
 				
+				con.close();
 			} catch (SQLException e) {
 				System.out.println("An exception occured...");
 				e.printStackTrace();
@@ -1865,6 +1878,7 @@ public class EmployeeServiceImpl {
 			ps.setString(8, curDate);
 			
 			ps.executeUpdate();
+			connection.close();
 		} catch(SQLException e) {
 			e.printStackTrace();
 			return false;
@@ -1996,8 +2010,7 @@ public class EmployeeServiceImpl {
 	    
 		boolean success = true;
 		boolean allSuccess = true;
-		boolean empAlreadyExists = false;
-		
+		boolean empAlreadyExists = false;	
 		
 		try {
 			f0 = new FileWriter(file);
@@ -2260,12 +2273,12 @@ public class EmployeeServiceImpl {
 		System.out.println("totalSuccessful: " + totalSuccessful);
 		System.out.println("totalFailed: " + (last_row_valid - totalSuccessful));
 		
-//		System.out.println("Sending log to " + qlid + "@ncr.com");
-//		if(!qlid.equals(DEFAULT_QLID)) {
-//		sendAttachment("ag250497@ncr.com", logFileName);
-//		}else {
-//			System.out.println("could not send email to: " + qlid);
-//		}
+		System.out.println("Sending log to admins....");
+		if(!qlid.equals(DEFAULT_QLID)) {
+			sendAttachment(logFileName);
+		}else {
+			System.out.println("could not send email to: " + qlid);
+		}
 		
 		return (new JSONObject())
 					.put("success", allSuccess)
@@ -2275,14 +2288,65 @@ public class EmployeeServiceImpl {
 					.put("successfulUpload", jsArr);
 	}
 	
-	public boolean sendAttachment(String toAddress, String filePath) {
+	public ContactBean[] getAllAdmins() {
+		DBConnectionUpd dbCon = new DBConnectionUpd();
+		Connection con = dbCon.getConnection();
+		ContactBean cb[] = null;
+		
+		try {
+			PreparedStatement ps = con.prepareStatement("SELECT * FROM " + DBTables.CONTACTS);
+			ResultSet rs = ps.executeQuery();
+			int rows = rs.last() ? rs.getRow() : 0;
+			rs.beforeFirst();
+			
+			cb = new ContactBean[rows];
+			
+			int index = 0;
+			
+			while(rs.next()) {
+				cb[index] = new ContactBean();
+				cb[index].setContactId(rs.getInt("contact_id"));
+				cb[index].setContactName(rs.getString("contact_name"));
+				cb[index].setContactNbr(rs.getString("contact_nbr"));
+				cb[index].setContactRole(rs.getString("contact_role"));
+				cb[index].setContactSos(rs.getString("contact_sos"));
+				cb[index].setContactSosPriority(rs.getInt("contact_sos_priority"));
+				cb[index].setContactStatus(rs.getString("conctact_status"));
+				
+				++index;
+			}
+			
+			con.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return cb;
+	}
+	
+	public boolean sendAttachment(String filePath) {
 		String host = "localhost";
 		Properties props = new Properties();
     	props.put("mail.smtp.host", "smtp.gmail.com");
 		props.put("mail.smtp.socketFactory.port", "465");
 		props.put("mail.smtp.socketFactory.class","javax.net.ssl.SSLSocketFactory");
 		props.put("mail.smtp.auth", "true");
-		props.put("mail.smtp.port", "465");
+		props.put("mail.smtp.port", "465");		
+
+		ContactBean cb[] = getAllAdmins();
+		String admins[] = new String[cb.length];
+		for(int i=0; i<cb.length; ++i) {
+			admins[i] = cb[i].getContactName();
+		}
+		
+		String toAddress = "";
+		if(admins.length > 0) {
+			toAddress = admins[0];
+		}
+		for(int i=1; i<admins.length; ++i) {
+			toAddress += ","+admins[i];
+		}
 		    
 		Session mySession = Session.getInstance(props, new Authenticator(){
 			protected PasswordAuthentication getPasswordAuthentication(){
@@ -2357,6 +2421,8 @@ public class EmployeeServiceImpl {
 				jsObj.put("driverName", rs.getString("driver_name"))
 					.put("driverContact", rs.getString("d_contact_num"));				
 			}
+			
+			con.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -2410,6 +2476,8 @@ public class EmployeeServiceImpl {
 								.put("message", "Current Password is invalid!");
 				}
 			}
+			
+			con.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -2443,6 +2511,8 @@ public class EmployeeServiceImpl {
 							.put("shiftName", rs.getString("shift_name"))
 				);	
 			}
+			
+			con.close();
 		}catch(SQLException e) {
 			e.printStackTrace();
 		}
@@ -2453,8 +2523,8 @@ public class EmployeeServiceImpl {
 
 	public JSONObject employeeDash(String qlid) {
 		// TODO Auto-generated method stub
-		DBConnectionUpd dbCon = new DBConnectionUpd();
-		Connection con = dbCon.getConnection();
+//		DBConnectionUpd dbCon = new DBConnectionUpd();
+//		Connection con = dbCon.getConnection();
 		
 		RosterServiceImpl rstrImpl= new RosterServiceImpl();
 		JSONObject jsObj = new JSONObject();
@@ -2573,8 +2643,7 @@ public class EmployeeServiceImpl {
 			} 
 			
 			shiftArr.put(tmp);
-		}
-				
+		}				
 		
 		empBean = getEmployeeFromQLID(qlid);
 		mgr1 = getEmployeeFromQLID(empBean.getEmpMgrQlid1());
@@ -2582,32 +2651,51 @@ public class EmployeeServiceImpl {
 		
 		String mgr1Name;
 		String mgr2Name;
+		String mgr1Contact = "9999999999";
+		String mgr2Contact = "9999999999";
 		
-		if(mgr1.getEmpMName() == "" || mgr1.getEmpMName().toUpperCase() == "NULL"
-				|| mgr1.getEmpMName() == null) {
-			if(mgr1.getEmpLName() == "") {
-				mgr1Name = mgr1.getEmpFName();
+		if(mgr1 != null || mgr2 != null) {		
+			if(mgr1 != null) {
+				if(mgr1.getEmpMName() == "" ||
+						mgr1.getEmpMName().toUpperCase() == "NULL"
+						|| mgr1.getEmpMName() == null) {
+					if(mgr1.getEmpLName() == "") {
+						mgr1Name = mgr1.getEmpFName();
+					}else {
+						mgr1Name = mgr1.getEmpFName() + " " + mgr1.getEmpLName();
+					}
+				}else {
+					mgr1Name = mgr1.getEmpFName() + " " + mgr1.getEmpMName() + " " + mgr1.getEmpLName();
+				}
+				mgr1Contact = mgr1.getEmpMobNbr();	
 			}else {
-				mgr1Name = mgr1.getEmpFName() + " " + mgr1.getEmpLName();
+				mgr1Name = "Mgr1";
 			}
-		}else {
-			mgr1Name = mgr1.getEmpFName() + " " + mgr1.getEmpMName() + " " + mgr1.getEmpLName();
-		}
-
-		
-		if(mgr2.getEmpMName() == "" || mgr1.getEmpMName().toUpperCase() == "NULL"
-				|| mgr1.getEmpMName() == null) {
-			if(mgr2.getEmpLName() == "") {
-				mgr2Name = mgr2.getEmpFName();
+	
+			if(mgr2 != null) {
+				if(mgr2.getEmpMName() == "" || mgr1.getEmpMName().toUpperCase() == "NULL"
+						|| mgr1.getEmpMName() == null) {
+					if(mgr2.getEmpLName() == "") {
+						mgr2Name = mgr2.getEmpFName();
+					}else {
+						mgr2Name = mgr2.getEmpFName() + " " + mgr2.getEmpLName();
+					}
+				}else {
+					mgr2Name = mgr2.getEmpFName() + " " + mgr2.getEmpMName() + " " + mgr2.getEmpLName();
+				}
+				mgr2Contact = mgr2.getEmpMobNbr();
 			}else {
-				mgr2Name = mgr2.getEmpFName() + " " + mgr2.getEmpLName();
+				mgr2Name = "Mgr2";
 			}
+			
+			mgr1Name.replaceAll(" null", "");
+			mgr1Name.replaceAll(" NULL", "");
+			mgr1Name.replaceAll(" (NULL)", "");
+			mgr2Name.replaceAll(" null", "");
 		}else {
-			mgr2Name = mgr2.getEmpFName() + " " + mgr2.getEmpMName() + " " + mgr2.getEmpLName();
+			mgr1Name = "Mgr1";
+			mgr2Name = "Mgr2";		
 		}
-		
-		mgr1Name.replaceAll(" null", "");
-		mgr2Name.replaceAll(" null", "");
 		
 		System.out.println("manager 1: " + mgr1Name);
 		System.out.println("manager 2: " + mgr2Name);
@@ -2615,8 +2703,8 @@ public class EmployeeServiceImpl {
 				
 		jsObj = createJSON(empBean);
 		jsObj.put("mgr1Name", mgr1Name)
-				.put("mgr1Contact", mgr1.getEmpMobNbr())
-				.put("mgr2Contact", mgr2.getEmpMobNbr())
+				.put("mgr1Contact", mgr1Contact)
+				.put("mgr2Contact", mgr2Contact)
 				.put("mgr2Name", mgr2Name)
 				.put("rosterInfo", rosterInfo)
 				.put("driverDetails", getDriverInfoForEmployee(qlid))
@@ -2680,6 +2768,8 @@ public class EmployeeServiceImpl {
 			ps.setString(2, srb.getRosterId());
 			ps.setString(3, srb.getCabLicensePlateNo());
 			ps.executeUpdate();
+			
+			con.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -2723,6 +2813,8 @@ public class EmployeeServiceImpl {
 				
 				pushTokenUpdateSuccessful = true;
 			}
+			
+			con.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -2751,6 +2843,8 @@ public class EmployeeServiceImpl {
 				loginPushToken = rs.getString("login_push_token");
 				break;
 			}
+			
+			con.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -2770,6 +2864,8 @@ public class EmployeeServiceImpl {
 			ps.executeUpdate();			
 			
 			System.out.println("Contact disable!");
+			
+			connection.close();
 		}catch(SQLException e) {
 			e.printStackTrace();
 			System.out.println(e);
@@ -2796,7 +2892,9 @@ public class EmployeeServiceImpl {
 			ResultSet rs = ps.executeQuery();
 			if(rs.next()){
 				return true;
-			}			
+			}
+			
+			con.close();
 		} catch (SQLException e) {
 			System.out.println("SQL ERROR!");
 			e.printStackTrace();
@@ -2825,6 +2923,7 @@ public class EmployeeServiceImpl {
 			
 			System.out.println("SQL insert query executed succesfully!");
 			
+			connection.close();			
 		}catch(SQLException e) {
 			e.printStackTrace();
 			System.out.println(e);
@@ -2860,6 +2959,7 @@ public class EmployeeServiceImpl {
 			
 			System.out.println("SQL update executed succesfully!");
 			
+			connection.close();			
 		}catch(SQLException e) {
 			e.printStackTrace();
 			return (new JSONObject())
@@ -2901,6 +3001,8 @@ public class EmployeeServiceImpl {
 						.put("contactEmail", rs.getString("contact_email"))
 				);
 			}
+			
+			connection.close();
 		}catch(SQLException e) {
 			e.printStackTrace();
 		}

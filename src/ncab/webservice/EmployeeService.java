@@ -302,11 +302,16 @@ public class EmployeeService {
 		JSONObject			jsObj			= new JSONObject();
 //		SendMailService		sms				= new SendMailService();
 		EmployeeServiceImpl	empSrvImpl		= new EmployeeServiceImpl();		
-		
+		UtilServiceImpl utilServiceImpl     = new UtilServiceImpl();
 		if (empSrvImpl.validateUser(ucb.getQlid())) {
+			
+			System.out.println(" forgot testing");
+			
+			
+			
 			//// IMPORTANT STEP: Set all the old tokens invalid!
 			empSrvImpl.setOldTokensInvalid(ucb.getQlid());
-
+			String from="donotreply@ncr.com";
 			String token = empSrvImpl.buildRandomToken(128);
 			String url= BASE_URL+"/#/forgot-password/set-password/"+ucb.getQlid()+"/"+token;
 			String recepient = ucb.getQlid()+"@ncr.com";
@@ -316,8 +321,27 @@ public class EmployeeService {
 				"code{margin: 0px 10px 0px 10px;}</style></head><body><div class=\"col-sm-8 col-sm-offset-2\">" + 
 				"<h1 class=\"text-center\">iNCRediCabs</h1><p>Visit the url below to reset your password:</p>" + 
 				"<strong>Note:</strong>Copy the url below and paste in supported browser: Chrome(ver: 50+) or Firefox(ver: 40+)" + 
-				"<div id=\"link-box\"><code>"+url+"</code></div></div></body></html>";
-			if(empSrvImpl.sendMessage(recepient, subject, message)) {
+				"<div id=\"link-box\"><code>"+url+"</code></div></div></body></html> ";
+			
+
+			if(utilServiceImpl.sendEmailMessage(from, recepient, "", "", "", subject, message)) {
+				
+				jsObj.put("success", true)
+				    	.put("message", 
+						" An Email has been sent to you along with a link to reset your password."
+						+ "You have 10 minutes to set your password before this link expires!"
+				);
+				if(!empSrvImpl.setNewPasswordToken(ucb.getQlid(), token)) {
+					jsObj.put("success", false)
+						.put("message", "Internal Error....");
+					return jsObj.toString();
+				}
+				System.out.println("Message sent");
+				return jsObj.toString();				
+				
+			}
+		
+			/*	if(empSrvImpl.sendMessage(recepient, subject, message)) {
 				jsObj.put("success", true)
 					.put("message", 
 					"An Email has been sent to you along with a link to reset your password."
@@ -331,7 +355,7 @@ public class EmployeeService {
 				System.out.println("Message sent");
 				return jsObj.toString();				
 			}
-
+*/
 			jsObj.put("success", false)
 				.put("message", "An error occured!, please try after some time....");
 
@@ -534,7 +558,7 @@ public class EmployeeService {
 			return Response.ok(
 						jsObj.toString()
 					).cookie(
-						new NewCookie("qlid", qlid, "/", "", "", 7200, false),
+						new NewCookie("qlid", qlid, "/", "", "", 10800, false),
 						new NewCookie("token", (String)session.getAttribute("token"), "/", "", "", 7200, false)
 					).build();
 		}
@@ -643,8 +667,11 @@ public class EmployeeService {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public String newAccSetup(UserCredBean	userCredBean) {
+		System.out.println("New account setup testing");
 		JSONObject jsObj = new JSONObject();
 		EmployeeServiceImpl	empSrvImpl = new EmployeeServiceImpl();
+		UtilServiceImpl utilServiceImpl     = new UtilServiceImpl();
+		
 		String qlid = userCredBean.getQlid();
 		
 		if(empSrvImpl.validateUser(userCredBean.getQlid())) {
@@ -677,6 +704,7 @@ public class EmployeeService {
 			}
 			
 //			SendMailService sms = new SendMailService();
+			String from ="";
 			String url = BASE_URL + "/#/new-acc-setup/set-password/"+qlid+"/"+pwdToken;
 			String recepient = qlid+"@ncr.com";
 			String subject = "iNCRediCabs: Link to set password.....";
@@ -687,13 +715,23 @@ public class EmployeeService {
 				"<strong>Note:</strong>Copy the url below and paste in supported browser: Chrome(ver: 50+) or Firefox(ver: 40+)" + 
 				"<div id=\"link-box\"><code>"+url+"</code></div></div></body></html>";
 	
-			if(empSrvImpl.sendMessage(recepient, subject, messageBody)) {
+			if(utilServiceImpl.sendEmailMessage(from, recepient, "", "", "", subject, messageBody)) {
+				jsObj.put("success", true)
+				.put("message",
+					"An Email has been sent to you along with a link to set your password."
+					+ "You have 10 minutes to set your password before this link expires!"
+					);
+			}
+			
+			
+			/* if(empSrvImpl.sendMessage(recepient, subject, messageBody)) {
 				jsObj.put("success", true)
 					.put("message",
 						"An Email has been sent to you along with a link to set your password."
 						+ "You have 10 minutes to set your password before this link expires!"
 						);
-			}else {
+			*/
+		   else {
 				jsObj.put("success", false)
 					.put("message", "An error occured!, please try after some time....");
 			}
@@ -1029,6 +1067,7 @@ public class EmployeeService {
 		//// TODO: add entry to sos table
 		////		send mails to transport admins and managers
 		EmployeeServiceImpl empSrvImpl = new EmployeeServiceImpl();
+		UtilServiceImpl us = new UtilServiceImpl();
 		empSrvImpl.addEntryToSOSTable(sos);
 		
 		//// send SOS mail
@@ -1062,9 +1101,8 @@ public class EmployeeService {
 		
 		empSrvImpl.addEntryToSOSTable(sos);
 		
-		UtilServiceImpl us = new UtilServiceImpl();
-//		us.sendEmailMessage(from, mail[0], mail[1], mail[2], subject, message);
-		empSrvImpl.sendMessage(mail[0]+","+mail[1]+","+mail[2], subject, message);
+		us.sendEmailMessage(from, mail[0], mail[1], mail[2], "", subject, message);
+//		empSrvImpl.sendMessage(mail[0]+","+mail[1]+","+mail[2], subject, message);
 		
 		
 		return "";
@@ -1099,6 +1137,8 @@ public class EmployeeService {
 		JSONObject sUpl = null;
 		try {
 			sUpl = frd.insertIntoDatabase(fileInputStream, fileFormDataContentDisposition, _qlid);
+//			UtilServiceImpl us = new UtilServiceImpl();
+//			us.sendEmailMessage("system@ncr.com", recepient1, recepient2, recepient3, recepient4, subject, messageAttribute)
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -1126,7 +1166,7 @@ public class EmployeeService {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public String contactDelete(
-					ContactBean	contactBean,			        
+					ContactBean	contactBean,
 		@Context	HttpServletRequest	req,
 		@Context	HttpServletResponse	res
 	) {
@@ -1137,17 +1177,16 @@ public class EmployeeService {
 		if(qlid == null || qlid == EmployeeServiceImpl.DEFAULT_QLID ||
 				sessRole.toUpperCase() != "ADMIN") {
 			return EmployeeServiceImpl.noLoginMessage();
-		}		
+		}
 		
 		JSONObject			jsObj			= new JSONObject();
-		EmployeeServiceImpl	empSrvImpl		= new EmployeeServiceImpl();	
+		EmployeeServiceImpl	empSrvImpl		= new EmployeeServiceImpl();
 		jsObj = empSrvImpl.disableContact(contactBean);
 		System.out.println(jsObj.toString());
-			return jsObj.toString();
+		return jsObj.toString();
      }
 	
-	//Contact-update
-	
+	//Contact-update	
 	@Path("/contacts/update")
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
