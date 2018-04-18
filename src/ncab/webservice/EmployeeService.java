@@ -311,7 +311,7 @@ public class EmployeeService {
 			
 			//// IMPORTANT STEP: Set all the old tokens invalid!
 			empSrvImpl.setOldTokensInvalid(ucb.getQlid());
-			String from="donotreply@ncr.com";
+			String from="incredicabs@ncr.com";
 			String token = empSrvImpl.buildRandomToken(128);
 			String url= BASE_URL+"/#/forgot-password/set-password/"+ucb.getQlid()+"/"+token;
 			String recepient = ucb.getQlid()+"@ncr.com";
@@ -704,7 +704,7 @@ public class EmployeeService {
 			}
 			
 //			SendMailService sms = new SendMailService();
-			String from ="";
+			String from ="incredicabs@ncr.com";
 			String url = BASE_URL + "/#/new-acc-setup/set-password/"+qlid+"/"+pwdToken;
 			String recepient = qlid+"@ncr.com";
 			String subject = "iNCRediCabs: Link to set password.....";
@@ -1081,7 +1081,7 @@ public class EmployeeService {
 		String now = sdf.format(new Date());
 		
 		String mail[] = new String[3];
-		String from		= sos.getEmpQlid()+"@ncr.com";
+		String from		= "incredicabs@ncr.com";
 		String subject	= "SOS received from "+emp.getEmpFName()+" "+emp.getEmpMName()+" "
 							+emp.getEmpLName()+" - iNCRediCabs";
 		String message	= "An SOS alert has been triggered by "+emp.getEmpFName()+" "+emp.getEmpMName()+" "

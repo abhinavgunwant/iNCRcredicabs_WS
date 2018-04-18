@@ -2328,11 +2328,14 @@ public class EmployeeServiceImpl {
 	public boolean sendAttachment(String filePath) {
 		String host = "localhost";
 		Properties props = new Properties();
-    	props.put("mail.smtp.host", "smtp.gmail.com");
+		props.put("mail.smtp.host", "smtp.sendgrid.net");
 		props.put("mail.smtp.socketFactory.port", "465");
+		props.put("mail.smtp.ssl.enable", "true");
 		props.put("mail.smtp.socketFactory.class","javax.net.ssl.SSLSocketFactory");
 		props.put("mail.smtp.auth", "true");
-		props.put("mail.smtp.port", "465");		
+		props.put("mail.smtp.port", "465");
+		props.put("mail.smtp.connectiontimeout", 120000);
+		props.put("mail.debug", "true");	
 
 		ContactBean cb[] = getAllAdmins();
 		String admins[] = new String[cb.length];
@@ -2353,7 +2356,7 @@ public class EmployeeServiceImpl {
 				return new PasswordAuthentication("javamailsystem1@gmail.com","javamail1");
 		}});		    
 	    try{
-	    	String from="iNCRediCabs-Admin@ncr.com";
+	    	String from="incredicabs@ncr.com";
 	    	MimeMessage message = new MimeMessage(mySession);
 	    	message.setFrom(new InternetAddress(from));
 	    	message.addRecipients(Message.RecipientType.TO, InternetAddress.parse(toAddress));	  
