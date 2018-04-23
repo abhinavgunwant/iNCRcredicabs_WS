@@ -1114,13 +1114,13 @@ public class EmployeeServiceImpl {
 					.put("error", true)
 					.put("message", "Address Line 1 cannot be empty!")
 			);
-		}else if(employeeBean.getEmpAddLine1().length() > 100) {
+		}else if(employeeBean.getEmpAddLine1().length() > 255) {
 			System.out.println("Error in Employee Address Line 1 validation2");
 			addEmpSuccess = false;
 			jsObj.put("empAddLine1", 
 				(new JSONObject())
 					.put("error", true)
-					.put("message", "Address Line 1 can have maximum 100 characters!")
+					.put("message", "Address Line 1 can have maximum 255 characters!")
 			);
 		}else {
 			jsObj.put("empAddLine1",
@@ -1189,13 +1189,13 @@ public class EmployeeServiceImpl {
 					.put("error", true)
 					.put("message", "Pickup Area cannot be empty!")
 			);
-		}else if(employeeBean.getEmpPickupArea().length() > 20) {
+		}else if(employeeBean.getEmpPickupArea().length() > 100) {
 			System.out.println("Error in Employee Pickup Area validation2");
 			addEmpSuccess = false;
 			jsObj.put("empPickupArea", 
 				(new JSONObject())
 					.put("error", true)
-					.put("message", "Pickup Area cannot exceed 20 characters!")
+					.put("message", "Pickup Area cannot exceed 100 characters!")
 			);
 		}else {
 			jsObj.put("empPickupArea",
@@ -1981,6 +1981,8 @@ public class EmployeeServiceImpl {
 		
 		String logFileName = LOGFILE_DIR + "/" + LOGFILE_PREFIX +
 						logStartStr.replaceAll("\\s", "_").replaceAll(":", "-") + ".txt";
+//		String logFileName = LOGFILE_DIR + "\\" + LOGFILE_PREFIX +
+//				logStartStr.replaceAll("\\s", "_").replaceAll(":", "-") + ".txt";
 		
 		File logDir = new File(LOGFILE_DIR);
 		
@@ -2121,14 +2123,21 @@ public class EmployeeServiceImpl {
 				jsonKeys = validateJSON.keys();
 				
 				String key;
+				String value = "";
+				String message = "";
 				while(jsonKeys.hasNext()) {
 					key = jsonKeys.next().toString();
 					if(key != "message" && key != "success") {
 						js2 = validateJSON.getJSONObject(key);
 						if(Boolean.parseBoolean(js2.getString("error"))) {
 							success = false;
-							f0.write("\n\tERROR: \"" + js2.getString("message") +"\" \n\t\tVALUE: "
-									+js2.getString("value"));
+							if(js2.has("message")) {
+								message = js2.getString("message");
+							}
+							if(js2.has("vaule")) {
+								value = js2.getString("value");
+							}
+							f0.write("\n\tERROR: \"" + message +"\" \n\t\tVALUE: "+value);
 						}
 					}
 				}
@@ -2166,7 +2175,7 @@ public class EmployeeServiceImpl {
 						);						
 						
 						ps.setString(1, empBean.getEmpMgrQlid1());
-						ps.setString(2, empBean.getEmpMgrQlid1());
+						ps.setString(2, empBean.getEmpMgrQlid2());
 						ps.setString(3, its);
 						ps.setString(4, empBean.getEmpFName());
 						ps.setString(5, empBean.getEmpMName());
@@ -2659,9 +2668,10 @@ public class EmployeeServiceImpl {
 		
 		if(mgr1 != null || mgr2 != null) {		
 			if(mgr1 != null) {
-				if(mgr1.getEmpMName() == "" ||
+				if(mgr1.getEmpMName() == null ||
+						mgr1.getEmpMName() == "" ||
 						mgr1.getEmpMName().toUpperCase() == "NULL"
-						|| mgr1.getEmpMName() == null) {
+						) {
 					if(mgr1.getEmpLName() == "") {
 						mgr1Name = mgr1.getEmpFName();
 					}else {
@@ -2676,8 +2686,10 @@ public class EmployeeServiceImpl {
 			}
 	
 			if(mgr2 != null) {
-				if(mgr2.getEmpMName() == "" || mgr1.getEmpMName().toUpperCase() == "NULL"
-						|| mgr1.getEmpMName() == null) {
+				if(mgr2.getEmpMName() == null ||
+						mgr2.getEmpMName() == "" ||
+						mgr2.getEmpMName().toUpperCase() == "NULL"
+						) {
 					if(mgr2.getEmpLName() == "") {
 						mgr2Name = mgr2.getEmpFName();
 					}else {
