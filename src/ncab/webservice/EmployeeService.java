@@ -50,7 +50,10 @@ import ncab.dao.impl.VendorServiceImpl;
 @Path("/EmployeeService")
 public class EmployeeService {	
 //	private static final String BASE_URL = "http://localhost:4200";
-	private static final String BASE_URL = "http://ec2-18-219-151-75.us-east-2.compute.amazonaws.com:8080";
+//	private static final String BASE_URL = "http://ec2-18-219-151-75.us-east-2.compute.amazonaws.com:8080";
+	
+	private static final String BASE_URL = "http://incredicabs.in";
+
 	
 	private static final String FORGOT_PASSWORD_SET_URL = BASE_URL+"/forgot-password/set-password";
 	private static final String NEW_ACC_SETUP_SET_PASSWORD_URL = BASE_URL+"/new-acc-setup/set-password";
