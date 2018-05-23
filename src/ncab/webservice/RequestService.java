@@ -338,7 +338,7 @@ public class RequestService {
 			System.out.println("out"+push_Level1_token);
 			sendMailService.sendEmailMessage(
 					"incredicabs@ncr.com",                 //from
-					"hanif.mohd@ncr.com",                   //to  Transport Manger ID
+					"Transport.Gurgaon@ncr.com",                   //to  Transport Manger ID
 					Mgr_QLID+"@ncr.com",
 					Emp_QLID+"@ncr.com",
 					"",//cc
@@ -414,7 +414,7 @@ public class RequestService {
 
 			sendMailService.sendEmailMessage(
 					"incredicabs@ncr.com",                      //from
-					"hanif.mohd@ncr.com",                   //to  Transport Manger ID
+					"Transport.Gurgaon@ncr.com",                   //to  Transport Manger ID
 					Mgr_QLID+"@ncr.com",
 					Level2_mgr+"@ncr.com",							//cc
 					Emp_QLID+"@ncr.com",							//cc
