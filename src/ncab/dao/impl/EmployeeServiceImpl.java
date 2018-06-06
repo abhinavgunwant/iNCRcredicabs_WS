@@ -2067,6 +2067,7 @@ public class EmployeeServiceImpl {
 			try {
 				row = (Row) sheet.getRow(i);
 				String creation_date = "" + row.getCell(18, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getDateCellValue();
+//				String creation_date = "Monday Apr 29 00:00:00 +0530 2018";
 				DateFormat formatter1 = new SimpleDateFormat("E MMM dd HH:mm:ss Z yyyy");
 				Date date2 = (Date)formatter1.parse(creation_date);			 
 				
@@ -2074,6 +2075,7 @@ public class EmployeeServiceImpl {
 				cal1.setTime(date2);
 				String formatedDate1 = cal1.get(Calendar.YEAR) + "-" + (cal1.get(Calendar.MONTH) + 1) + "-" + cal1.get(Calendar.DATE);
 				String last_updated_date = "" + row.getCell(20, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getDateCellValue();
+//				String last_updated_date = "Monday Apr 30 00:00:00 +0530 2018";
 				DateFormat formatter2 = new SimpleDateFormat("E MMM dd HH:mm:ss Z yyyy");
 	            Date date3 = (Date)formatter1.parse(last_updated_date);
 	            
@@ -2118,6 +2120,8 @@ public class EmployeeServiceImpl {
 					empBean.setEmpHomeNbr(null);
 				}
 				
+				System.out.println("----| Inserting Employee |----");
+				
 				validateJSON = validateAddEmployeeFormData(empBean);
 				System.out.println("Home Number: " + empBean.getEmpHomeNbr());
 				jsonKeys = validateJSON.keys();
@@ -2159,7 +2163,7 @@ public class EmployeeServiceImpl {
 
 				connection.setAutoCommit(false);
 
-				if(success) {
+//				if(success) {
 					PreparedStatement ps;
 					if(empAlreadyExists) {
 						System.out.println("already exists! updating....");
@@ -2249,9 +2253,9 @@ public class EmployeeServiceImpl {
 						jsArr.put(createJSON(empBean));
 						++totalSuccessful;
 					}
-				}else {
-					System.out.println("***** Validation Error!");
-				}
+//				}else {
+//					System.out.println("***** Validation Error!");
+//				}
 			}catch (Exception e) {		
 				System.out.println(e.toString());
 			    e.printStackTrace();
@@ -2421,10 +2425,18 @@ public class EmployeeServiceImpl {
 		
 		
 		try {
+			//// Old code, revert when broken!
+//			ps = con.prepareStatement(
+//				"select driver_name, d_contact_num from ncab_driver_master_tbl where driver_id = "
+//				+ "(select driver_id from ncab_roster_tbl where "
+//				+ "emp_qlid = ? and emp_status = 'active')"
+//			);			
+			
+			//// New code, to address the issue!
 			ps = con.prepareStatement(
-				"select driver_name, d_contact_num from ncab_driver_master_tbl where driver_id = "
-				+ "(select driver_id from ncab_roster_tbl where "
-				+ "emp_qlid = ? and emp_status = 'active')"
+				"SELECT driver_name, d_contact_num FROM ncab_driver_master_tbl WHERE"
+				+ " driver_id = (SELECT driver_id FROM ncab_roster_tbl WHERE emp_qlid = ?"
+				+ " AND CURDATE() BETWEEN start_date AND end_date)"
 			);
 			
 			ps.setString(1, qlid);
