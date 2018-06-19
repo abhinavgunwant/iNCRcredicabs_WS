@@ -581,7 +581,7 @@ public class AndroidServiceImpl {
         JSONArray jsonarray=new JSONArray();
         DBConnectionRo dbconnection = new DBConnectionRo();
         Connection connection = (Connection) dbconnection.getConnection();
-        String sql = "SELECT a.Rqst_Date_Time,a.Start_Date_Time,a.End_Date_Time,a.Approval,a.Source,a.Destination,a.Reason,b.Emp_FName,b.Emp_LName FROM NCAB_UNSCHEDULE_RQST_TBL AS a, ncab_master_employee_tbl AS b  WHERE a.Emp_Qlid=b.Emp_Qlid AND a.Approvers like '%"+Emp_Qlid+"%' ";
+        String sql = "SELECT a.Rqst_Date_Time,a.Start_Date_Time,a.End_Date_Time,a.Approval,a.Source,a.Destination,a.Reason,b.Emp_FName,b.Emp_LName FROM NCAB_UNSCHEDULE_RQST_TBL AS a, ncab_master_employee_tbl AS b  WHERE a.Emp_Qlid=b.Emp_Qlid AND a.Approvers like '%"+Emp_Qlid+"%' order by a.Approval desc";
         PreparedStatement ps;
  
         try {
