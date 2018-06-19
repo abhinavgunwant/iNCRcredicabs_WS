@@ -1,3 +1,4 @@
+
 package ncab.dao.impl;
 
 import java.sql.PreparedStatement;
@@ -5,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.NoSuchElementException;
+
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -530,5 +532,90 @@ public class AndroidServiceImpl {
 	//                         return jsonresponse;
 	//
 	//           }
+	
+	public JSONObject getRequestsbyme(String Emp_Qlid){
+        
+        JSONArray jsonarray=new JSONArray();
+        DBConnectionRo dbconnection = new DBConnectionRo();
+        Connection connection = (Connection) dbconnection.getConnection();
+        String sql = "SELECT (SELECT CONCAT(Emp_FName,' ',Emp_LName) FROM ncab_master_employee_tbl WHERE Emp_Qlid=?) AS Emp_Name,Rqst_Date_Time,Start_Date_Time,End_Date_Time,Approval,Source,Destination,Reason FROM NCAB_UNSCHEDULE_RQST_TBL WHERE Emp_Qlid=?";
+        PreparedStatement ps;
+ 
+        try {
+               ps = connection.prepareStatement(sql);
+               ps.setString(1,Emp_Qlid);
+               ps.setString(2,Emp_Qlid);
+               
+               ResultSet rs = ps.executeQuery();
+               if (!rs.next())
+                     return (new JSONObject()).put("result","fail");
+                     
+               while (rs.next()) {
+                     JSONObject jsonresponse=new JSONObject();
+
+                     jsonresponse.put("Emp_Name",rs.getString(1));
+                     jsonresponse.put("Rqst_Date_Time",rs.getString(2));
+                     jsonresponse.put("Start_Date_Time",rs.getString(3));
+                     jsonresponse.put("End_Date_Time",rs.getString(4));
+                     jsonresponse.put("Approval",rs.getString(5));
+                     jsonresponse.put("Source",rs.getString(6));
+                     jsonresponse.put("Destination",rs.getString(7));
+                     jsonresponse.put("Reason",rs.getString(8));
+                      
+                     jsonarray.put(jsonresponse);
+        
+               }
+
+
+        } catch (SQLException e) {
+               // TODO Auto-generated catch block
+               e.printStackTrace();
+        }
+        return (new JSONObject()).put("result",jsonarray).put("status","success");
+
+        
+ }
+ 
+ public JSONObject getRequestsforme(String Emp_Qlid){
+        
+        JSONArray jsonarray=new JSONArray();
+        DBConnectionRo dbconnection = new DBConnectionRo();
+        Connection connection = (Connection) dbconnection.getConnection();
+        String sql = "SELECT a.Rqst_Date_Time,a.Start_Date_Time,a.End_Date_Time,a.Approval,a.Source,a.Destination,a.Reason,b.Emp_FName,b.Emp_LName FROM NCAB_UNSCHEDULE_RQST_TBL AS a, ncab_master_employee_tbl AS b  WHERE a.Emp_Qlid=b.Emp_Qlid AND a.Approvers like '%"+Emp_Qlid+"%' ";
+        PreparedStatement ps;
+ 
+        try {
+               ps = connection.prepareStatement(sql);
+               
+               ResultSet rs = ps.executeQuery();
+               
+               if (!rs.next())
+                     return (new JSONObject()).put("result","fail");
+               
+               while (rs.next()) {
+                     JSONObject jsonresponse=new JSONObject();
+
+                     jsonresponse.put("Emp_Name",rs.getString(8)+" "+rs.getString(9));
+                     jsonresponse.put("Rqst_Date_Time",rs.getString(1));
+                     jsonresponse.put("Start_Date_Time",rs.getString(2));
+                     jsonresponse.put("End_Date_Time",rs.getString(3));
+                      jsonresponse.put("Approval",rs.getString(4));
+                     jsonresponse.put("Source",rs.getString(5));
+                     jsonresponse.put("Destination",rs.getString(6));
+                     jsonresponse.put("Reason",rs.getString(7));
+                     
+                     jsonarray.put(jsonresponse);
+        
+               }
+
+
+        } catch (SQLException e) {
+               // TODO Auto-generated catch block
+               e.printStackTrace();
+        }
+        return (new JSONObject()).put("result",jsonarray).put("status","success");
+        
+ }
+
 
 }

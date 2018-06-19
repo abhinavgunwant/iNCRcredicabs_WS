@@ -1,3 +1,5 @@
+
+
 package ncab.webservice;
 
 import java.text.ParseException;
@@ -171,6 +173,39 @@ public class AndroidService {
                 Response   response = Response.status(200).type("application/json").entity(jsonresponse.toString()).build();              
            return response;
          }
+       
+       @Path("/NotificationsByMe")
+     @POST
+     @Produces(MediaType.APPLICATION_JSON)
+     public Response RequestsByMe(String jsonreq) throws ParseException{
+       AndroidServiceImpl demodaoimpl=new AndroidServiceImpl();
+              JSONObject jsonrequest=new JSONObject(jsonreq);
+       JSONObject jsonresponse = new JSONObject();
+       jsonresponse = demodaoimpl.getRequestsbyme(jsonrequest.getString("Emp_Qlid"));
+
+       Response response = Response.status(200).type("application/json").entity(jsonresponse.toString()).build();
+
+            return response;
+        
+        
+     }
+     
+     @Path("/NotificationsForMe")
+     @POST
+     @Produces(MediaType.APPLICATION_JSON)
+     public Response RequestsForMe(String jsonreq) throws ParseException{
+       AndroidServiceImpl demodaoimpl=new AndroidServiceImpl();
+              JSONObject jsonrequest=new JSONObject(jsonreq);
+       JSONObject jsonresponse = new JSONObject();
+       jsonresponse = demodaoimpl.getRequestsforme(jsonrequest.getString("Emp_Qlid"));
+
+       Response response = Response.status(200).type("application/json").entity(jsonresponse.toString()).build();
+
+            return response;
+        
+        
+     }
+
 
 }
 
