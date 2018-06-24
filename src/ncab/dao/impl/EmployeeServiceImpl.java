@@ -68,21 +68,17 @@ import ncab.dao.DBConnectionUpd;
 
 public class EmployeeServiceImpl {
 	//// The set of characters a pwdToken is allowed to have
-	private final String allowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-	private final int allowedLen = allowedChars.length();
+	private final String		allowedChars	= "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+	private final int			allowedLen		= allowedChars.length();
 	
-	//// required information for Google Recaptcha
-	private final String USER_AGENT = "Mozilla/5.0";
-	private final String GRECAPTCHA_API_URL = "https://www.google.com/recaptcha/api/siteverify";
-	private final String GRECAPTCHA_SECRET = "6LfobEoUAAAAAMzl6qoNPTKv561siLjKlvFVAMIO";
 //	private final String LOGFILE_DIR = "C:\\Users\\AG250497\\Desktop\\ncab_logs";
-	private final String LOGFILE_DIR = "/tmp/ncab_logs";
-	private final String LOGFILE_PREFIX = "iNCRediCabs_EMP_MASS_UPLOAD_LOG_";
+	private final String		LOGFILE_DIR		= "/tmp/ncab_logs";
+	private final String		LOGFILE_PREFIX	= "iNCRediCabs_EMP_MASS_UPLOAD_LOG_";
 	//	private final String LOGFILE_DIR = "C:\\Users\\AG250497\\Desktop\\ncab_logs";
 //	private final String LOGFILE_DIR = "/tmp/ncab_logs";
 	
-	public static final String DEFAULT_QLID = "NO_QLID";
-	public static final String DEFAULT_TOKEN = "NO_TOKEN";
+	public static final String	DEFAULT_QLID	= "NO_QLID";
+	public static final String	DEFAULT_TOKEN	= "NO_TOKEN";
 	
 	public static String noLoginMessage() {
 		return (new JSONObject())
@@ -96,44 +92,6 @@ public class EmployeeServiceImpl {
 				.put("login", false)
 				.put("message", "You must be logged-in!")
 				.toString()).build();
-	}
-	
-	public JSONObject grecaptchaVerify(String grecaptchaResponse) {
-		JSONObject grecaptchaResponseJSON = new JSONObject();
-		try{
-			URL url = new URL(GRECAPTCHA_API_URL);
-			HttpsURLConnection conUrl = (HttpsURLConnection) url.openConnection();
-
-			conUrl.setRequestMethod("POST");
-			conUrl.setRequestProperty("User-Agent", USER_AGENT);
-			conUrl.setRequestProperty("Accept-Language", "en-US,en;q=0.5");
-
-			String postParams = "secret="+GRECAPTCHA_SECRET+"&response="+grecaptchaResponse;
-
-			conUrl.setDoOutput(true);
-			DataOutputStream wr = new DataOutputStream(conUrl.getOutputStream());
-			wr.writeBytes(postParams);
-			wr.flush();
-			wr.close();
-
-			BufferedReader in = new BufferedReader(new InputStreamReader(conUrl.getInputStream()));
-			String inputLine;
-			StringBuffer response = new StringBuffer();
-
-			while ((inputLine = in.readLine()) != null) {
-				response.append(inputLine);
-			}
-			in.close();
-			grecaptchaResponseJSON = new JSONObject(response.toString());
-		}catch(Exception e){
-			e.printStackTrace();
-			grecaptchaResponseJSON
-				.put("success", false)
-				.put("exception", true)
-				.put("message", "Error connecting to reCaptcha server.... Please try again later!");
-		}
-		
-		return grecaptchaResponseJSON;
 	}
 	
 	/**
@@ -153,12 +111,10 @@ public class EmployeeServiceImpl {
 	 * 				{"success": false, "message": "Error in fetching result!"}
 	 */
 	public JSONObject addEmployee(EmployeeBean employeeBean) {
-		System.out.println("in addEmployee");
-		boolean managerFound = false;
-//		System.out.println("!!");
-		JSONObject validateJSON = validateAddEmployeeFormData(employeeBean);
+		boolean managerFound	= false;
+		JSONObject validateJSON	= validateAddEmployeeFormData(employeeBean);
+		
 		if(validateJSON.has("success")) {
-//			System.out.println("!!1, success: " + validateJSON.getString("success"));
 			if(!Boolean.parseBoolean(validateJSON.getString("success"))) {
 				return validateJSON;
 			}
@@ -167,15 +123,18 @@ public class EmployeeServiceImpl {
 					.put("success", false)
 					.put("message", "An error occured!");
 		}
-//		System.out.println("!!2");
+
+		Connection connection	= (new DBConnectionUpd()).getConnection();
+		PreparedStatement ps	= null;
+		PreparedStatement psMgr	= null;
+		ResultSet rs			= null;
 		
 		try {
-			Connection connection = (new DBConnectionUpd()).getConnection();
-			PreparedStatement psMgr = connection.prepareStatement(
+			psMgr = connection.prepareStatement(
 				"SELECT * FROM "+DBTables.EMPLOYEE+" WHERE emp_qlid = ? AND roles_id = 2"
 			);
 			psMgr.setString(1, employeeBean.getEmpMgrQlid1());
-			ResultSet rs = psMgr.executeQuery();
+			rs = psMgr.executeQuery();
 			while(rs.next()) {				
 				managerFound = true;	
 			}
@@ -184,7 +143,7 @@ public class EmployeeServiceImpl {
 						.put("success", false)
 						.put("message", "The Manager QLID is invalid!");
 			}
-			PreparedStatement ps = connection.prepareStatement(
+			ps = connection.prepareStatement(
 				"INSERT INTO "+ DBTables.EMPLOYEE +"("
 				+ "emp_qlid, emp_mgr_qlid1, emp_mgr_qlid2, emp_fname, emp_mname, emp_lname, emp_gender,"
 				+ "Emp_Mob_Nbr, emp_home_nbr, emp_emerg_nbr, emp_add_line1, emp_add_line2, emp_pin,"
@@ -200,7 +159,6 @@ public class EmployeeServiceImpl {
 			ps.setString(5, employeeBean.getEmpMName());
 			ps.setString(6, employeeBean.getEmpLName());
 			ps.setString(7, employeeBean.getEmpGender());
-//			ps.setString(8, employeeBean.getEmpDOB());
 			ps.setString(8, employeeBean.getEmpMobNbr());
 			ps.setString(9, employeeBean.getEmpHomeNbr());
 			ps.setString(10, employeeBean.getEmpEmergNbr());
@@ -220,6 +178,19 @@ public class EmployeeServiceImpl {
 			return (new JSONObject())
 					.put("success", false)
 					.put("message", "Error in fetching result!");
+		}finally {
+			if(rs != null) {
+				try {rs.close();}catch(SQLException e) {e.printStackTrace();}
+			}
+			if(psMgr != null) {
+				try {psMgr.close();}catch(SQLException e) {e.printStackTrace();}
+			}
+			if(ps != null) {
+				try {ps.close();}catch(SQLException e) {e.printStackTrace();}
+			}
+			if(connection != null) {
+				try {connection.close();}catch(SQLException e) {e.printStackTrace();}
+			}
 		}
 		return (new JSONObject())
 				.put("success", true)
@@ -236,17 +207,22 @@ public class EmployeeServiceImpl {
 	public JSONObject editEmployee(EmployeeBean employeeBean) {
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 		Date today = (Calendar.getInstance()).getTime();
+		
 		System.out.println("Starting validation....");
+		
 		JSONObject validateJSON = validateAddEmployeeFormData(employeeBean);
+		
 		System.out.println(validateJSON.toString());
 		System.out.println(validateJSON.getString("success"));
+		
 		if(!Boolean.parseBoolean(validateJSON.getString("success"))) {
 			return validateJSON;
-		}
-		System.out.println("Before sql");
-		try {
-			Connection connection = (new DBConnectionUpd()).getConnection();			
-			PreparedStatement ps = connection.prepareStatement( 
+		}		
+
+		Connection connection	= (new DBConnectionUpd()).getConnection();
+		PreparedStatement ps	= null;
+		try {			
+			ps = connection.prepareStatement( 
 				"UPDATE ncab_master_employee_tbl SET "
 					+ "emp_mgr_qlid1 = ?, emp_mgr_qlid2 = ?, emp_fname = ?, emp_mname = ?, "
 					+ "emp_lname = ?, emp_gender = ?, emp_mob_nbr = ?, "
@@ -279,16 +255,20 @@ public class EmployeeServiceImpl {
 			ps.setString(20, employeeBean.getEmpQlid());
 
 			ps.executeUpdate();
-			System.out.println("SQL update executed succesfully!");
 		} catch(SQLException e) {
 			e.printStackTrace();
-			System.out.println("Inside Catch");
 			return (new JSONObject())
 					.put("success", false)
 					.put("message", "Error while editing employee!");
+		}finally {
+			if(ps != null) {
+				try {ps.close();}catch(SQLException e) {e.printStackTrace();}
+			}
+			if(connection != null) {
+				try {connection.close();}catch(SQLException e) {e.printStackTrace();}
+			}
 		}
 		
-		System.out.println("Last statement");
 		return (new JSONObject())
 				.put("success", true)
 				.put("message", "Employee edited successfully!");
@@ -303,20 +283,27 @@ public class EmployeeServiceImpl {
 	 * 	to 'I' (i.e. 'Inactive')
 	 */
 	public boolean deactivateEmployee(EmployeeBean employeeBean) {
-		System.out.println("Deactivating");
+		Connection connection = (new DBConnectionUpd()).getConnection();
+		PreparedStatement ps = null;
+		
 		try {
-			Connection connection = (new DBConnectionUpd()).getConnection();
-			PreparedStatement ps = connection.prepareStatement(
+			ps = connection.prepareStatement(
 				"UPDATE "+ DBTables.EMPLOYEE +" SET emp_status = 'I' WHERE emp_qlid = ?"
 			);
 			ps.setString(1, employeeBean.getEmpQlid());
 			ps.executeUpdate();
-			System.out.println("SQL update executed succesfully!");
 		} catch(SQLException e) {
-			System.out.println("!!!!!!!!");
 			e.printStackTrace();
 			return false;
-		}		
+		}finally {
+			if(ps != null) {
+				try {ps.close();}catch(SQLException e) {e.printStackTrace();}
+			}
+			
+			if(connection != null) {
+				try {connection.close();}catch(SQLException e) {e.printStackTrace();}
+			}			
+		}
 		return true;
 	}
 	
@@ -330,17 +317,25 @@ public class EmployeeServiceImpl {
 	 */
 	public boolean activateEmployee(EmployeeBean employeeBean) {
 		System.out.println("Activating Employee!!");
+		Connection connection = (new DBConnectionUpd()).getConnection();
+		PreparedStatement ps = null;
 		try {
-			Connection connection = (new DBConnectionUpd()).getConnection();
-			PreparedStatement ps = connection.prepareStatement(
+			ps = connection.prepareStatement(
 				"UPDATE "+ DBTables.EMPLOYEE +" SET emp_status = 'A' WHERE emp_qlid = ?"
 			);
 			ps.setString(1, employeeBean.getEmpQlid());
 			ps.executeUpdate();
-			System.out.println("SQL update executed succesfully!");
 		} catch(SQLException e) {
 			e.printStackTrace();
 			return false;
+		}finally {
+			if(ps != null) {
+				try {ps.close();}catch(SQLException e) {e.printStackTrace();}
+			}
+			
+			if(connection != null) {
+				try {connection.close();}catch(SQLException e) {e.printStackTrace();}
+			}	
 		}
 		return true;
 	}
@@ -378,12 +373,15 @@ public class EmployeeServiceImpl {
 	) {
 		EmployeeBean employeeBeanArr[] = null;
 		String defaultSQL = "SELECT * FROM "+ DBTables.EMPLOYEE;
+		Connection			connection	= (new DBConnectionUpd()).getConnection();
+		PreparedStatement	ps			= null;
+		PreparedStatement	ps2			= null;
+		PreparedStatement	ps3			= null;
+		ResultSet			rs			= null;
+		ResultSet			rs2			= null;
+		ResultSet			rs3			= null;
 		
-		try {
-			Connection connection = (new DBConnectionUpd()).getConnection();
-			PreparedStatement ps = null;
-			ResultSet rs = null;
-			
+		try {			
 			//// Check if filter type is not null
 			if(employeeFilterBean.getFilterType() != null ||
 					employeeFilterBean.getFilterValue() != null) {
@@ -407,6 +405,7 @@ public class EmployeeServiceImpl {
 						ps.setString(1, employeeFilterBean.getFilterValue()+"%");
 						break;
 						
+						
 					case "MGRNAME1":
 						String mgrName1[] = employeeFilterBean.getFilterValue().split(" ");
 						String mgrFName1, mgrLName1;
@@ -419,7 +418,7 @@ public class EmployeeServiceImpl {
 							mgrLName1 = mgrFName1;
 						}
 						
-						PreparedStatement ps2 = connection.prepareStatement(
+						ps2 = connection.prepareStatement(
 							//// make sure roles_id is manager's role id
 							"SELECT emp_qlid from "+DBTables.EMPLOYEE+" WHERE "
 							+ "(emp_fname LIKE ? or emp_lname LIKE ?) "
@@ -428,7 +427,7 @@ public class EmployeeServiceImpl {
 						ps2.setString(1, "%"+mgrFName1+"%");
 						ps2.setString(2, "%"+mgrLName1+"%");
 						
-						ResultSet rs2 = ps2.executeQuery();
+						rs2 = ps2.executeQuery();
 						
 						int rows = rs2.last() ? rs2.getRow() : 0;
 						if(rows > 0) {
@@ -462,17 +461,14 @@ public class EmployeeServiceImpl {
 							mgrLName2 = mgrFName2;
 						}
 						
-						PreparedStatement ps3 = connection.prepareStatement(
-//							"SELECT mgr_qlid from master_manager WHERE "
-//								+ "mgr_fname LIKE ? or mgr_lname LIKE ? "
-							//// make sure roles_id is manager's role id
+						ps3 = connection.prepareStatement(
 							"SELECT emp_qlid from "+DBTables.EMPLOYEE+" WHERE "
 							+ "(emp_fname LIKE ? or emp_lname LIKE ?)"
 							+ "AND roles_id = 2" 
 						);
 						ps3.setString(1, "%"+mgrFName2+"%");
 						ps3.setString(2, "%"+mgrLName2+"%");
-						ResultSet rs3 = ps3.executeQuery();
+						rs3 = ps3.executeQuery();
 						
 						int rows2 = rs3.last() ? rs3.getRow() : 0;
 						if(rows2 > 0) {
@@ -712,6 +708,14 @@ public class EmployeeServiceImpl {
 			}
 		} catch(SQLException e) {
 			e.printStackTrace();
+		}finally {
+			if(rs != null) {try {rs.close();}catch(SQLException e) {e.printStackTrace();}}
+			if(rs2 != null) {try {rs2.close();}catch(SQLException e) {e.printStackTrace();}}
+			if(rs3 != null) {try {rs3.close();}catch(SQLException e) {e.printStackTrace();}}
+			if(ps != null) {try {ps.close();}catch(SQLException e) {e.printStackTrace();}}
+			if(ps2 != null) {try {ps2.close();}catch(SQLException e) {e.printStackTrace();}}
+			if(ps3 != null) {try {ps3.close();}catch(SQLException e) {e.printStackTrace();}}
+			if(connection != null) {try {connection.close();}catch(SQLException e) {e.printStackTrace();}}
 		}
 		
 		return employeeBeanArr;
@@ -721,12 +725,14 @@ public class EmployeeServiceImpl {
 		DBConnectionUpd dbCon = new DBConnectionUpd();
 		Connection con = dbCon.getConnection();
 		EmployeeBean empBean = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
 		try {
-			PreparedStatement ps = con.prepareStatement(
+			ps = con.prepareStatement(
 				"SELECT * FROM "+DBTables.EMPLOYEE+" WHERE emp_qlid = ? "
 					);
 			ps.setString(1, qlid);
-			ResultSet rs = ps.executeQuery();
+			rs = ps.executeQuery();
 			
 			if(rs.next()) {
 				empBean = new EmployeeBean();
@@ -754,8 +760,17 @@ public class EmployeeServiceImpl {
 				empBean.setRolesId(rs.getString("roles_id"));
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}finally {
+			if(rs != null) {
+				try {rs.close();}catch(SQLException e) {e.printStackTrace();}
+			}
+			if(ps != null) {
+				try {ps.close();}catch(SQLException e) {e.printStackTrace();}
+			}
+			if(con != null) {
+				try {con.close();}catch(SQLException e) {e.printStackTrace();}
+			}			
 		}
 		
 		return empBean;
@@ -769,14 +784,17 @@ public class EmployeeServiceImpl {
 	public JSONArray getAllManagers() {
 		JSONArray jsArr = new JSONArray();
 		
-		try {		
-			DBConnectionUpd DBConnectionUpd = new DBConnectionUpd();
-			Connection connection = DBConnectionUpd.getConnection();
-			PreparedStatement ps = connection.prepareStatement(
+		DBConnectionUpd		DBConnectionUpd	= new DBConnectionUpd();
+		Connection			connection		= DBConnectionUpd.getConnection();
+		PreparedStatement	ps				= null;
+		ResultSet			rs				= null;
+		
+		try {	
+			ps = connection.prepareStatement(
 				"SELECT * FROM "+DBTables.EMPLOYEE+" WHERE roles_id = 2 or roles_id = 1"
 			);
 			
-			ResultSet rs = ps.executeQuery();
+			rs = ps.executeQuery();
 			while(rs.next()) {
 				jsArr.put(
 					(new JSONObject())
@@ -787,6 +805,16 @@ public class EmployeeServiceImpl {
 			}
 		}catch(SQLException e) {
 			e.printStackTrace();
+		}finally {
+			if(rs != null) {
+				try {rs.close();}catch(SQLException e) {e.printStackTrace();}
+			}
+			if(ps != null) {
+				try {ps.close();}catch(SQLException e) {e.printStackTrace();}
+			}
+			if(connection != null) {
+				try {connection.close();}catch(SQLException e) {e.printStackTrace();}
+			}			
 		}
 		
 		return jsArr;		
@@ -806,11 +834,14 @@ public class EmployeeServiceImpl {
 		if (name == null || name.length == 0) {
 			return jsArr;
 		}
+
+		DBConnectionUpd		DBConnectionUpd	= new DBConnectionUpd();
+		Connection			connection		= DBConnectionUpd.getConnection();
+		PreparedStatement	ps				= null;
+		ResultSet			rs				= null;
 		
 		try {
-			DBConnectionUpd DBConnectionUpd = new DBConnectionUpd();
-			Connection connection = DBConnectionUpd.getConnection();
-			PreparedStatement ps = connection.prepareStatement(
+			ps = connection.prepareStatement(
 				"SELECT * FROM "+DBTables.EMPLOYEE+" WHERE (mgr_fname LIKE ? "
 				+ "or mgr_lname LIKE ? or mgr_fname LIKE ? or mgr_lname LIKE ?)"
 				+ "AND roles_id = 2");
@@ -832,7 +863,7 @@ public class EmployeeServiceImpl {
 					return jsArr;
 			}
 			
-			ResultSet rs = ps.executeQuery();
+			rs = ps.executeQuery();
 			while(rs.next()) {
 				jsArr.put(
 					(new JSONObject())
@@ -843,6 +874,16 @@ public class EmployeeServiceImpl {
 			}
 		}catch(SQLException e) {
 			e.printStackTrace();
+		}finally {
+			if(rs != null) {
+				try {rs.close();}catch(SQLException e) {e.printStackTrace();}
+			}
+			if(ps != null) {
+				try {ps.close();}catch(SQLException e) {e.printStackTrace();}
+			}
+			if(connection != null) {
+				try {connection.close();}catch(SQLException e) {e.printStackTrace();}
+			}			
 		}
 		
 		return jsArr;
@@ -861,12 +902,12 @@ public class EmployeeServiceImpl {
 		
 		boolean addEmpSuccess = true;
 		
-		String qlidPattern = "^[a-zA-Z]{2}\\d{6}$";
-		String mobPattern = "^\\d{10}$";
-		String pinPattern = "^\\d{6}$";
-		String bloodGrpPattern = "^(A|B|AB|O|a|b|ab|o)[\\\\+\\\\-]$";
-		String genderPattern = "^((M|F)|(m|f))$";
-		String namePattern = "^\\w{1,15}$";
+		String qlidPattern		= "^[a-zA-Z]{2}\\d{6}$";
+		String mobPattern		= "^\\d{10}$";
+		String pinPattern		= "^\\d{6}$";
+		String bloodGrpPattern	= "^(A|B|AB|O|a|b|ab|o)[\\\\+\\\\-]$";
+		String genderPattern	= "^((M|F)|(m|f))$";
+		String namePattern		= "^\\w{1,15}$";
 		
 		String message;
 		
@@ -1287,9 +1328,9 @@ public class EmployeeServiceImpl {
 	 * 	Returns true if they have, false otherwise....		
 	 */
 	public boolean isPasswordSet(String qlid) {
-		Connection con = (new DBConnectionUpd()).getConnection();
-		PreparedStatement ps;
-		ResultSet rs;
+		Connection			con = (new DBConnectionUpd()).getConnection();
+		PreparedStatement	ps	= null;
+		ResultSet			rs	= null;
 		if(qlid.matches("^\\w\\w\\d{6}$")) {
 			try {
 				ps = con.prepareStatement(
@@ -1306,12 +1347,18 @@ public class EmployeeServiceImpl {
 						return true;
 					}
 				}
-				rs.close();
-				ps.close();
-				con.close();
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
+			}finally {
+				if(rs != null) {
+					try {rs.close();}catch(SQLException e) {e.printStackTrace();}
+				}
+				if(ps != null) {
+					try {ps.close();}catch(SQLException e) {e.printStackTrace();}
+				}
+				if(con != null) {
+					try {con.close();}catch(SQLException e) {e.printStackTrace();}
+				}			
 			}
 		}
 		
@@ -1327,11 +1374,12 @@ public class EmployeeServiceImpl {
 	 * 		Sets the password for employee with the supplied qlid
 	 */
 	public boolean setPassword(String qlid, String password) {
-		DBConnectionUpd dbCon = new DBConnectionUpd();
-		Connection con = dbCon.getConnection();
-		PreparedStatement ps;
+		DBConnectionUpd		dbCon	= new DBConnectionUpd();
+		Connection			con		= dbCon.getConnection();
+		PreparedStatement	ps		= null;
 		
 		String passwordHash = BCrypt.hashpw(password, BCrypt.gensalt());
+		
 		try {
 			ps = con.prepareStatement(
 				"INSERT INTO "+DBTables.LOGIN_CREDENTIALS+" ("
@@ -1349,6 +1397,13 @@ public class EmployeeServiceImpl {
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return false;
+		}finally {
+			if(ps != null) {
+				try {ps.close();}catch(SQLException e) {e.printStackTrace();}
+			}
+			if(con != null) {
+				try {con.close();}catch(SQLException e) {e.printStackTrace();}
+			}			
 		}
 	}
 
@@ -1361,10 +1416,11 @@ public class EmployeeServiceImpl {
 	 * 		Updates the user password
 	 */
 	public boolean updatePassword(String qlid, String password) {
+		Connection			connection	= (new DBConnectionUpd()).getConnection();
+		PreparedStatement	ps			= null;
 		try {
 			String passwordHash = BCrypt.hashpw(password, BCrypt.gensalt());
-			Connection connection = (new DBConnectionUpd()).getConnection();
-			PreparedStatement ps = connection.prepareStatement(
+			ps = connection.prepareStatement(
 				"UPDATE "+DBTables.LOGIN_CREDENTIALS+" SET "
 				+ "Login_Last_Update_Date = CURDATE(), Login_PasswordChangedOn = CURDATE(), "
 				+ "Login_Password = ?, Login_Last_Updated_By = ? WHERE Emp_Qlid = ?"
@@ -1373,14 +1429,19 @@ public class EmployeeServiceImpl {
 			ps.setString(2, qlid);
 			ps.setString(3, qlid);
 			ps.executeUpdate();
-			
-			System.out.println("SQL update executed succesfully!");
-			connection.close();
 		}catch(SQLException e) {
 			e.printStackTrace();
 			return false;
+		}finally {
+			if(ps != null) {
+				try {ps.close();}catch(SQLException e) {e.printStackTrace();}
+			}
+			if(connection != null) {
+				try {connection.close();}catch(SQLException e) {e.printStackTrace();}
+			}		
 		}
-		return true;		
+		
+		return true;
 	}
 	
 	/**
@@ -1392,8 +1453,10 @@ public class EmployeeServiceImpl {
 	 * 		returns true if user with the given qlid exists....
 	 */
 	public boolean validateUser(String qlid) {
-		DBConnectionUpd dbCon = new DBConnectionUpd();
-		Connection con = dbCon.getConnection();
+		DBConnectionUpd		dbCon	= new DBConnectionUpd();
+		Connection			con		= dbCon.getConnection();
+		PreparedStatement	ps		= null;
+		ResultSet			rs		= null;
 		
 		//// return false if the qlid string does not match the qlid format
 		if(!qlid.matches("^\\w\\w\\d{6}$")) {
@@ -1401,19 +1464,28 @@ public class EmployeeServiceImpl {
 		}
 		
 		try{
-			PreparedStatement ps = con.prepareStatement(
+			ps = con.prepareStatement(
 				"select * from ncab_master_employee_tbl where Emp_Qlid= ? "
 			);
 			ps.setString(1, qlid);
-			ResultSet rs = ps.executeQuery();
+			rs = ps.executeQuery();
 			if(rs.next()){
 				return true;
-			}
-			con.close();		
+			}	
 		} catch (SQLException e) {
 			System.out.println("SQL ERROR!");
 			e.printStackTrace();
 			return false;			
+		}finally {
+			if(rs != null) {
+				try {rs.close();}catch(SQLException e) {e.printStackTrace();}
+			}
+			if(ps != null) {
+				try {ps.close();}catch(SQLException e) {e.printStackTrace();}
+			}
+			if(con != null) {
+				try {con.close();}catch(SQLException e) {e.printStackTrace();}
+			}			
 		}
 		return false;
 	}
@@ -1467,25 +1539,30 @@ public class EmployeeServiceImpl {
 	 * 	
 	 */
 	public JSONObject getLoginAuthJSON(String qlid, String password) {
-		JSONObject jsObj = new JSONObject();
-		boolean userRecordFound = false;
-		boolean loginSuccess = false;
+		JSONObject	jsObj				= new JSONObject();
+		boolean		userRecordFound		= false;
+		boolean		loginSuccess		= false;
 		
-		String dbPassword = null;
+		String		dbPassword			= null;
 		
-		String message = "The username and password combination you entered is incorrect!";
-		String messageType = "error";
-		String roleId;
-		String role = "EMPLOYEE";
+		String		message				= "The username and password combination you entered is incorrect!";
+		String		messageType			= "error";
+		String		roleId				= "";
+		String		role				= "EMPLOYEE";
+
+		Connection	con					= (new DBConnectionUpd()).getConnection();
+		
+		PreparedStatement ps			= null;
+		PreparedStatement psRole		= null;
+		ResultSet	rs					= null;
+		ResultSet	rs2					= null;
 		
 		try {
-//			System.out.println("!!");
-			Connection con = (new DBConnectionUpd()).getConnection();
-			PreparedStatement ps = con.prepareStatement(
+			ps = con.prepareStatement(
 				"select login_password from "+DBTables.LOGIN_CREDENTIALS+", "+
 					DBTables.EMPLOYEE+" where "+DBTables.LOGIN_CREDENTIALS+".emp_qlid = ?"
 			);
-			PreparedStatement psRole = con.prepareStatement(
+			psRole = con.prepareStatement(
 					"SELECT roles_name FROM `ncab_master_roles_tbl` WHERE roles_id ="
 					+ "	(SELECT roles_id FROM `ncab_master_employee_tbl` WHERE emp_qlid = ?)"	
 			);
@@ -1493,8 +1570,8 @@ public class EmployeeServiceImpl {
 			ps.setString(1, qlid);
 			psRole.setString(1, qlid);
 			
-			ResultSet rs = ps.executeQuery();
-			ResultSet rs2 = psRole.executeQuery();
+			rs = ps.executeQuery();
+			rs2 = psRole.executeQuery();
 			
 			while(rs2.next()) {
 				role = rs2.getString("roles_name");
@@ -1506,9 +1583,6 @@ public class EmployeeServiceImpl {
 			while(rs.next()) {
 				userRecordFound = true;
 				dbPassword = rs.getString("login_password");
-//				System.out.println("DB password: " + dbPassword);
-				
-//				if(dbPassword.equals(password)) {
 				//// Verify that the password is correct!
 				//// (Uses BCrypt)....
 				if(BCrypt.checkpw(password, dbPassword)) {
@@ -1524,10 +1598,24 @@ public class EmployeeServiceImpl {
 				message = "User with the QLID \""+ qlid +"\" is not registered,"
 						+ " Please go to \"New Account Setup\" to register yourself...";
 			}
-			
-			con.close();
 		} catch(Exception e) {
 			e.printStackTrace();
+		}finally {
+			if(rs != null) {
+				try {rs.close();}catch(SQLException e) {e.printStackTrace();}
+			}
+			if(rs2 != null) {
+				try {rs2.close();}catch(SQLException e) {e.printStackTrace();}
+			}
+			if(ps != null) {
+				try {ps.close();}catch(SQLException e) {e.printStackTrace();}
+			}
+			if(psRole != null) {
+				try {psRole.close();}catch(SQLException e) {e.printStackTrace();}
+			}
+			if(con != null) {
+				try {con.close();}catch(SQLException e) {e.printStackTrace();}
+			}			
 		}
 		
 		if(loginSuccess) {
@@ -1586,8 +1674,8 @@ public class EmployeeServiceImpl {
 	 * 		Returns true if a user is logged in, false otherwise....
 	 */
 	public static boolean isLoginValid(HttpServletRequest req) {
-		HttpSession sess = req.getSession();
-		String loginToken = (String) sess.getAttribute("token");
+		HttpSession	sess		= req.getSession();
+		String		loginToken	= (String) sess.getAttribute("token");
 		
 		if(sess.getAttribute("qlid") == null) {
 			System.out.println("Checking qlid: " + sess.getAttribute("qlid"));
@@ -1607,7 +1695,9 @@ public class EmployeeServiceImpl {
 	 */
 	public String buildRandomToken(int length) {
 		StringBuilder strB = new StringBuilder(length);
+		
 		int ranIndx;
+		
 		Random rand = new Random();
 		
 		for(int i=0; i<length; ++i) {
@@ -1627,9 +1717,9 @@ public class EmployeeServiceImpl {
 	 * 	(i.e. Mobile/Web)
 	 */
 	public void addLoginToDB(HttpServletRequest req, String qlid, char mode) {
-		DBConnectionUpd dbConnection = new DBConnectionUpd();
-		Connection con = dbConnection.getConnection();
-		PreparedStatement ps;
+		DBConnectionUpd		dbConnection	= new DBConnectionUpd();
+		Connection			con				= dbConnection.getConnection();
+		PreparedStatement	ps				= null;
 		try {
 			ps = con.prepareStatement(
 				"INSERT INTO "+ DBTables.LOGIN_HISTORY
@@ -1638,39 +1728,24 @@ public class EmployeeServiceImpl {
 				+ "?, ?, ?, ?, ?, CURDATE(), CURDATE())"
 			);
 			
-			long ip = 0;
 			String ipString = req.getRemoteAddr();
-//			String ipNums[];
-//			if(ipString.matches(":")) {
-//				ipNums = ipString.split(":");
-//			}else {
-//				ipNums = ipString.split("\\.");
-//			}
-			
-			Calendar cal = Calendar.getInstance();
-			DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-//			System.out.println("IpNums: " + ipNums);
-//			
-//			for(int i=0; i<ipNums.length; ++i) {
-//				ip += Integer.parseInt(ipNums[i]) << (24 - (8*i));
-//			}
-			
-			//// TODO: add something to really tell the login mode!
 			ps.setString(1, qlid);
 			ps.setString(2, mode+"");
-			//// TODO: this method of gathering IP address does not work with proxy...
 			ps.setString(3, ipString);
 			ps.setString(4, "SYSTEM");
 			ps.setString(5, "SYSTEM");
-//			ps.setString(6, df.format(cal));
-//			ps.setString(7, df.format(cal));
 			ps.executeUpdate();
-			
-			con.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}		
+		}finally {
+			if(ps != null) {
+				try {ps.close();}catch(SQLException e) {e.printStackTrace();}
+			}
+			if(con != null) {
+				try {con.close();}catch(SQLException e) {e.printStackTrace();}
+			}			
+		}	
 	}
 	
 	/**
@@ -1681,10 +1756,10 @@ public class EmployeeServiceImpl {
 	 * 		Returns true if user has ever set password, false otherwise
 	 */
 	public boolean hasSetPassword(String qlid) {
-		DBConnectionUpd dbCon = new DBConnectionUpd();
-		Connection con = dbCon.getConnection();
-		PreparedStatement ps;
-		ResultSet rs;
+		DBConnectionUpd		dbCon	= new DBConnectionUpd();
+		Connection			con		= dbCon.getConnection();
+		PreparedStatement	ps		= null;
+		ResultSet			rs		= null;
 		
 		try {
 			ps = con.prepareStatement(
@@ -1700,9 +1775,18 @@ public class EmployeeServiceImpl {
 			
 			con.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
+		}finally {
+			if(rs != null) {
+				try {rs.close();}catch(SQLException e) {e.printStackTrace();}
+			}
+			if(ps != null) {
+				try {ps.close();}catch(SQLException e) {e.printStackTrace();}
+			}
+			if(con != null) {
+				try {con.close();}catch(SQLException e) {e.printStackTrace();}
+			}			
 		}
 		
 		return false;
@@ -1716,14 +1800,15 @@ public class EmployeeServiceImpl {
 	 * 	(i.e. 'Invalid')
 	 */
 	public void setOldTokensInvalid(String qlid) {
-		DBConnectionUpd dbCon = new DBConnectionUpd();
-		Connection con = dbCon.getConnection();
-		Calendar now = Calendar.getInstance();
-		Date today = new Date(now.getTimeInMillis());
-		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		DBConnectionUpd		dbCon		= new DBConnectionUpd();
+		Connection			con			= dbCon.getConnection();
+		Calendar			now			= Calendar.getInstance();
+		Date				today		= new Date(now.getTimeInMillis());
+		DateFormat			dateFormat	= new SimpleDateFormat("yyyy-MM-dd");
+		PreparedStatement	ps			= null;
 		
 		try {
-			PreparedStatement ps = con.prepareStatement(
+			ps = con.prepareStatement(
 				"UPDATE "+DBTables.PASSWORD_TOKEN+" SET "
 				+ "pwd_token_status = 'I', pwd_token_last_updated_by = ?,"
 				+ "pwd_token_last_update_date = ? "
@@ -1731,11 +1816,16 @@ public class EmployeeServiceImpl {
 			ps.setString(1, "SYSTEM");
 			ps.setString(2, dateFormat.format(today));
 			ps.executeUpdate();
-			
-			con.close();
 		} catch (SQLException e) {
 			System.out.println("Error while invalidating old tokens....");
 			e.printStackTrace();
+		}finally {
+			if(ps != null) {
+				try {ps.close();}catch(SQLException e) {e.printStackTrace();}
+			}
+			if(con != null) {
+				try {con.close();}catch(SQLException e) {e.printStackTrace();}
+			}			
 		}
 	}
 	
@@ -1748,10 +1838,10 @@ public class EmployeeServiceImpl {
 	 * 		Returns true if token for the given qlid exists and is not expired.
 	 */
 	public boolean isPwdTokenValid(String qlid, String token) {
-		DBConnectionUpd dbCon = new DBConnectionUpd();
-		Connection con = dbCon.getConnection();
-		PreparedStatement ps;
-		ResultSet rs;
+		DBConnectionUpd		dbCon	= new DBConnectionUpd();
+		Connection			con		= dbCon.getConnection();
+		PreparedStatement	ps		= null;
+		ResultSet			rs		= null;
 		try {
 			ps = con.prepareStatement(
 				"SELECT pwd_token_id FROM "+DBTables.PASSWORD_TOKEN+" "
@@ -1766,12 +1856,19 @@ public class EmployeeServiceImpl {
 			if(rs.next()) {
 				return true;
 			}
-			
-			con.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
-			System.out.println("Exception!!");
 			return false;
+		}finally {
+			if(rs != null) {
+				try {rs.close();}catch(SQLException e) {e.printStackTrace();}
+			}
+			if(ps != null) {
+				try {ps.close();}catch(SQLException e) {e.printStackTrace();}
+			}
+			if(con != null) {
+				try {con.close();}catch(SQLException e) {e.printStackTrace();}
+			}			
 		}
 		
 		return false;
@@ -1792,22 +1889,17 @@ public class EmployeeServiceImpl {
 			//// If password is set, tell the user to use "Forgot Password" instead....
 			if(isPasswordSet(qlid)) {
 				System.out.println("The password is already set!");
-//				return false;
 				accType = "O";
 			}
 			
-			DBConnectionUpd dbCon = new DBConnectionUpd();
-			Connection con;
-			PreparedStatement ps;
-			Calendar now = Calendar.getInstance();
-			long nowMillis = now.getTimeInMillis();
-			Date today = new Date(nowMillis);
-			//// set expiry time to be 10 minutes from now....
-			Date pwdTokenExpiry = new Date(nowMillis + 600000);
-			DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-			DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+			Connection			con				= (new DBConnectionUpd()).getConnection();
+			PreparedStatement	ps				= null;
 			
-			con = dbCon.getConnection();
+			Calendar			now				= Calendar.getInstance();
+			long				nowMillis		= now.getTimeInMillis();
+			Date				pwdTokenExpiry	= new Date(nowMillis + 600000);			//// set expiry time to be 10 minutes from now....
+			DateFormat			df				= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			
 			try {
 				ps = con.prepareStatement(
 					"INSERT INTO "+DBTables.PASSWORD_TOKEN+" ("
@@ -1821,14 +1913,18 @@ public class EmployeeServiceImpl {
 				ps.setString(4, accType);
 				ps.setString(5, "SYSTEM");
 				ps.setString(6, "SYSTEM");				
-				ps.executeUpdate();			
-				
-				con.close();
+				ps.executeUpdate();
 			} catch (SQLException e) {
-				System.out.println("An exception occured...");
 				e.printStackTrace();
 				return false;
-			}	
+			}finally {
+				if(ps != null) {
+					try {ps.close();}catch(SQLException e) {e.printStackTrace();}
+				}
+				if(con != null) {
+					try {con.close();}catch(SQLException e) {e.printStackTrace();}
+				}			
+			}
 			
 			System.out.println("Success!");			
 			return true;
@@ -1846,23 +1942,26 @@ public class EmployeeServiceImpl {
 	 * 		Set the password token for user in case of forgot password....
 	 */
 	public boolean insertforgotpasswordDetails(String qlid, String token) {
-		try {
-			DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");				
-			Date currentDate = new Date();				
-			
-			DateFormat dateFormat1 = new SimpleDateFormat("yyyy/MM/dd");				
-			Date currentDate1 = new Date();
-			String curDate=dateFormat1.format(currentDate1);
+		Connection			connection	= (new DBConnectionUpd()).getConnection();
+		PreparedStatement	ps			= null;
 		
-		    Calendar c = Calendar.getInstance();
+		try {
+			DateFormat		dateFormat	= new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");				
+			Date			currentDate	= new Date();				
+			
+			DateFormat		dateFormat1	= new SimpleDateFormat("yyyy/MM/dd");				
+			Date			currentDate1= new Date();
+			String			curDate		= dateFormat1.format(currentDate1);
+		
+		    Calendar		c			= Calendar.getInstance();
 	        c.setTime(currentDate);
 	        c.add(Calendar.MINUTE, 10);
+	        
 	        Date currentDatePlusTen = c.getTime();
 		        
-	        String expDate=  dateFormat.format(currentDatePlusTen);
+	        String			expDate		= dateFormat.format(currentDatePlusTen);
 		      
-			Connection connection = (new DBConnectionUpd()).getConnection();
-			PreparedStatement ps = connection.prepareStatement(
+			ps = connection.prepareStatement(
 				"INSERT INTO ncab_password_token_tbl("
 				+ "Pwd_Token,Pwd_Token_Expiry, Emp_Qlid, Pwd_Token_Status,Pwd_Token_Created_By,"
 				+ "Pwd_Token_Creation_Date,Pwd_Token_Last_Updated_By,Pwd_Token_Last_Update_Date,"
@@ -1878,11 +1977,17 @@ public class EmployeeServiceImpl {
 			ps.setString(8, curDate);
 			
 			ps.executeUpdate();
-			connection.close();
 		} catch(SQLException e) {
 			e.printStackTrace();
 			return false;
-		}
+		}finally {
+            if(ps != null) {
+                try {ps.close();}catch(SQLException e) {e.printStackTrace();}
+            }
+            if(connection != null) {
+                try {connection.close();}catch(SQLException e) {e.printStackTrace();}
+            }			
+        }
 		return true;
 	}
 
@@ -1933,22 +2038,33 @@ public class EmployeeServiceImpl {
 	 *		Returns JSONObject containing all roles in the roles master table.		
 	 */
 	public JSONObject getAllRoles() {
-		JSONObject jsObj = new JSONObject();
-		DBConnectionUpd dbCon = new DBConnectionUpd();
-		Connection con = dbCon.getConnection();
+		Connection			con		= (new DBConnectionUpd()).getConnection();
+		JSONObject			jsObj	= new JSONObject();
+		PreparedStatement	ps		= null;
+		ResultSet			rs		= null;
+		
 		try {
-			PreparedStatement ps = con.prepareStatement(
+			ps = con.prepareStatement(
 				"SELECT roles_id, roles_name FROM "+DBTables.ROLES
 			);
-			ResultSet rs;
+			
 			rs = ps.executeQuery();
 			while(rs.next()) {
 				jsObj.put(rs.getString("roles_id"), rs.getString("roles_name"));
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		}finally {
+            if(rs != null) {
+                try {rs.close();}catch(SQLException e) {e.printStackTrace();}
+            }
+            if(ps != null) {
+                try {ps.close();}catch(SQLException e) {e.printStackTrace();}
+            }
+            if(con != null) {
+                try {con.close();}catch(SQLException e) {e.printStackTrace();}
+            }			
+        }
 		
 		return jsObj;
 	}
@@ -1958,61 +2074,58 @@ public class EmployeeServiceImpl {
 		return roleJSON.getString(roleId);
 	}
 
-
 	public JSONObject insertIntoDatabase(InputStream fileInputStream, FormDataContentDisposition fileFormDataContentDisposition, String qlid)
 			throws IOException {
-		DBConnectionUpd dbconnection = new DBConnectionUpd();
-		Connection connection = dbconnection.getConnection();
+		Connection			connection		= (new DBConnectionUpd()).getConnection();
+		PreparedStatement	ps				= null;
+		PreparedStatement	psCheck			= null;
+		ResultSet			rsCheck			= null;
 		
-		DateFormat formatter = new SimpleDateFormat("E MMM dd HH:mm:ss Z yyyy");
-		DateFormat logDateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+		DateFormat			logDateFormat	= new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 		
-		EmployeeBean empBean = new EmployeeBean();
+		EmployeeBean		empBean			= new EmployeeBean();
 		
-		JSONArray jsArr = new JSONArray();
-		JSONArray jsValidateArr = new JSONArray();
-		JSONObject validateJSON = new JSONObject();
-		JSONObject js2;
-		Iterator jsonKeys;
+		JSONArray			jsArr			= new JSONArray();
+		JSONObject			validateJSON	= new JSONObject();
+		JSONObject			js2				= new JSONObject();
+		Iterator			jsonKeys		= null;
 		
-		RowCheck rowcheck = new RowCheck();
-		Calendar cal = Calendar.getInstance();
-		String logStartStr = logDateFormat.format(new Date());
+		RowCheck			rowcheck		= new RowCheck();
+		Calendar			cal				= Calendar.getInstance();
 		
-		String logFileName = LOGFILE_DIR + "/" + LOGFILE_PREFIX +
-						logStartStr.replaceAll("\\s", "_").replaceAll(":", "-") + ".txt";
-//		String logFileName = LOGFILE_DIR + "\\" + LOGFILE_PREFIX +
-//				logStartStr.replaceAll("\\s", "_").replaceAll(":", "-") + ".txt";
-		
-		File logDir = new File(LOGFILE_DIR);
+		String				newLine			= System.getProperty("line.separator");
+		String				logStartStr		= logDateFormat.format(new Date());
+		String				logFileName		= LOGFILE_DIR + "/" + LOGFILE_PREFIX
+											+ logStartStr.replaceAll("\\s", "_").replaceAll(":", "-") + ".txt";
+
+		File				logDir			= new File(LOGFILE_DIR);
+		File				file			= new File(logFileName);		
+		FileWriter			f0				= null;
+
+	    int					last_row_valid	= 0;
+		int					index			= 1;
+	    int					ct				= 0;
+	    int					totalRows		= 0;
+	    int					totalSuccessful	= 0;
+		boolean				success			= true;
+		boolean				allSuccess		= true;
+		boolean				empAlreadyExists= false;
+
+	    String[]			qlid_arr		= null;
+	    	
+	    XSSFWorkbook		workbook		= null;
+	    Sheet				sheet			= null;
+	    Row					row				= null;	    
+
+	    HashMap<String, String> link = new HashMap<>();
 		
 		if(!logDir.exists()) {
 			logDir.mkdir();
 		}
 		
-		File file = new File(logFileName);
 		if(!file.exists()) {
 			file.createNewFile();
-		}
-		
-		FileWriter f0 = null;
-//		FileWriter fw;
-		
-	    int last_row_valid = 0;
-		int index = 1;
-	    int ct = 0;
-	    int totalRows = 0;
-	    int totalSuccessful = 0;
-
-	    String[] qlid_arr = null;
-	
-		HashMap<String, String> link = new HashMap<>();	
-	    XSSFWorkbook workbook = null;
-	    Sheet sheet = null;
-	    
-		boolean success = true;
-		boolean allSuccess = true;
-		boolean empAlreadyExists = false;	
+		}		
 		
 		try {
 			f0 = new FileWriter(file);
@@ -2041,8 +2154,6 @@ public class EmployeeServiceImpl {
 				}
 			}
 			qlid_arr = new String[last_row_valid];
-			
-			String newLine = System.getProperty("line.separator");
 		}catch(FileNotFoundException c){			//// for new FileWriter(file) statement
 			System.out.println("File not found!");
 			return (new JSONObject())
@@ -2050,24 +2161,23 @@ public class EmployeeServiceImpl {
 						.put("message", "Log file could not be created, aborting...");
 		}catch(Exception e) {
 			e.printStackTrace();
-		}
-		
+		}		
 
-		f0.write("\nFile Name: " + fileFormDataContentDisposition.getFileName());
-		f0.write("\nTotal number of rows in file: "+(last_row_valid+1));
-		f0.write("\n---------------------------------------------------\n");
+		f0.write(newLine+"File Name: " + fileFormDataContentDisposition.getFileName());
+		f0.write(newLine+"Total number of rows in file: "+(last_row_valid+1));
+		f0.write(newLine+"---------------------------------------------------"+newLine);		
 		
-		Row row;
 		for (int i = 0; i <= last_row_valid; i++) {
 			success = true;
 			empAlreadyExists = false;
-			f0.write("\nROW " + (i+1)+ ":["+logDateFormat.format(new Date())+"] >>>> ");
+			f0.write(newLine+"ROW " + (i+1)+ ":["+logDateFormat.format(new Date())+"] >>>> ");
 			validateJSON = null;			
 			
 			try {
 				row = (Row) sheet.getRow(i);
+				// creation_date format: "Monday Apr 29 00:00:00 +0530 2018";
 				String creation_date = "" + row.getCell(18, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getDateCellValue();
-//				String creation_date = "Monday Apr 29 00:00:00 +0530 2018";
+				
 				DateFormat formatter1 = new SimpleDateFormat("E MMM dd HH:mm:ss Z yyyy");
 				Date date2 = (Date)formatter1.parse(creation_date);			 
 				
@@ -2075,7 +2185,6 @@ public class EmployeeServiceImpl {
 				cal1.setTime(date2);
 				String formatedDate1 = cal1.get(Calendar.YEAR) + "-" + (cal1.get(Calendar.MONTH) + 1) + "-" + cal1.get(Calendar.DATE);
 				String last_updated_date = "" + row.getCell(20, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getDateCellValue();
-//				String last_updated_date = "Monday Apr 30 00:00:00 +0530 2018";
 				DateFormat formatter2 = new SimpleDateFormat("E MMM dd HH:mm:ss Z yyyy");
 	            Date date3 = (Date)formatter1.parse(last_updated_date);
 	            
@@ -2109,11 +2218,11 @@ public class EmployeeServiceImpl {
 				
 				if(empBean.getEmpAddLine1().length() > 60) {
 					empBean.setEmpAddLine1(empBean.getEmpAddLine1().substring(0, 60));
-				}				
+				}
 
 				if(empBean.getEmpAddLine2().length() > 60) {
 					empBean.setEmpAddLine2(empBean.getEmpAddLine2().substring(0, 60));
-				}			
+				}
 				
 				if(empBean.getEmpHomeNbr().equals("0")) {
 					System.out.println("Home no is 0");
@@ -2129,6 +2238,7 @@ public class EmployeeServiceImpl {
 				String key;
 				String value = "";
 				String message = "";
+				
 				while(jsonKeys.hasNext()) {
 					key = jsonKeys.next().toString();
 					if(key != "message" && key != "success") {
@@ -2141,7 +2251,7 @@ public class EmployeeServiceImpl {
 							if(js2.has("vaule")) {
 								value = js2.getString("value");
 							}
-							f0.write("\n\tERROR: \"" + message +"\" \n\t\tVALUE: "+value);
+							f0.write(newLine+"\tERROR: \"" + message +"\""+newLine+"\t\tVALUE: "+value);
 						}
 					}
 				}
@@ -2149,12 +2259,12 @@ public class EmployeeServiceImpl {
 				String its = row.getCell(3, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
 				System.out.println("ITS: " + its);
 				
-				PreparedStatement psCheck = connection.prepareStatement(
+				psCheck = connection.prepareStatement(
 						"SELECT emp_qlid FROM "+DBTables.EMPLOYEE+
 							" WHERE emp_qlid = ?"
 						);
 				psCheck.setString(1, empBean.getEmpQlid());
-				ResultSet rsCheck = psCheck.executeQuery();
+				rsCheck = psCheck.executeQuery();
 				while(rsCheck.next()) {
 					if(rsCheck.getString("emp_qlid") != null) {
 						empAlreadyExists = true;						
@@ -2162,136 +2272,137 @@ public class EmployeeServiceImpl {
 				}
 
 				connection.setAutoCommit(false);
-
-//				if(success) {
-					PreparedStatement ps;
-					if(empAlreadyExists) {
-						System.out.println("already exists! updating....");
-						ps = connection.prepareStatement(
-							"UPDATE "+DBTables.EMPLOYEE+" SET "+
-								"Emp_Mgr_Qlid1 = ?, " + 
-								"Emp_Mgr_Qlid2 = ?, Emp_Org_Id = ?, Emp_Fname = ?, Emp_Mname = ?, Emp_Lname = ?,"+
-								"Emp_Gender = ?, Emp_Mob_Nbr = ?, Emp_Home_Nbr = ?, Emp_Emerg_Nbr = ?, Emp_Add_Line1 = ?, "+
-								"Emp_Add_Line2 = ?, Emp_PIN = ?, Emp_Pickup_Area = ?, Emp_Status = ?, Emp_BloodGrp = ?,"+
-								"Emp_Created_By = ?, Emp_Creation_Date = ?, Emp_Last_Updated_By = ?, Emp_Last_Update_Date = ?,"+
-								"Roles_Id = ?, Emp_Zone = ?"
-								+ " WHERE emp_qlid = ?"
-						);						
-						
-						ps.setString(1, empBean.getEmpMgrQlid1());
-						ps.setString(2, empBean.getEmpMgrQlid2());
-						ps.setString(3, its);
-						ps.setString(4, empBean.getEmpFName());
-						ps.setString(5, empBean.getEmpMName());
-						ps.setString(6, empBean.getEmpLName());
-						ps.setString(7, empBean.getEmpGender());
-						ps.setString(8, empBean.getEmpMobNbr());
-						ps.setString(9, empBean.getEmpHomeNbr());
-						ps.setString(10, empBean.getEmpEmergNbr());
-						ps.setString(11, empBean.getEmpAddLine1());
-						ps.setString(12, empBean.getEmpAddLine2());
-						ps.setInt(13, empBean.getEmpPin());
-						ps.setString(14, empBean.getEmpPickupArea());
-						ps.setString(15, empBean.getEmpStatus());
-						ps.setString(16, empBean.getEmpBloodGrp());
-						ps.setString(17, empBean.getEmpCreatedBy());
-						ps.setString(18, empBean.getEmpCreationDate());
-						ps.setString(19, empBean.getEmpCreatedBy());
-						ps.setString(20, empBean.getEmpLastUpdateDate());
-						ps.setString(21, empBean.getRolesId());
-						ps.setString(22, empBean.getEmpZone());
-						ps.setString(23, empBean.getEmpQlid());
-						ps.executeUpdate();
-						ps.close();
-						
-						connection.commit();
 					
-						System.out.println("Success import excel to mysql table");
-						jsArr.put(createJSON(empBean));
-						++totalSuccessful;						
-					}else {
-						System.out.println("Does not exist in db, Inserting....");
-						ps = connection.prepareStatement(
-							"INSERT into "+DBTables.EMPLOYEE+" (Emp_Qlid, Emp_Mgr_Qlid1,"
-								+ "Emp_Mgr_Qlid2, Emp_Org_Id, Emp_Fname, Emp_Mname, Emp_Lname, Emp_Gender,"
-								+ "Emp_Mob_Nbr, Emp_Home_Nbr, Emp_Emerg_Nbr, Emp_Add_Line1, Emp_Add_Line2,"
-								+ "Emp_PIN, Emp_Pickup_Area, Emp_Status, Emp_BloodGrp, Emp_Created_By,"
-								+ "Emp_Creation_Date, Emp_Last_Updated_By, Emp_Last_Update_Date, Roles_Id,"
-								+ "Emp_Zone) values ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
-								+ "?, ?, ?, ?, ?, ?)"
-						);
-			
-						ps.setString(1, empBean.getEmpQlid());
-						ps.setString(2, empBean.getEmpMgrQlid1());
-						ps.setString(3, empBean.getEmpMgrQlid1());
-						ps.setString(4, its);
-						ps.setString(5, empBean.getEmpFName());
-						ps.setString(6, empBean.getEmpMName());
-						ps.setString(7, empBean.getEmpLName());
-						ps.setString(8, empBean.getEmpGender());
-						ps.setString(9, empBean.getEmpMobNbr());
-						ps.setString(10, empBean.getEmpHomeNbr());
-						ps.setString(11, empBean.getEmpEmergNbr());
-						ps.setString(12, empBean.getEmpAddLine1());
-						ps.setString(13, empBean.getEmpAddLine2());
-						ps.setInt(14, empBean.getEmpPin());
-						ps.setString(15, empBean.getEmpPickupArea());
-						ps.setString(16, empBean.getEmpStatus());
-						ps.setString(17, empBean.getEmpBloodGrp());
-						ps.setString(18, empBean.getEmpCreatedBy());
-						ps.setString(19, empBean.getEmpCreationDate());
-						ps.setString(20, empBean.getEmpCreatedBy());
-						ps.setString(21, empBean.getEmpLastUpdateDate());
-						ps.setString(22, empBean.getRolesId());
-						ps.setString(23, empBean.getEmpZone());
-						ps.executeUpdate();
-						ps.close();
-						
-						connection.commit();
+				if(empAlreadyExists) {
+					System.out.println("already exists! updating....");
+					ps = connection.prepareStatement(
+						"UPDATE "+DBTables.EMPLOYEE+" SET "+
+							"Emp_Mgr_Qlid1 = ?, " + 
+							"Emp_Mgr_Qlid2 = ?, Emp_Org_Id = ?, Emp_Fname = ?, Emp_Mname = ?, Emp_Lname = ?,"+
+							"Emp_Gender = ?, Emp_Mob_Nbr = ?, Emp_Home_Nbr = ?, Emp_Emerg_Nbr = ?, Emp_Add_Line1 = ?, "+
+							"Emp_Add_Line2 = ?, Emp_PIN = ?, Emp_Pickup_Area = ?, Emp_Status = ?, Emp_BloodGrp = ?,"+
+							"Emp_Created_By = ?, Emp_Creation_Date = ?, Emp_Last_Updated_By = ?, Emp_Last_Update_Date = ?,"+
+							"Roles_Id = ?, Emp_Zone = ?"
+							+ " WHERE emp_qlid = ?"
+					);						
 					
-						System.out.println("Success import excel to mysql table");
-						jsArr.put(createJSON(empBean));
-						++totalSuccessful;
-					}
-//				}else {
-//					System.out.println("***** Validation Error!");
-//				}
-			}catch (Exception e) {		
-				System.out.println(e.toString());
+					ps.setString(1, empBean.getEmpMgrQlid1());
+					ps.setString(2, empBean.getEmpMgrQlid2());
+					ps.setString(3, its);
+					ps.setString(4, empBean.getEmpFName());
+					ps.setString(5, empBean.getEmpMName());
+					ps.setString(6, empBean.getEmpLName());
+					ps.setString(7, empBean.getEmpGender());
+					ps.setString(8, empBean.getEmpMobNbr());
+					ps.setString(9, empBean.getEmpHomeNbr());
+					ps.setString(10, empBean.getEmpEmergNbr());
+					ps.setString(11, empBean.getEmpAddLine1());
+					ps.setString(12, empBean.getEmpAddLine2());
+					ps.setInt(13, empBean.getEmpPin());
+					ps.setString(14, empBean.getEmpPickupArea());
+					ps.setString(15, empBean.getEmpStatus());
+					ps.setString(16, empBean.getEmpBloodGrp());
+					ps.setString(17, empBean.getEmpCreatedBy());
+					ps.setString(18, empBean.getEmpCreationDate());
+					ps.setString(19, empBean.getEmpCreatedBy());
+					ps.setString(20, empBean.getEmpLastUpdateDate());
+					ps.setString(21, empBean.getRolesId());
+					ps.setString(22, empBean.getEmpZone());
+					ps.setString(23, empBean.getEmpQlid());
+					ps.executeUpdate();
+					
+					ps.close();
+					
+					connection.commit();
+				
+					System.out.println("Success import excel to mysql table");
+					jsArr.put(createJSON(empBean));
+					++totalSuccessful;						
+				}else {
+					System.out.println("Does not exist in db, Inserting....");
+					ps = connection.prepareStatement(
+						"INSERT into "+DBTables.EMPLOYEE+" (Emp_Qlid, Emp_Mgr_Qlid1,"
+							+ "Emp_Mgr_Qlid2, Emp_Org_Id, Emp_Fname, Emp_Mname, Emp_Lname, Emp_Gender,"
+							+ "Emp_Mob_Nbr, Emp_Home_Nbr, Emp_Emerg_Nbr, Emp_Add_Line1, Emp_Add_Line2,"
+							+ "Emp_PIN, Emp_Pickup_Area, Emp_Status, Emp_BloodGrp, Emp_Created_By,"
+							+ "Emp_Creation_Date, Emp_Last_Updated_By, Emp_Last_Update_Date, Roles_Id,"
+							+ "Emp_Zone) values ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+							+ "?, ?, ?, ?, ?, ?)"
+					);
+		
+					ps.setString(1, empBean.getEmpQlid());
+					ps.setString(2, empBean.getEmpMgrQlid1());
+					ps.setString(3, empBean.getEmpMgrQlid1());
+					ps.setString(4, its);
+					ps.setString(5, empBean.getEmpFName());
+					ps.setString(6, empBean.getEmpMName());
+					ps.setString(7, empBean.getEmpLName());
+					ps.setString(8, empBean.getEmpGender());
+					ps.setString(9, empBean.getEmpMobNbr());
+					ps.setString(10, empBean.getEmpHomeNbr());
+					ps.setString(11, empBean.getEmpEmergNbr());
+					ps.setString(12, empBean.getEmpAddLine1());
+					ps.setString(13, empBean.getEmpAddLine2());
+					ps.setInt(14, empBean.getEmpPin());
+					ps.setString(15, empBean.getEmpPickupArea());
+					ps.setString(16, empBean.getEmpStatus());
+					ps.setString(17, empBean.getEmpBloodGrp());
+					ps.setString(18, empBean.getEmpCreatedBy());
+					ps.setString(19, empBean.getEmpCreationDate());
+					ps.setString(20, empBean.getEmpCreatedBy());
+					ps.setString(21, empBean.getEmpLastUpdateDate());
+					ps.setString(22, empBean.getRolesId());
+					ps.setString(23, empBean.getEmpZone());
+					ps.executeUpdate();
+					
+					connection.commit();
+				
+					System.out.println("Success import excel to mysql table");
+					jsArr.put(createJSON(empBean));
+					++totalSuccessful;
+				}
+				
+				if(success) {				
+					f0.write(newLine+"\tROW ADD SUCCEEDED");				
+				}else {
+					allSuccess = false;
+					f0.write(newLine+"\tROW ADD FAILED");
+					
+				}
+			}catch (Exception e) {
 			    e.printStackTrace();
 			    success = false;
 		    }
-			
-			if(success) {				
-				f0.write("\n\tROW ADD SUCCEEDED");				
-			}else {
-				allSuccess = false;
-				f0.write("\n\tROW ADD FAILED");
-				
-			}
-		}
-
-		workbook.close();
-		
-		try {
-			connection.close();
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 		
-		f0.close();
+		System.out.println("totalRows: " + (last_row_valid+1)+ "\ntotalSuccessful: " + totalSuccessful +
+			"\ntotalFailed: " + (last_row_valid - totalSuccessful) + "\nSending log to admins....");
 		
-		System.out.println("totalRows: " + (last_row_valid+1));
-		System.out.println("totalSuccessful: " + totalSuccessful);
-		System.out.println("totalFailed: " + (last_row_valid - totalSuccessful));
-		
-		System.out.println("Sending log to admins....");
 		if(!qlid.equals(DEFAULT_QLID)) {
 			sendAttachment(logFileName);
 		}else {
 			System.out.println("could not send email to: " + qlid);
+		}		
+		
+		//// Release all the resources!
+		if(rsCheck != null) {
+			try {rsCheck.close();}catch(SQLException e) {e.printStackTrace();}
 		}
+		if(psCheck != null) {
+			try {psCheck.close();}catch(SQLException e) {e.printStackTrace();}
+		}
+		if(ps != null) {
+			try {ps.close();}catch(SQLException e) {e.printStackTrace();}
+		}
+		if(connection != null) {
+			try {connection.close();}catch(SQLException e) {e.printStackTrace();}
+		}	
+		if(f0 != null) {
+			try {f0.close();}catch(Exception e) {e.printStackTrace();}
+		}	
+		if(workbook != null) {
+			try {workbook.close();}catch(Exception e) {e.printStackTrace();}
+		}	
 		
 		return (new JSONObject())
 					.put("success", allSuccess)
@@ -2302,14 +2413,18 @@ public class EmployeeServiceImpl {
 	}
 	
 	public ContactBean[] getAllAdmins() {
-		DBConnectionUpd dbCon = new DBConnectionUpd();
-		Connection con = dbCon.getConnection();
-		ContactBean cb[] = null;
+		DBConnectionUpd		dbCon	= new DBConnectionUpd();
+		Connection			con		= dbCon.getConnection();
+		PreparedStatement	ps		= null;
+		ResultSet			rs		= null;
+		ContactBean			cb[]	= null;
 		
 		try {
-			PreparedStatement ps = con.prepareStatement("SELECT * FROM " + DBTables.CONTACTS);
-			ResultSet rs = ps.executeQuery();
+			ps = con.prepareStatement("SELECT * FROM " + DBTables.CONTACTS);
+			rs = ps.executeQuery();
+			
 			int rows = rs.last() ? rs.getRow() : 0;
+			
 			rs.beforeFirst();
 			
 			cb = new ContactBean[rows];
@@ -2328,11 +2443,18 @@ public class EmployeeServiceImpl {
 				
 				++index;
 			}
-			
-			con.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}finally {
+			if(rs != null) {
+				try {rs.close();}catch(SQLException e) {e.printStackTrace();}
+			}
+			if(ps != null) {
+				try {ps.close();}catch(SQLException e) {e.printStackTrace();}
+			}
+			if(con != null) {
+				try {con.close();}catch(SQLException e) {e.printStackTrace();}
+			}			
 		}
 		
 		return cb;
@@ -2407,9 +2529,9 @@ public class EmployeeServiceImpl {
 	 * @return
 	 */
 	public EmployeeBean[] getManagerDetailsEmployee(String qlid) {		
-		EmployeeBean emp = getEmployeeFromQLID(qlid);
+		EmployeeBean	emp		= getEmployeeFromQLID(qlid);		
+		EmployeeBean[]	mgrArr	= new EmployeeBean[2];
 		
-		EmployeeBean[] mgrArr = new EmployeeBean[2];
 		mgrArr[0] = getEmployeeFromQLID(emp.getEmpMgrQlid1());
 		mgrArr[1] = getEmployeeFromQLID(emp.getEmpMgrQlid2()); 
 		
@@ -2417,22 +2539,13 @@ public class EmployeeServiceImpl {
 	}
 	
 	public JSONObject getDriverInfoForEmployee(String qlid) {
-		JSONObject jsObj = new JSONObject();
-		DBConnectionUpd dbCon = new DBConnectionUpd();
-		Connection con = dbCon.getConnection();
-		PreparedStatement ps;
-		ResultSet rs;
-		
+		Connection			con		= (new DBConnectionUpd()).getConnection();
+		PreparedStatement	ps		= null;
+		ResultSet			rs		= null;
+
+		JSONObject			jsObj	= new JSONObject();		
 		
 		try {
-			//// Old code, revert when broken!
-//			ps = con.prepareStatement(
-//				"select driver_name, d_contact_num from ncab_driver_master_tbl where driver_id = "
-//				+ "(select driver_id from ncab_roster_tbl where "
-//				+ "emp_qlid = ? and emp_status = 'active')"
-//			);			
-			
-			//// New code, to address the issue!
 			ps = con.prepareStatement(
 				"SELECT driver_name, d_contact_num FROM ncab_driver_master_tbl WHERE"
 				+ " driver_id = (SELECT driver_id FROM ncab_roster_tbl WHERE emp_qlid = ?"
@@ -2445,25 +2558,32 @@ public class EmployeeServiceImpl {
 				jsObj.put("driverName", rs.getString("driver_name"))
 					.put("driverContact", rs.getString("d_contact_num"));				
 			}
-			
-			con.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}finally {
+			if(rs != null) {
+				try {rs.close();}catch(SQLException e) {e.printStackTrace();}
+			}
+			if(ps != null) {
+				try {ps.close();}catch(SQLException e) {e.printStackTrace();}
+			}
+			if(con != null) {
+				try {con.close();}catch(SQLException e) {e.printStackTrace();}
+			}			
 		}
 		
 		return jsObj;
 	}
 	
 	public JSONObject changePassword(String qlid, SetPasswordBean spb) {
-		DBConnectionUpd dbCon = new DBConnectionUpd();
-		Connection con = dbCon.getConnection();
-		PreparedStatement ps, setPassPs;
-		ResultSet rs;
+		Connection			con			= (new DBConnectionUpd()).getConnection();
+		PreparedStatement	ps			= null;
+		PreparedStatement	setPassPs	= null;
+		ResultSet			rs			= null;
 		
-		System.out.println("current pass: " + spb.getCurrentPassword());
-		System.out.println("pass1: " + spb.getPassword1());
-		System.out.println("pass2: " + spb.getPassword2());
+		System.out.println("current pass: " + spb.getCurrentPassword()+ "\npass1: " + spb.getPassword1()
+			+ "\npass2: " + spb.getPassword2());
 		
 		try {
 			ps = con.prepareStatement(
@@ -2481,7 +2601,6 @@ public class EmployeeServiceImpl {
 			rs = ps.executeQuery();
 						
 			while(rs.next()) {
-				System.out.println("!!");
 				if(BCrypt.checkpw(spb.getCurrentPassword(), rs.getString("login_password"))){
 					if(spb.getPassword1().equals(spb.getPassword2())) {
 						setPassPs.setString(1, BCrypt.hashpw(spb.getPassword1(), BCrypt.gensalt()));
@@ -2500,11 +2619,13 @@ public class EmployeeServiceImpl {
 								.put("message", "Current Password is invalid!");
 				}
 			}
-			
-			con.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}finally {
+			if(rs != null)			{try{rs.close();}catch(SQLException e){e.printStackTrace();}}
+			if(ps != null)			{try{ps.close();}catch(SQLException e){e.printStackTrace();}}
+			if(setPassPs != null)	{try{setPassPs.close();}catch(SQLException e){e.printStackTrace();}}
+			if(con != null)			{try{con.close();}catch(SQLException e){e.printStackTrace();}}			
 		}
 		
 		return (new JSONObject())
@@ -2513,12 +2634,10 @@ public class EmployeeServiceImpl {
 	}
 	
 	public JSONArray getShiftJSONArray() {
-		System.out.println("Getting Shift Info....");
-		DBConnectionUpd dbCon = new DBConnectionUpd();
-		Connection con = dbCon.getConnection();
-		PreparedStatement ps;
-		ResultSet rs;
-		JSONArray jsArr = new JSONArray();
+		Connection			con		= (new DBConnectionUpd()).getConnection();
+		PreparedStatement	ps		= null;
+		ResultSet			rs		= null;
+		JSONArray			jsArr	= new JSONArray();
 		
 		try {
 			ps = con.prepareStatement(
@@ -2535,10 +2654,12 @@ public class EmployeeServiceImpl {
 							.put("shiftName", rs.getString("shift_name"))
 				);	
 			}
-			
-			con.close();
 		}catch(SQLException e) {
 			e.printStackTrace();
+		}finally {
+			if(rs != null){try{rs.close();}catch(SQLException e){e.printStackTrace();}}
+			if(ps != null){try{ps.close();}catch(SQLException e){e.printStackTrace();}}
+			if(con != null){try{con.close();}catch(SQLException e){e.printStackTrace();}}			
 		}
 		return jsArr;
 	}
@@ -2546,12 +2667,8 @@ public class EmployeeServiceImpl {
 /// Employee Dashboard
 
 	public JSONObject employeeDash(String qlid) {
-		// TODO Auto-generated method stub
-//		DBConnectionUpd dbCon = new DBConnectionUpd();
-//		Connection con = dbCon.getConnection();
-		
-		RosterServiceImpl rstrImpl= new RosterServiceImpl();
-		JSONObject jsObj = new JSONObject();
+		RosterServiceImpl	rstrImpl	= new RosterServiceImpl();
+		JSONObject			jsObj		= new JSONObject();
 		
 		EmployeeBean empBean;
 		EmployeeBean mgr1;
@@ -2568,110 +2685,47 @@ public class EmployeeServiceImpl {
 				.put("vname", "")
 			);
 		
-//		for(int i=0; i<rosterInfoTemp.length(); ++i) {
-//			tmp = rosterInfoTemp.getJSONObject(i);
-//			if(tmp.has("Qlid") && !tmp.has("f_name")) {
-//				empBean = getEmployeeFromQLID(tmp.getString("Qlid"));
-//				
-//				tmp.put("f_name", empBean.getEmpFName());
-//				tmp.put("m_name", empBean.getEmpMName());
-//				tmp.put("l_name", empBean.getEmpLName());
-//			}
-//		}
-		
-		JSONArray shiftTemp = getShiftJSONArray();
-		
-		JSONArray rosterInfo = new JSONArray();
-		JSONArray shiftArr = new JSONArray();		
-		
-//		if(rosterInfo.length() == 0) {
-//			rosterInfo.put(
-//					(new JSONObject())
-//						.put("", value))
-//		}
-		
+		JSONArray	shiftTemp	= getShiftJSONArray();		
+		JSONArray	rosterInfo	= new JSONArray();
+		JSONArray	shiftArr	= new JSONArray();	
 		
 		for(int i=0; i<rosterInfoTemp.length(); ++i) {
 			tmp = (JSONObject) rosterInfoTemp.get(i);
 			if(tmp == null) {
 				tmp = new JSONObject();
 			}
-			if(!tmp.has("Qlid")) {
-				tmp.put("Qlid", "");
-			}
-			if(!tmp.has("m_name")) {
-				tmp.put("m_name", "");
-								
-			}
-			if(!tmp.has("p_a")) {
-				tmp.put("p_a", "");				
-			}
-			if(!tmp.has("Cab_number")) {
-				tmp.put("Cab_number", "");				
-			}
-			if(!tmp.has("shift_id")) {
-				tmp.put("shift_id", "");
-				
-			}
-			if(!tmp.has("l_name")) {
-				tmp.put("l_name", "");
-				
-			}
-			if(!tmp.has("f_name")) {
-				tmp.put("f_name", "");
-				
-			}
-			if(!tmp.has("vendor_name")) {
-				tmp.put("vendor_name", "");
-				
-			}
-			if(!tmp.has("e_mob")) {
-				tmp.put("e_mob", "");
-				
-			}
-			if(!tmp.has("pickup_time")) {
-				tmp.put("pickup_time", "");
-				
-			}
-			if(!tmp.has("Route_number")) {
-				tmp.put("Route_number", "");				
-			}
-			if(!tmp.has("occu_left")) {
-				tmp.put("occu_left", "");				
-			}
 			
-			if(!tmp.has("roster_id")) {
-				tmp.put("roster_id", "");				
-			}
-			 
+			if(!tmp.has("Qlid"))		{tmp.put("Qlid", "");}
+			if(!tmp.has("m_name"))		{tmp.put("m_name", "");}
+			if(!tmp.has("p_a"))			{tmp.put("p_a", "");}
+			if(!tmp.has("Cab_number"))	{tmp.put("Cab_number", "");}
+			if(!tmp.has("shift_id"))	{tmp.put("shift_id", "");}
+			if(!tmp.has("l_name"))		{tmp.put("l_name", "");}
+			if(!tmp.has("f_name"))		{tmp.put("f_name", "");}
+			if(!tmp.has("vendor_name"))	{tmp.put("vendor_name", "");}
+			if(!tmp.has("e_mob"))		{tmp.put("e_mob", "");}
+			if(!tmp.has("pickup_time"))	{tmp.put("pickup_time", "");}
+			if(!tmp.has("Route_number")){tmp.put("Route_number", "");}
+			if(!tmp.has("occu_left"))	{tmp.put("occu_left", "");}			
+			if(!tmp.has("roster_id"))	{tmp.put("roster_id", "");}			 
 			
 			rosterInfo.put(tmp);
 		}
 		
 		for(int i=0; i<shiftTemp.length(); ++i) {
 			tmp = shiftTemp.getJSONObject(i);
-			if(tmp == null) {
-				tmp = new JSONObject();
-			}
-			if(!tmp.has("shiftId")) {
-				tmp.put("shiftId", "");				
-			}
-			if(!tmp.has("shiftName")) {
-				tmp.put("shiftName", "");				
-			}
-			if(!tmp.has("startTime")) {
-				tmp.put("startTime", "");				
-			}
-			if(!tmp.has("endTime")) {
-				tmp.put("endTime", "");				
-			} 
+			if(tmp == null)				{tmp = new JSONObject();}
+			if(!tmp.has("shiftId"))		{tmp.put("shiftId", "");}
+			if(!tmp.has("shiftName"))	{tmp.put("shiftName", "");}
+			if(!tmp.has("startTime"))	{tmp.put("startTime", "");}
+			if(!tmp.has("endTime"))		{tmp.put("endTime", "");} 
 			
 			shiftArr.put(tmp);
 		}				
 		
-		empBean = getEmployeeFromQLID(qlid);
-		mgr1 = getEmployeeFromQLID(empBean.getEmpMgrQlid1());
-		mgr2 = getEmployeeFromQLID(empBean.getEmpMgrQlid2());
+		empBean	= getEmployeeFromQLID(qlid);
+		mgr1	= getEmployeeFromQLID(empBean.getEmpMgrQlid1());
+		mgr2	= getEmployeeFromQLID(empBean.getEmpMgrQlid2());
 		
 		String mgr1Name;
 		String mgr2Name;
@@ -2683,7 +2737,7 @@ public class EmployeeServiceImpl {
 				if(mgr1.getEmpMName() == null ||
 						mgr1.getEmpMName() == "" ||
 						mgr1.getEmpMName().toUpperCase() == "NULL"
-						) {
+					) {
 					if(mgr1.getEmpLName() == "") {
 						mgr1Name = mgr1.getEmpFName();
 					}else {
@@ -2723,10 +2777,6 @@ public class EmployeeServiceImpl {
 			mgr1Name = "Mgr1";
 			mgr2Name = "Mgr2";		
 		}
-		
-		System.out.println("manager 1: " + mgr1Name);
-		System.out.println("manager 2: " + mgr2Name);
-		
 				
 		jsObj = createJSON(empBean);
 		jsObj.put("mgr1Name", mgr1Name)
@@ -2751,77 +2801,80 @@ public class EmployeeServiceImpl {
 	 */
 	
 	public boolean validateUserCurrPassword(String qlid, String currpassword) {
-		DBConnectionUpd dbCon = new DBConnectionUpd();
-		Connection con = dbCon.getConnection();
+		Connection			con	= (new DBConnectionUpd()).getConnection();
+		PreparedStatement	ps	= null;
+		ResultSet			rs	= null;
 		
-		//// return false if the qlid string does not match the qlid format
+		//// return false if not in qlid format
 		if(!qlid.matches("^[a-zA-Z]{2}\\d{6}$")) {
 			return false;
 		}
 		
 		try{
-			PreparedStatement ps = con.prepareStatement(
+			ps = con.prepareStatement(
 				"select * from "+DBTables.LOGIN_CREDENTIALS+" where Emp_Qlid= ? and Login_Password=?"
 			);
 			ps.setString(1, qlid);
 			ps.setString(2, currpassword);
-			ResultSet rs = ps.executeQuery();
+			rs = ps.executeQuery();
 			if(rs.next()){
 				return true;
-			}			
+			}
 		} catch (SQLException e) {
 			System.out.println("SQL ERROR!");
 			e.printStackTrace();
 						
-		}		
+		}finally {
+			if(rs != null){try{rs.close();}catch(SQLException e){e.printStackTrace();}}
+			if(ps != null){try{ps.close();}catch(SQLException e){e.printStackTrace();}}
+			if(con != null){try{con.close();}catch(SQLException e){e.printStackTrace();}}			
+		}
 		return false;
 	}
 	
 	public boolean addEntryToSOSTable(SOSRequestBean srb) {
-		//// TODO get cab licenseplate no
+		Connection			con	= (new DBConnectionUpd()).getConnection();
+		PreparedStatement	ps	= null;
 		
-		DBConnectionUpd dbCon = new DBConnectionUpd();
-		Connection con = dbCon.getConnection();
-		
-		try {
-			
-			PreparedStatement ps = con.prepareStatement(
-					"INSERT INTO "+DBTables.SOS+" SET emp_qlid = ?, sos_date_time = CURDATE(),"
-						+ "roster_id = ?, cab_license_plate_no = ?, sos_creation_date = CURDATE(),"
-						+ "sos_last_update_date = CURDATE(), sos_last_updated_by = 'SYSTEM'"
-				);
+		try {			
+			ps = con.prepareStatement(
+				"INSERT INTO "+DBTables.SOS+" SET emp_qlid = ?, sos_date_time = CURDATE(),"
+					+ "roster_id = ?, cab_license_plate_no = ?, sos_creation_date = CURDATE(),"
+					+ "sos_last_update_date = CURDATE(), sos_last_updated_by = 'SYSTEM'"
+			);
 			
 			ps.setString(1, srb.getEmpQlid());
 			ps.setString(2, srb.getRosterId());
 			ps.setString(3, srb.getCabLicensePlateNo());
 			ps.executeUpdate();
-			
-			con.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}finally {
+			if(ps != null){try{ps.close();}catch(SQLException e){e.printStackTrace();}}
+			if(con != null){try{con.close();}catch(SQLException e){e.printStackTrace();}}			
 		}
-		
 		
 		return false;
 	}
 	
 	public boolean setPushTokenAndroid(PushTokenBean ptb) {
 		System.out.println("push token: qlid: " + ptb.getQlid());
-		DBConnectionUpd dbCon = new DBConnectionUpd();
-		Connection con = dbCon.getConnection();
-		PreparedStatement ps, psVerify;
-		ResultSet rs, rsVerify;
-		boolean loginExists = false;
-		boolean pushTokenUpdateSuccessful = false;
+		DBConnectionUpd		dbCon						= new DBConnectionUpd();
+		Connection			con							= dbCon.getConnection();
+		PreparedStatement	ps							= null;
+		PreparedStatement	psVerify					= null;
+		ResultSet			rs							= null;
+		ResultSet			rsVerify					= null;
+		boolean				loginExists					= false;
+		boolean				pushTokenUpdateSuccessful	= false;
+		
 		try {
 			//// first verify whether the row is present in the db or not
 			psVerify = con.prepareStatement(
 					"SELECT login_push_token FROM "+DBTables.LOGIN_CREDENTIALS+""
 							+ " WHERE emp_qlid = ?"
 					);
-			psVerify.setString(1, ptb.getQlid());
-			
+			psVerify.setString(1, ptb.getQlid());			
 			rsVerify = psVerify.executeQuery();
 			
 			while(rsVerify.next()) {
@@ -2845,17 +2898,21 @@ public class EmployeeServiceImpl {
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}finally {
+			if(rs != null){try{rs.close();}catch(SQLException e){e.printStackTrace();}}
+			if(ps != null){try{ps.close();}catch(SQLException e){e.printStackTrace();}}
+			if(con != null){try{con.close();}catch(SQLException e){e.printStackTrace();}}			
 		}
 		
 		return pushTokenUpdateSuccessful;
 	}
 	
 	public String getPushTokenAndroid(PushTokenBean ptb) {
-		String loginPushToken = "";
-		DBConnectionUpd dbCon = new DBConnectionUpd();
-		Connection con = dbCon.getConnection();
-		PreparedStatement ps;
-		ResultSet rs;
+		String				loginPushToken	= "";
+		DBConnectionUpd		dbCon			= new DBConnectionUpd();
+		Connection			con				= dbCon.getConnection();
+		PreparedStatement	ps				= null;
+		ResultSet			rs				= null;
 		
 		try {
 			ps = con.prepareStatement(
@@ -2864,41 +2921,42 @@ public class EmployeeServiceImpl {
 			);
 			ps.setString(1, ptb.getQlid());
 			
-			rs= ps.executeQuery();
+			rs = ps.executeQuery();
 			
 			while(rs.next()) {
 				loginPushToken = rs.getString("login_push_token");
 				break;
 			}
-			
-			con.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}finally {
+			if(rs != null){try{rs.close();}catch(SQLException e){e.printStackTrace();}}
+			if(ps != null){try{ps.close();}catch(SQLException e){e.printStackTrace();}}
+			if(con != null){try{con.close();}catch(SQLException e){e.printStackTrace();}}			
 		}
 		
 		return loginPushToken;
 	}
 
-	public JSONObject disableContact(ContactBean contactBean) {				
+	public JSONObject disableContact(ContactBean contactBean) {		
+		Connection			connection	= (new DBConnectionUpd()).getConnection();
+		PreparedStatement	ps			= null;
+		
 		try {
-			Connection connection = (new DBConnectionUpd()).getConnection();
-			PreparedStatement ps = connection.prepareStatement(
+			ps = connection.prepareStatement(
 				"update "+DBTables.CONTACTS +"  set contact_sos_status='I' Where "
 				+ "contact_id = ?"
 			);
 			ps.setInt(1, contactBean.getContactId());			
-			ps.executeUpdate();			
-			
-			System.out.println("Contact disable!");
-			
-			connection.close();
+			ps.executeUpdate();
 		}catch(SQLException e) {
 			e.printStackTrace();
-			System.out.println(e);
 			return (new JSONObject())
 					.put("success", false)
 					.put("message", "Contact can't be disable!");
+		}finally {
+			if(ps != null){try{ps.close();}catch(SQLException e){e.printStackTrace();}}
+			if(connection != null){try{connection.close();}catch(SQLException e){e.printStackTrace();}}			
 		}
 	 
 		return (new JSONObject())
@@ -2907,37 +2965,39 @@ public class EmployeeServiceImpl {
 	}
 	
 	
-	public boolean validateContactId(ContactBean contactBean) {		
-		DBConnectionUpd dbCon = new DBConnectionUpd();
-		Connection con = dbCon.getConnection();
+	public boolean validateContactId(ContactBean contactBean) {
+		Connection			con	= (new DBConnectionUpd()).getConnection();
+		PreparedStatement	ps	= null;
+		ResultSet			rs	= null;
 		
 		try{
-			PreparedStatement ps = con.prepareStatement(
+			ps = con.prepareStatement(
 					"UPDATE "+ DBTables.CONTACTS +" SET contact_ WHERE contact_id = ?"	);
 			ps.setInt(1, contactBean.getContactId());
 			
-			ResultSet rs = ps.executeQuery();
+			rs = ps.executeQuery();
 			if(rs.next()){
 				return true;
 			}
-			
-			con.close();
 		} catch (SQLException e) {
-			System.out.println("SQL ERROR!");
-			e.printStackTrace();
-						
+			e.printStackTrace();						
+		}finally {
+			if(rs != null){try{rs.close();}catch(SQLException e){e.printStackTrace();}}
+			if(ps != null){try{ps.close();}catch(SQLException e){e.printStackTrace();}}
+			if(con != null){try{con.close();}catch(SQLException e){e.printStackTrace();}}			
 		}
+		
 		return false;	
 	}
 	
 	
 	public JSONObject addContact(ContactBean contactBean) {
+		Connection			connection	= (new DBConnectionUpd()).getConnection();
+		PreparedStatement	ps			= null;
 		try {
-			Connection connection = (new DBConnectionUpd()).getConnection();
-			PreparedStatement ps = connection.prepareStatement(
+			ps = connection.prepareStatement(
 			"insert into "+ DBTables.CONTACTS +"(contact_nbr, contact_name,contact_sos,contact_role,contact_sos_priority,contact_sos_status) values(?,?,?,?,?,'A')"
-			);	
-			System.out.println("SQL update executed succesfully!");
+			);
 	
 			ps.setString(1, contactBean.getContactNbr() );
 			ps.setString(2, contactBean.getContactName());
@@ -2945,18 +3005,16 @@ public class EmployeeServiceImpl {
 			ps.setString(4, contactBean.getContactRole());
 			ps.setInt(5,    contactBean.getContactSosPriority());			
 			
-			ps.executeUpdate();
-			
-			
-			System.out.println("SQL insert query executed succesfully!");
-			
-			connection.close();			
+			ps.executeUpdate();		
 		}catch(SQLException e) {
 			e.printStackTrace();
 			System.out.println(e);
 			return (new JSONObject())
 					.put("success", false)
 					.put("message", "Error in inserting Contact!");
+		}finally {
+			if(ps != null){try{ps.close();}catch(SQLException e){e.printStackTrace();}}
+			if(connection != null){try{connection.close();}catch(SQLException e){e.printStackTrace();}}			
 		}
 		return (new JSONObject())
 				.put("success", true)
@@ -2965,9 +3023,10 @@ public class EmployeeServiceImpl {
 	}
 	
 	public JSONObject editContact(ContactBean contactBean) {
-		try {
-			Connection connection = (new DBConnectionUpd()).getConnection();
-			PreparedStatement ps = connection.prepareStatement(
+		Connection connection = (new DBConnectionUpd()).getConnection();
+		PreparedStatement ps = null;
+		try {			
+			ps = connection.prepareStatement(
 			"UPDATE "+ DBTables.CONTACTS +" SET contact_nbr=?, contact_name=?, contact_sos=?,"
 				+ "contact_role=?, contact_sos_priority=?, contact_status=?"
 				+ " WHERE contact_id = ?"
@@ -2982,16 +3041,15 @@ public class EmployeeServiceImpl {
 			ps.setInt(5, contactBean.getContactSosPriority() );
 			ps.setString(6, contactBean.getContactStatus());			
 			ps.setInt(7, contactBean.getContactId());			
-			ps.executeUpdate();			
-			
-			System.out.println("SQL update executed succesfully!");
-			
-			connection.close();			
+			ps.executeUpdate();		
 		}catch(SQLException e) {
 			e.printStackTrace();
 			return (new JSONObject())
 					.put("success", false)
 					.put("message", "Error in Updating Contact!");
+		}finally {
+			if(ps != null){try{ps.close();}catch(SQLException e){e.printStackTrace();}}
+			if(connection != null){try{connection.close();}catch(SQLException e){e.printStackTrace();}}			
 		}
 		return (new JSONObject())
 				.put("success", true)
@@ -3006,16 +3064,18 @@ public class EmployeeServiceImpl {
 	 * 		Returns the list of all SOS Contact Number in the JSON array.
 	 */
 	public JSONArray getContactJSONArray() {
-		JSONArray jsArr = new JSONArray();
+		JSONArray			jsArr			= new JSONArray();
+		DBConnectionUpd		DBConnectionUpd	= new DBConnectionUpd();
+		Connection			connection		= DBConnectionUpd.getConnection();
+		PreparedStatement	ps				= null;
+		ResultSet			rs				= null;
 		
 		try {		
-			DBConnectionUpd DBConnectionUpd = new DBConnectionUpd();
-			Connection connection = DBConnectionUpd.getConnection();
-			PreparedStatement ps = connection.prepareStatement(
+			ps = connection.prepareStatement(
 				"SELECT * FROM "+DBTables.CONTACTS+" where contact_status='A' "
 			);
 						
-			ResultSet rs = ps.executeQuery();
+			rs = ps.executeQuery();
 			while(rs.next()) {
 				jsArr.put(
 						(new JSONObject())
@@ -3028,10 +3088,12 @@ public class EmployeeServiceImpl {
 						.put("contactEmail", rs.getString("contact_email"))
 				);
 			}
-			
-			connection.close();
 		}catch(SQLException e) {
 			e.printStackTrace();
+		}finally {
+			if(rs != null){try{rs.close();}catch(SQLException e){e.printStackTrace();}}
+			if(ps != null){try{ps.close();}catch(SQLException e){e.printStackTrace();}}
+			if(connection != null){try{connection.close();}catch(SQLException e){e.printStackTrace();}}			
 		}
 		
 		return jsArr;		

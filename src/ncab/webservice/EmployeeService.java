@@ -197,6 +197,7 @@ public class EmployeeService {
 	) {
 //		System.out.println("------------checkLoginStatus----------");
 		HttpSession sess = req.getSession(true);
+		System.out.println("!!");
 		
 		if(cookie == null || tokenCookie == null) {
 			return Response.ok(
